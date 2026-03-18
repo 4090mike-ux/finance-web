@@ -1,43 +1,69 @@
+<!--
+  파일명: templates/bank.html
+  역할: 은행 화면
+        - 금리 비교 (API 연동 예정)
+        - 이자 계산기 (Vanilla JS로 즉시 작동)
+-->
+
+<!-- base.html 상속 -->
 {% extends "base.html" %}
 {% block title %}은행 — Finance Hub{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto">
+  <!-- 페이지 제목 -->
   <h1 class="text-3xl font-bold text-green-400 mb-2">🏦 은행</h1>
+  <!-- 법적 면책 문구 (투자 권유 아님 명시) -->
   <p class="text-gray-400 mb-6 text-sm">본 데이터는 참고용이며 투자 권유가 아닙니다.</p>
 
+  <!-- 2열 그리드: 금리비교 | 이자계산기 -->
+  <!-- md:grid-cols-2 = 중간 화면 이상에서 2열로 배치 -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-    <!-- 금리 비교 -->
+    <!-- 금리 비교 카드 (3단계 API 연동 후 채워질 예정) -->
     <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
       <h2 class="text-lg font-bold text-green-400 mb-4">📊 금리 비교</h2>
       <p class="text-gray-400 text-sm">금융감독원 API 연동 예정</p>
     </div>
 
-    <!-- 이자 계산기 -->
+    <!-- 이자 계산기 카드 (Vanilla JS로 즉시 작동) -->
     <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
       <h2 class="text-lg font-bold text-green-400 mb-4">🧮 이자 계산기</h2>
 
+      <!-- flex flex-col = 세로 방향 배치, gap-3 = 항목 간격 -->
       <div class="flex flex-col gap-3">
+
+        <!-- 원금 입력 -->
         <div>
           <label class="text-sm text-gray-400 mb-1 block">원금 (원)</label>
+          <!-- id="principal" = JS에서 이 값을 읽어올 때 사용 -->
+          <!-- type="number" = 숫자만 입력 가능 -->
           <input id="principal" type="number" placeholder="10000000"
             class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-green-500" />
         </div>
+
+        <!-- 연이율 입력 -->
         <div>
           <label class="text-sm text-gray-400 mb-1 block">연이율 (%)</label>
+          <!-- step="0.1" = 0.1 단위로 증감 가능 -->
           <input id="rate" type="number" step="0.1" placeholder="3.5"
             class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-green-500" />
         </div>
+
+        <!-- 기간 입력 -->
         <div>
           <label class="text-sm text-gray-400 mb-1 block">기간 (개월)</label>
           <input id="months" type="number" placeholder="12"
             class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-green-500" />
         </div>
+
+        <!-- 계산 버튼: 클릭 시 calcInterest() 함수 실행 -->
         <button onclick="calcInterest()"
           class="w-full bg-green-700 hover:bg-green-600 rounded-lg py-2 font-bold transition">
           계산하기
         </button>
+
+        <!-- 계산 결과가 여기에 표시됨 (처음엔 비어있음) -->
         <div id="calcResult" class="text-center text-green-400 font-bold text-lg mt-2"></div>
       </div>
     </div>
@@ -45,20 +71,36 @@
   </div>
 </div>
 
+<!-- Vanilla JS: 이자 계산 함수 -->
 <script>
 function calcInterest() {
-  const p = parseFloat(document.getElementById("principal").value);
-  const r = parseFloat(document.getElementById("rate").value) / 100 / 12;
-  const n = parseInt(document.getElementById("months").value);
+  // HTML에서 입력값 읽기
+  // parseFloat() = 문자열을 소수점 포함 숫자로 변환
+  const p = parseFloat(document.getElementById("principal").value); // 원금
 
+  // 연이율(%)을 월이율로 변환
+  // 예: 연 3.5% → 0.035 → 월 0.035/12
+  const r = parseFloat(document.getElementById("rate").value) / 100 / 12;
+
+  // parseInt() = 문자열을 정수로 변환
+  const n = parseInt(document.getElementById("months").value); // 개월 수
+
+  // 입력값이 하나라도 비어있으면 안내 메시지 표시 후 종료
   if (!p || !r || !n) {
     document.getElementById("calcResult").textContent = "모든 값을 입력하세요";
-    return;
+    return; // 함수 종료
   }
 
+  // 단리 이자 계산 공식: 이자 = 원금 × 월이율 × 개월수
   const interest = p * r * n;
-  const total    = p + interest;
 
+  // 만기 수령액 = 원금 + 이자
+  const total = p + interest;
+
+  // 계산 결과를 화면에 출력
+  // Math.round() = 소수점 반올림
+  // toLocaleString() = 천 단위 콤마 추가 (예: 1,000,000)
+  // innerHTML = HTML 태그 포함해서 내용 삽입 (<br> 줄바꿈)
   document.getElementById("calcResult").innerHTML =
     `이자: ${Math.round(interest).toLocaleString()}원<br>
      만기 수령액: ${Math.round(total).toLocaleString()}원`;

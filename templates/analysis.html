@@ -1,28 +1,49 @@
+<!--
+  파일명: templates/analysis.html
+  역할: 통합 분석 대시보드
+        주식·코인·은행·부동산 자산을 입력하면
+        비율을 계산해서 프로그레스바로 시각화
+        (Vanilla JS로 즉시 작동, 서버 요청 없음)
+-->
+
+<!-- base.html 상속 -->
 {% extends "base.html" %}
 {% block title %}통합 분석 — Finance Hub{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto">
+  <!-- 페이지 제목 -->
   <h1 class="text-3xl font-bold text-purple-400 mb-2">🧠 통합 분석 대시보드</h1>
+  <!-- 법적 면책 문구 -->
   <p class="text-gray-400 mb-6 text-sm">본 데이터는 참고용이며 투자 권유가 아닙니다.</p>
 
-  <!-- 자산 입력 -->
+  <!-- 자산 입력 4칸 (그리드) -->
+  <!-- grid-cols-2 = 기본 2열, md:grid-cols-4 = 중간 화면에서 4열 -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
+    <!-- 주식 자산 입력 -->
     <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
       <label class="text-sm text-blue-400 block mb-1">📈 주식 자산 (만원)</label>
+      <!-- id="stockAsset" = JS에서 이 값을 읽어올 때 사용 -->
       <input id="stockAsset" type="number" placeholder="0"
         class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500" />
     </div>
+
+    <!-- 코인 자산 입력 -->
     <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
       <label class="text-sm text-yellow-400 block mb-1">🪙 코인 자산 (만원)</label>
       <input id="coinAsset" type="number" placeholder="0"
         class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:border-yellow-500" />
     </div>
+
+    <!-- 은행 자산 입력 -->
     <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
       <label class="text-sm text-green-400 block mb-1">🏦 은행 자산 (만원)</label>
       <input id="bankAsset" type="number" placeholder="0"
         class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:border-green-500" />
     </div>
+
+    <!-- 부동산 자산 입력 -->
     <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
       <label class="text-sm text-orange-400 block mb-1">🏠 부동산 자산 (만원)</label>
       <input id="realtyAsset" type="number" placeholder="0"
@@ -30,44 +51,66 @@
     </div>
   </div>
 
+  <!-- 분석 버튼: 클릭 시 calcPortfolio() 함수 실행 -->
   <button onclick="calcPortfolio()"
     class="w-full bg-purple-700 hover:bg-purple-600 rounded-xl py-3 font-bold text-lg transition mb-8">
     포트폴리오 분석하기
   </button>
 
-  <!-- 결과 -->
+  <!-- 결과 영역: 처음에는 hidden(숨겨진) 상태 -->
+  <!-- JS에서 hidden 클래스를 제거하면 나타남 -->
   <div id="portfolioResult" class="hidden bg-gray-800 rounded-xl p-6 border border-purple-700">
     <h2 class="text-lg font-bold text-purple-400 mb-4">분석 결과</h2>
+    <!-- JS가 이 안에 프로그레스바 HTML을 동적으로 삽입 -->
     <div id="resultContent"></div>
+    <!-- 법적 면책 문구 -->
     <p class="text-xs text-gray-500 mt-4">* 이 분석은 단순 비율 계산이며 투자 추천이 아닙니다.</p>
   </div>
 </div>
 
+<!-- Vanilla JS: 포트폴리오 분석 함수 -->
 <script>
 function calcPortfolio() {
+  // 각 자산 입력값 읽기
+  // parseFloat() = 소수점 포함 숫자로 변환
+  // || 0 = 입력값이 없거나 NaN이면 0으로 처리
   const stock  = parseFloat(document.getElementById("stockAsset").value)  || 0;
   const coin   = parseFloat(document.getElementById("coinAsset").value)   || 0;
   const bank   = parseFloat(document.getElementById("bankAsset").value)   || 0;
   const realty = parseFloat(document.getElementById("realtyAsset").value) || 0;
-  const total  = stock + coin + bank + realty;
 
+  // 전체 자산 합계
+  const total = stock + coin + bank + realty;
+
+  // 모든 값이 0이면 경고 후 종료
   if (total === 0) {
     alert("자산을 하나 이상 입력하세요");
-    return;
+    return; // 함수 종료
   }
 
+  // 비율(%) 계산 함수 (화살표 함수)
+  // v = 개별 자산, total = 전체 자산
+  // toFixed(1) = 소수점 1자리까지만 표시 (예: 30.0)
   const pct = (v) => ((v / total) * 100).toFixed(1);
 
+  // 결과 HTML을 동적으로 생성해서 삽입
+  // 백틱(`) = 템플릿 리터럴: 변수를 ${} 안에 넣을 수 있음
   document.getElementById("resultContent").innerHTML = `
     <p class="text-gray-300 mb-4">총 자산: <span class="text-white font-bold">${total.toLocaleString()}만원</span></p>
     <div class="space-y-3">
+
+      <!-- 주식 프로그레스바 -->
       <div class="flex justify-between items-center">
         <span class="text-blue-400">📈 주식</span>
+        <!-- 회색 배경 바 -->
         <div class="flex-1 mx-4 bg-gray-700 rounded-full h-3">
+          <!-- 파란 채움 바: style로 너비를 비율(%)로 설정 -->
           <div class="bg-blue-500 h-3 rounded-full" style="width:${pct(stock)}%"></div>
         </div>
         <span>${pct(stock)}%</span>
       </div>
+
+      <!-- 코인 프로그레스바 -->
       <div class="flex justify-between items-center">
         <span class="text-yellow-400">🪙 코인</span>
         <div class="flex-1 mx-4 bg-gray-700 rounded-full h-3">
@@ -75,6 +118,8 @@ function calcPortfolio() {
         </div>
         <span>${pct(coin)}%</span>
       </div>
+
+      <!-- 은행 프로그레스바 -->
       <div class="flex justify-between items-center">
         <span class="text-green-400">🏦 은행</span>
         <div class="flex-1 mx-4 bg-gray-700 rounded-full h-3">
@@ -82,6 +127,8 @@ function calcPortfolio() {
         </div>
         <span>${pct(bank)}%</span>
       </div>
+
+      <!-- 부동산 프로그레스바 -->
       <div class="flex justify-between items-center">
         <span class="text-orange-400">🏠 부동산</span>
         <div class="flex-1 mx-4 bg-gray-700 rounded-full h-3">
@@ -89,8 +136,11 @@ function calcPortfolio() {
         </div>
         <span>${pct(realty)}%</span>
       </div>
+
     </div>
   `;
+
+  // hidden 클래스 제거 → 결과 영역이 화면에 나타남
   document.getElementById("portfolioResult").classList.remove("hidden");
 }
 </script>

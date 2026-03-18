@@ -1,21 +1,42 @@
+<!--
+  파일명: templates/register.html
+  역할: 회원가입 화면
+        닉네임 + 이메일 + 비밀번호 입력 폼
+        개인정보 동의 체크박스 포함 (법적 필수)
+        현재는 화면만 존재 (POST 처리는 2단계에서 구현)
+-->
+
+<!-- base.html 상속 -->
 {% extends "base.html" %}
 {% block title %}회원가입 — Finance Hub{% endblock %}
 
 {% block content %}
+<!-- 화면 가운데 정렬 -->
 <div class="max-w-md mx-auto mt-20">
+  <!-- 카드 박스 -->
   <div class="bg-gray-800 rounded-xl p-8 border border-gray-700">
 
     <h1 class="text-2xl font-bold text-center mb-6">회원가입</h1>
 
+    <!--
+      method="POST" = 데이터를 숨겨서 서버로 전송
+      action="/register" = Flask의 @app.route("/register") 로 전달
+    -->
     <form method="POST" action="/register" class="flex flex-col gap-4">
 
+      <!-- 닉네임 입력 -->
       <div>
         <label class="text-sm text-gray-400 mb-1 block">닉네임</label>
+        <!--
+          type="text" = 일반 텍스트 입력
+          name="nickname" = 서버에서 request.form["nickname"]로 읽음
+        -->
         <input type="text" name="nickname" required
           class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
           placeholder="닉네임 입력" />
       </div>
 
+      <!-- 이메일 입력 -->
       <div>
         <label class="text-sm text-gray-400 mb-1 block">이메일</label>
         <input type="email" name="email" required
@@ -23,22 +44,38 @@
           placeholder="example@email.com" />
       </div>
 
+      <!-- 비밀번호 입력 -->
       <div>
         <label class="text-sm text-gray-400 mb-1 block">비밀번호</label>
+        <!-- type="password" = 입력 내용이 *** 로 가려짐 -->
         <input type="password" name="password" required
           class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
           placeholder="8자 이상 입력" />
       </div>
 
-      <!-- 개인정보 동의 (법적 필수) -->
+      <!--
+        개인정보 동의 체크박스 (법적 필수 항목)
+        개인정보보호법에 따라 수집 동의를 받아야 함
+        required = 체크 안 하면 제출 불가
+      -->
       <div class="flex items-start gap-2 mt-2">
+        <!--
+          type="checkbox" = 체크박스
+          name="agree" = 서버에서 확인할 때 사용
+          id="agree" = 아래 label의 for="agree"와 연결
+          required = 반드시 체크해야 제출 가능
+        -->
         <input type="checkbox" name="agree" id="agree" required class="mt-1" />
+        <!--
+          for="agree" = 이 label 클릭 시 위의 체크박스가 선택됨
+        -->
         <label for="agree" class="text-sm text-gray-400">
           <a href="/privacy" class="text-blue-400 hover:underline">개인정보처리방침</a> 및
           <a href="/terms"   class="text-blue-400 hover:underline">이용약관</a>에 동의합니다. (필수)
         </label>
       </div>
 
+      <!-- 제출 버튼 -->
       <button type="submit"
         class="w-full bg-blue-600 hover:bg-blue-500 rounded-lg py-2 font-bold transition mt-2">
         가입하기
@@ -46,6 +83,7 @@
 
     </form>
 
+    <!-- 로그인 링크 -->
     <p class="text-center text-sm text-gray-400 mt-4">
       이미 계정이 있으신가요?
       <a href="/login" class="text-blue-400 hover:underline">로그인</a>

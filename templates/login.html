@@ -1,28 +1,55 @@
+<!--
+  파일명: templates/login.html
+  역할: 로그인 화면
+        이메일 + 비밀번호 입력 폼
+        현재는 화면만 존재 (POST 처리는 2단계에서 구현)
+-->
+
+<!-- base.html 상속 -->
 {% extends "base.html" %}
 {% block title %}로그인 — Finance Hub{% endblock %}
 
 {% block content %}
+<!-- 화면 가운데 정렬: max-w-md = 최대 너비 제한, mt-20 = 위 여백 -->
 <div class="max-w-md mx-auto mt-20">
+  <!-- 카드 박스 -->
   <div class="bg-gray-800 rounded-xl p-8 border border-gray-700">
 
     <h1 class="text-2xl font-bold text-center mb-6">로그인</h1>
 
+    <!--
+      form 태그 설명:
+      method="POST" = 데이터를 서버로 전송하는 방식 (URL에 안 보임)
+      action="/login" = 전송할 URL (Flask의 @app.route("/login") 로 전달)
+    -->
     <form method="POST" action="/login" class="flex flex-col gap-4">
 
+      <!-- 이메일 입력 -->
       <div>
         <label class="text-sm text-gray-400 mb-1 block">이메일</label>
+        <!--
+          type="email" = 이메일 형식 자동 검사
+          name="email" = 서버에서 request.form["email"]로 읽음
+          required = 비워두면 제출 불가
+        -->
         <input type="email" name="email" required
           class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
           placeholder="example@email.com" />
       </div>
 
+      <!-- 비밀번호 입력 -->
       <div>
         <label class="text-sm text-gray-400 mb-1 block">비밀번호</label>
+        <!--
+          type="password" = 입력 내용이 *** 로 가려짐
+          name="password" = 서버에서 request.form["password"]로 읽음
+        -->
         <input type="password" name="password" required
           class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
           placeholder="비밀번호 입력" />
       </div>
 
+      <!-- 제출 버튼: 클릭 시 form 데이터를 /login 으로 전송 -->
       <button type="submit"
         class="w-full bg-blue-600 hover:bg-blue-500 rounded-lg py-2 font-bold transition mt-2">
         로그인
@@ -30,6 +57,7 @@
 
     </form>
 
+    <!-- 회원가입 링크 -->
     <p class="text-center text-sm text-gray-400 mt-4">
       계정이 없으신가요?
       <a href="/register" class="text-blue-400 hover:underline">회원가입</a>
