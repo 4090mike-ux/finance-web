@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}메인 대시보드 — Finance Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+
+  <!-- 헤더 -->
+  <div class="text-center mb-10 mt-6">
+    <h1 class="text-4xl font-bold text-blue-400 mb-2">💰 Finance Hub</h1>
+    <p class="text-gray-400">주식 · 코인 · 은행 · 부동산 통합 분석 플랫폼</p>
+  </div>
+
+  <!-- 카드 4개 -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+    <a href="/stock" class="bg-gray-800 rounded-xl p-6 hover:bg-gray-700 transition border border-gray-700 hover:border-blue-500">
+      <div class="text-4xl mb-3">📈</div>
+      <h2 class="text-lg font-bold text-blue-400 mb-1">주식</h2>
+      <p class="text-sm text-gray-400">국내·해외 주식 시세 및 포트폴리오 관리</p>
+    </a>
+
+    <a href="/coin" class="bg-gray-800 rounded-xl p-6 hover:bg-gray-700 transition border border-gray-700 hover:border-yellow-500">
+      <div class="text-4xl mb-3">🪙</div>
+      <h2 class="text-lg font-bold text-yellow-400 mb-1">코인</h2>
+      <p class="text-sm text-gray-400">암호화폐 실시간 시세 및 수익률 계산</p>
+    </a>
+
+    <a href="/bank" class="bg-gray-800 rounded-xl p-6 hover:bg-gray-700 transition border border-gray-700 hover:border-green-500">
+      <div class="text-4xl mb-3">🏦</div>
+      <h2 class="text-lg font-bold text-green-400 mb-1">은행</h2>
+      <p class="text-sm text-gray-400">예금·적금·대출 금리 비교 및 이자 계산</p>
+    </a>
+
+    <a href="/realty" class="bg-gray-800 rounded-xl p-6 hover:bg-gray-700 transition border border-gray-700 hover:border-orange-500">
+      <div class="text-4xl mb-3">🏠</div>
+      <h2 class="text-lg font-bold text-orange-400 mb-1">부동산</h2>
+      <p class="text-sm text-gray-400">아파트 시세 조회 및 수익률 분석</p>
+    </a>
+
+  </div>
+
+  <!-- 통합 분석 배너 -->
+  <a href="/analysis" class="block mt-6 bg-gradient-to-r from-purple-900 to-blue-900 rounded-xl p-6 hover:opacity-90 transition border border-purple-700">
+    <div class="flex items-center gap-4">
+      <span class="text-5xl">🧠</span>
+      <div>
+        <h2 class="text-xl font-bold text-purple-300">통합 분석 대시보드</h2>
+        <p class="text-sm text-gray-400 mt-1">주식 · 코인 · 은행 · 부동산 자산을 한눈에 비교하세요</p>
+      </div>
+    </div>
+  </a>
+
+</div>
+{% endblock %}

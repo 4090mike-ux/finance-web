@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}부동산 — Finance Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  <h1 class="text-3xl font-bold text-orange-400 mb-2">🏠 부동산</h1>
+  <p class="text-gray-400 mb-6 text-sm">본 데이터는 참고용이며 투자 권유가 아닙니다.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- 시세 조회 -->
+    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+      <h2 class="text-lg font-bold text-orange-400 mb-4">🔍 아파트 시세 조회</h2>
+      <input type="text" placeholder="지역명 입력 (예: 강남구)"
+        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 mb-3 focus:outline-none focus:border-orange-500" />
+      <button class="w-full bg-orange-700 hover:bg-orange-600 rounded-lg py-2 font-bold transition">
+        조회하기 (국토교통부 API 연동 예정)
+      </button>
+      <p class="text-xs text-gray-500 mt-2">* 데이터 출처: 국토교통부 공공데이터포털</p>
+    </div>
+
+    <!-- 수익률 계산기 -->
+    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+      <h2 class="text-lg font-bold text-orange-400 mb-4">🧮 전월세 수익률 계산기</h2>
+
+      <div class="flex flex-col gap-3">
+        <div>
+          <label class="text-sm text-gray-400 mb-1 block">매매가 (만원)</label>
+          <input id="buyPrice" type="number" placeholder="50000"
+            class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-500" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-1 block">월세 (만원)</label>
+          <input id="rent" type="number" placeholder="100"
+            class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-500" />
+        </div>
+        <button onclick="calcRealty()"
+          class="w-full bg-orange-700 hover:bg-orange-600 rounded-lg py-2 font-bold transition">
+          수익률 계산
+        </button>
+        <div id="realtyResult" class="text-center text-orange-400 font-bold text-lg mt-2"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function calcRealty() {
+  const buy  = parseFloat(document.getElementById("buyPrice").value);
+  const rent = parseFloat(document.getElementById("rent").value);
+
+  if (!buy || !rent) {
+    document.getElementById("realtyResult").textContent = "모든 값을 입력하세요";
+    return;
+  }
+
+  const yield_ = ((rent * 12) / buy * 100).toFixed(2);
+  document.getElementById("realtyResult").textContent = `연 수익률: ${yield_}%`;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}통합 분석 — Finance Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  <h1 class="text-3xl font-bold text-purple-400 mb-2">🧠 통합 분석 대시보드</h1>
+  <p class="text-gray-400 mb-6 text-sm">본 데이터는 참고용이며 투자 권유가 아닙니다.</p>
+
+  <!-- 자산 입력 -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+      <label class="text-sm text-blue-400 block mb-1">📈 주식 자산 (만원)</label>
+      <input id="stockAsset" type="number" placeholder="0"
+        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500" />
+    </div>
+    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+      <label class="text-sm text-yellow-400 block mb-1">🪙 코인 자산 (만원)</label>
+      <input id="coinAsset" type="number" placeholder="0"
+        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:border-yellow-500" />
+    </div>
+    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+      <label class="text-sm text-green-400 block mb-1">🏦 은행 자산 (만원)</label>
+      <input id="bankAsset" type="number" placeholder="0"
+        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:border-green-500" />
+    </div>
+    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+      <label class="text-sm text-orange-400 block mb-1">🏠 부동산 자산 (만원)</label>
+      <input id="realtyAsset" type="number" placeholder="0"
+        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:border-orange-500" />
+    </div>
+  </div>
+
+  <button onclick="calcPortfolio()"
+    class="w-full bg-purple-700 hover:bg-purple-600 rounded-xl py-3 font-bold text-lg transition mb-8">
+    포트폴리오 분석하기
+  </button>
+
+  <!-- 결과 -->
+  <div id="portfolioResult" class="hidden bg-gray-800 rounded-xl p-6 border border-purple-700">
+    <h2 class="text-lg font-bold text-purple-400 mb-4">분석 결과</h2>
+    <div id="resultContent"></div>
+    <p class="text-xs text-gray-500 mt-4">* 이 분석은 단순 비율 계산이며 투자 추천이 아닙니다.</p>
+  </div>
+</div>
+
+<script>
+function calcPortfolio() {
+  const stock  = parseFloat(document.getElementById("stockAsset").value)  || 0;
+  const coin   = parseFloat(document.getElementById("coinAsset").value)   || 0;
+  const bank   = parseFloat(document.getElementById("bankAsset").value)   || 0;
+  const realty = parseFloat(document.getElementById("realtyAsset").value) || 0;
+  const total  = stock + coin + bank + realty;
+
+  if (total === 0) {
+    alert("자산을 하나 이상 입력하세요");
+    return;
+  }
+
+  const pct = (v) => ((v / total) * 100).toFixed(1);
+
+  document.getElementById("resultContent").innerHTML = `
+    <p class="text-gray-300 mb-4">총 자산: <span class="text-white font-bold">${total.toLocaleString()}만원</span></p>
+    <div class="space-y-3">
+      <div class="flex justify-between items-center">
+        <span class="text-blue-400">📈 주식</span>
+        <div class="flex-1 mx-4 bg-gray-700 rounded-full h-3">
+          <div class="bg-blue-500 h-3 rounded-full" style="width:${pct(stock)}%"></div>
+        </div>
+        <span>${pct(stock)}%</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-yellow-400">🪙 코인</span>
+        <div class="flex-1 mx-4 bg-gray-700 rounded-full h-3">
+          <div class="bg-yellow-500 h-3 rounded-full" style="width:${pct(coin)}%"></div>
+        </div>
+        <span>${pct(coin)}%</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-green-400">🏦 은행</span>
+        <div class="flex-1 mx-4 bg-gray-700 rounded-full h-3">
+          <div class="bg-green-500 h-3 rounded-full" style="width:${pct(bank)}%"></div>
+        </div>
+        <span>${pct(bank)}%</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-orange-400">🏠 부동산</span>
+        <div class="flex-1 mx-4 bg-gray-700 rounded-full h-3">
+          <div class="bg-orange-500 h-3 rounded-full" style="width:${pct(realty)}%"></div>
+        </div>
+        <span>${pct(realty)}%</span>
+      </div>
+    </div>
+  `;
+  document.getElementById("portfolioResult").classList.remove("hidden");
+}
+</script>
+{% endblock %}

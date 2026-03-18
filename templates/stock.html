@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}주식 — Finance Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  <h1 class="text-3xl font-bold text-blue-400 mb-2">📈 주식</h1>
+  <p class="text-gray-400 mb-6 text-sm">본 데이터는 참고용이며 투자 권유가 아닙니다.</p>
+
+  <!-- 검색창 -->
+  <div class="flex gap-3 mb-8">
+    <input id="searchInput" type="text" placeholder="종목명 또는 코드 입력 (예: 삼성전자)"
+      class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" />
+    <button onclick="searchStock()"
+      class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold transition">검색</button>
+  </div>
+
+  <!-- 결과 영역 (API 연동 후 채워질 예정) -->
+  <div id="result" class="bg-gray-800 rounded-xl p-6 border border-gray-700 text-center text-gray-400">
+    종목을 검색하세요
+  </div>
+</div>
+
+<script>
+function searchStock() {
+  const query = document.getElementById("searchInput").value;
+  document.getElementById("result").innerHTML =
+    `<p class="text-blue-400">"${query}" 검색 중... (API 연동 예정)</p>`;
+}
+</script>
+{% endblock %}

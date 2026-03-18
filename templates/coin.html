@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}코인 — Finance Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  <h1 class="text-3xl font-bold text-yellow-400 mb-2">🪙 코인</h1>
+  <p class="text-gray-400 mb-6 text-sm">본 데이터는 참고용이며 투자 권유가 아닙니다.</p>
+
+  <!-- 시세 테이블 (CoinGecko API 연동 예정) -->
+  <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-700 text-gray-300">
+        <tr>
+          <th class="px-4 py-3 text-left">#</th>
+          <th class="px-4 py-3 text-left">코인</th>
+          <th class="px-4 py-3 text-right">현재가 (원)</th>
+          <th class="px-4 py-3 text-right">24h 변동</th>
+          <th class="px-4 py-3 text-right">시가총액</th>
+        </tr>
+      </thead>
+      <tbody id="coinList">
+        <tr>
+          <td colspan="5" class="px-4 py-8 text-center text-gray-400">
+            데이터 로딩 중... (CoinGecko API 연동 예정)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-xs text-gray-500 mt-3">* 데이터 출처: CoinGecko API</p>
+</div>
+{% endblock %}

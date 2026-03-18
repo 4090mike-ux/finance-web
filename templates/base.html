@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}금융 통합 분석{% endblock %}</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 커스텀 CSS (static/css/style.css) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+
+<body class="bg-gray-950 text-white min-h-screen flex flex-col">
+
+  <!-- 네비게이션 바 -->
+  <nav class="bg-gray-900 border-b border-gray-700 px-6 py-3 flex items-center justify-between">
+
+    <!-- 로고 -->
+    <a href="/" class="text-xl font-bold text-blue-400">💰 Finance Hub</a>
+
+    <!-- 메뉴 -->
+    <div class="flex gap-6 text-sm font-medium">
+      <a href="/stock"    class="hover:text-blue-400 transition">📈 주식</a>
+      <a href="/coin"     class="hover:text-yellow-400 transition">🪙 코인</a>
+      <a href="/bank"     class="hover:text-green-400 transition">🏦 은행</a>
+      <a href="/realty"   class="hover:text-orange-400 transition">🏠 부동산</a>
+      <a href="/analysis" class="hover:text-purple-400 transition">🧠 분석</a>
+    </div>
+
+    <!-- 로그인 버튼 -->
+    <div class="flex gap-3 text-sm">
+      <a href="/login"    class="px-3 py-1 border border-gray-500 rounded hover:border-blue-400 transition">로그인</a>
+      <a href="/register" class="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500 transition">회원가입</a>
+    </div>
+  </nav>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="flex-1 p-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- 푸터 (법적 면책 문구) -->
+  <footer class="bg-gray-900 border-t border-gray-700 px-6 py-4 text-center text-xs text-gray-500">
+    본 서비스는 정보 제공 목적으로만 운영되며, 투자 권유 또는 자문을 제공하지 않습니다.<br>
+    모든 투자 결정과 그 결과는 이용자 본인에게 있습니다. 제공되는 데이터는 실시간이 아닐 수 있으며 정확성을 보장하지 않습니다.
+  </footer>
+
+</body>
+</html>

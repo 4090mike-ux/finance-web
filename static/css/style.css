@@ -1,0 +1,57 @@
+/* =============================================
+   Finance Hub — 커스텀 CSS
+   Tailwind CSS로 처리 못하는 스타일 여기에 작성
+   ============================================= */
+
+/* 전체 폰트 설정 */
+body {
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+
+/* 스크롤바 스타일 (다크 테마에 맞게) */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111827; /* gray-900 */
+}
+::-webkit-scrollbar-thumb {
+  background: #374151; /* gray-700 */
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4B5563; /* gray-600 */
+}
+
+/* 테이블 행 hover 효과 */
+tbody tr:hover {
+  background-color: #1F2937; /* gray-800 */
+  transition: background-color 0.15s;
+}
+
+/* 숫자 상승(빨강) / 하락(파랑) 색상 */
+.price-up   { color: #EF4444; } /* red-500   — 한국 증시 상승 = 빨강 */
+.price-down { color: #3B82F6; } /* blue-500  — 한국 증시 하락 = 파랑 */
+.price-zero { color: #9CA3AF; } /* gray-400  — 보합 */
+
+/* 카드 hover 애니메이션 */
+.card-hover {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* 로딩 스피너 */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #374151;
+  border-top-color: #60A5FA; /* blue-400 */
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
