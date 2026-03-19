@@ -4,3 +4,26 @@ gspread
 google-auth
 werkzeug
 requests
+yfinance
+pandas
+numpy
+flask-socketio
+
+# JARVIS dependencies
+anthropic
+openai
+duckduckgo-search
+httpx
+aiohttp
+pyttsx3
+speechrecognition
+wikipedia-api
+arxiv
+gitpython
+psutil
+watchdog
+cryptography
+pyaudio
+chromadb
+sentence-transformers
+tiktoken
