@@ -1,7 +1,7 @@
 """
-JARVIS 핵심 엔진
+JARVIS 핵심 엔진 — Iteration 2
 모든 모듈을 통합하는 중앙 오케스트레이터
-Chain-of-Thought 추론, Tool Use, 멀티에이전트 조율
+실제 Claude Tool Use API + 고급 추론 + 오케스트레이터 + 스킬 라이브러리
 """
 
 import re
@@ -17,26 +17,8 @@ logger = logging.getLogger(__name__)
 class JarvisEngine:
     """
     JARVIS (Just A Rather Very Intelligent System)
-    핵심 엔진 - 모든 모듈 통합 및 지능형 추론
+    핵심 엔진 Iteration 2 — 진정한 도구 사용 AI
     """
-
-    # 도구 정의 (Claude Tool Use 스타일)
-    TOOLS = {
-        "web_search": "웹 검색",
-        "github_search": "GitHub 검색",
-        "arxiv_search": "ArXiv 논문 검색",
-        "wikipedia": "Wikipedia 검색",
-        "execute_python": "Python 코드 실행",
-        "execute_shell": "Shell 명령 실행",
-        "read_file": "파일 읽기",
-        "write_file": "파일 쓰기",
-        "list_directory": "디렉토리 목록",
-        "system_info": "시스템 정보",
-        "get_processes": "프로세스 목록",
-        "run_agent": "에이전트 실행",
-        "remember": "기억 저장",
-        "recall": "기억 검색",
-    }
 
     def __init__(
         self,
@@ -47,6 +29,9 @@ class JarvisEngine:
         code_executor,
         agent_manager,
         voice_interface=None,
+        skill_library=None,
+        vision_system=None,
+        orchestrator=None,
     ):
         self.llm = llm_manager
         self.memory = memory_manager
@@ -55,59 +40,102 @@ class JarvisEngine:
         self.executor = code_executor
         self.agents = agent_manager
         self.voice = voice_interface
+        self.skills = skill_library
+        self.vision = vision_system
+        self.orchestrator = orchestrator
 
         self.conversation_history = []
         self.is_thinking = False
         self.startup_time = time.time()
+        self._anthropic_client = None  # Claude Tool Use API용
 
-        logger.info("JARVIS Engine fully initialized - All systems operational")
+        # ── 고급 추론 및 자기 개선 시스템 ──
+        try:
+            from jarvis.core.reasoning import ReasoningEngine
+            from jarvis.core.self_improvement import SelfImprovementSystem
+            from jarvis.core.knowledge_updater import KnowledgeUpdater
+            from jarvis.config import MEMORY_DB_PATH
+
+            self.reasoning = ReasoningEngine(llm_manager)
+            self.improvement = SelfImprovementSystem(MEMORY_DB_PATH, llm_manager)
+            self.knowledge_updater = KnowledgeUpdater(web_intelligence, memory_manager, llm_manager)
+            self.knowledge_updater.start_auto_update()
+            logger.info("Advanced reasoning and self-improvement systems active")
+        except Exception as e:
+            logger.warning(f"Advanced systems init failed: {e}")
+            self.reasoning = None
+            self.improvement = None
+            self.knowledge_updater = None
+
+        # ── 실제 Tool Use 엔진 초기화 ──
+        try:
+            from jarvis.core.tool_executor import ToolExecutor
+            self.tool_executor = ToolExecutor(
+                web=self.web,
+                computer=self.computer,
+                executor=self.executor,
+                memory=self.memory,
+                agents=self.agents,
+                skills=self.skills,
+                vision=self.vision,
+                reasoning=self.reasoning,
+            )
+            self._init_anthropic_client()
+            logger.info("Tool Use engine initialized — real API tool calling active")
+        except Exception as e:
+            logger.warning(f"ToolExecutor init failed: {e}")
+            self.tool_executor = None
+
+        logger.info("JARVIS Engine Iteration 2 — All systems operational")
+
+    # ==================== Anthropic 클라이언트 초기화 ====================
+
+    def _init_anthropic_client(self):
+        """Claude Tool Use API용 클라이언트"""
+        try:
+            import anthropic
+            from jarvis.config import ANTHROPIC_API_KEY
+            if ANTHROPIC_API_KEY:
+                self._anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+                logger.info("Anthropic client for Tool Use ready")
+        except Exception as e:
+            logger.warning(f"Anthropic client init failed: {e}")
 
     # ==================== 메인 채팅 ====================
 
     def chat(self, user_input: str, use_tools: bool = True) -> Dict:
         """
-        메인 대화 함수
-        1. 사용자 입력 분석
-        2. 필요시 도구 사용
-        3. LLM으로 최종 응답 생성
+        메인 대화 함수 — Iteration 2
+        실제 Claude Tool Use API 사용
         """
         start_time = time.time()
         self.is_thinking = True
 
-        # 메모리에 사용자 메시지 저장
         self.memory.add_message("user", user_input)
         self.conversation_history.append({"role": "user", "content": user_input})
 
         try:
-            # 도구 사용이 필요한지 판단
-            tool_results = []
-            if use_tools:
-                tool_results = self._determine_and_use_tools(user_input)
+            # ── 실제 Tool Use API (Anthropic 클라이언트 있을 때) ──
+            if use_tools and self.tool_executor and self._anthropic_client:
+                response, tools_used = self._chat_with_tool_use(user_input)
+                tools_list = [t["tool"] for t in tools_used]
+            else:
+                # 폴백: 기존 키워드 기반
+                tool_results = self._determine_and_use_tools(user_input) if use_tools else []
+                context = self._build_context(user_input, tool_results)
+                response = self._generate_response(context, tool_results)
+                tools_list = [t["tool"] for t in tool_results]
 
-            # 컨텍스트 구성
-            context = self._build_context(user_input, tool_results)
-
-            # LLM 응답 생성
-            response = self._generate_response(context, tool_results)
-
-            # 응답 저장
             self.memory.add_message("assistant", response)
             self.conversation_history.append({"role": "assistant", "content": response})
 
-            # 태스크 이력 기록
             duration = time.time() - start_time
-            self.memory.log_task(
-                task_type="chat",
-                description=user_input[:200],
-                result=response[:500],
-                status="success",
-                duration=duration,
-            )
+            self.memory.log_task("chat", user_input[:200], response[:500], "success", duration)
 
             self.is_thinking = False
             return {
                 "response": response,
-                "tools_used": [t["tool"] for t in tool_results],
+                "tools_used": tools_list,
                 "duration": round(duration, 2),
                 "timestamp": datetime.now().isoformat(),
             }
@@ -123,30 +151,68 @@ class JarvisEngine:
                 "duration": round(time.time() - start_time, 2),
             }
 
-    def stream_chat(self, user_input: str) -> Generator[str, None, None]:
-        """스트리밍 채팅 (WebSocket용)"""
-        # 도구 결과 먼저 처리
-        tool_results = self._determine_and_use_tools(user_input)
-
-        if tool_results:
-            yield f"[도구 사용 완료: {', '.join(t['tool'] for t in tool_results)}]\n\n"
-
-        context = self._build_context(user_input, tool_results)
-
-        from jarvis.llm.manager import Message
+    def _chat_with_tool_use(self, user_input: str) -> Tuple[str, List[Dict]]:
+        """실제 Claude Tool Use API로 채팅"""
         from jarvis.config import JARVIS_SYSTEM_PROMPT
 
-        messages = self._build_messages(context)
-        full_response = ""
+        # 대화 히스토리 포함
+        messages = []
+        for h in self.conversation_history[-10:]:
+            messages.append({"role": h["role"], "content": h["content"]})
 
-        for chunk in self.llm.stream_chat(messages, system=JARVIS_SYSTEM_PROMPT + self._get_context_suffix(tool_results)):
-            full_response += chunk
-            yield chunk
+        # 현재 메시지 추가 (마지막 user는 이미 추가됨)
+        if not messages or messages[-1]["role"] != "user":
+            messages.append({"role": "user", "content": user_input})
 
-        # 저장
+        return self.tool_executor.run_with_tool_use(
+            client=self._anthropic_client,
+            messages=messages,
+            system=JARVIS_SYSTEM_PROMPT,
+            max_tokens=8192,
+        )
+
+    def stream_chat(self, user_input: str) -> Generator[str, None, None]:
+        """스트리밍 채팅 (WebSocket용) — Tool Use 지원"""
+        from jarvis.config import JARVIS_SYSTEM_PROMPT
+
         self.memory.add_message("user", user_input)
-        self.memory.add_message("assistant", full_response)
         self.conversation_history.append({"role": "user", "content": user_input})
+
+        full_response = ""
+        tools_used = []
+
+        # ── 실제 Tool Use 스트리밍 ──
+        if self.tool_executor and self._anthropic_client:
+            messages = [{"role": h["role"], "content": h["content"]} for h in self.conversation_history[-10:]]
+
+            for event in self.tool_executor.run_streaming_with_tool_use(
+                client=self._anthropic_client,
+                messages=messages,
+                system=JARVIS_SYSTEM_PROMPT,
+            ):
+                if event["type"] == "text":
+                    chunk = event["content"]
+                    full_response += chunk
+                    yield chunk
+                elif event["type"] == "tool_start":
+                    yield f"\n🔧 **{event['tool']}** 실행 중...\n"
+                elif event["type"] == "tool_result":
+                    yield f"✅ **{event['tool']}** 완료\n\n"
+                elif event["type"] == "done":
+                    tools_used = event.get("tools_used", [])
+        else:
+            # 폴백
+            tool_results = self._determine_and_use_tools(user_input)
+            if tool_results:
+                yield f"[도구: {', '.join(t['tool'] for t in tool_results)}]\n\n"
+            context = self._build_context(user_input, tool_results)
+            from jarvis.llm.manager import Message
+            messages = self._build_messages(context)
+            for chunk in self.llm.stream_chat(messages, system=JARVIS_SYSTEM_PROMPT):
+                full_response += chunk
+                yield chunk
+
+        self.memory.add_message("assistant", full_response)
         self.conversation_history.append({"role": "assistant", "content": full_response})
 
     # ==================== 도구 사용 ====================
@@ -397,23 +463,143 @@ class JarvisEngine:
             trends = self.web.get_ai_trends()
             return {"type": "trends", "data": trends}
 
+        elif cmd.startswith("/reason "):
+            problem = command[8:]
+            if self.reasoning:
+                strategy = self.reasoning.select_strategy(problem)
+                result = self.reasoning.reason(problem, strategy=strategy)
+                return {"type": "reasoning", "strategy": result.strategy,
+                        "answer": result.final_answer, "confidence": result.confidence,
+                        "duration": result.duration}
+            return {"error": "Reasoning engine not available"}
+
+        elif cmd == "/improve":
+            if self.improvement:
+                report = self.improvement.get_performance_report()
+                suggestions = self.improvement.suggest_improvements()
+                return {"type": "improvement", "report": report, "suggestions": suggestions}
+            return {"error": "Self-improvement not available"}
+
+        elif cmd == "/update":
+            if self.knowledge_updater:
+                result = self.knowledge_updater.run_update_cycle()
+                return {"type": "knowledge_update", "result": result}
+            return {"error": "Knowledge updater not available"}
+
+        elif cmd == "/knowledge":
+            if self.knowledge_updater:
+                summary = self.knowledge_updater.get_knowledge_summary()
+                kstatus = self.knowledge_updater.get_status()
+                return {"type": "knowledge", "summary": summary, "status": kstatus}
+            return {"type": "knowledge", "summary": "지식 갱신 시스템 없음"}
+
+        elif cmd.startswith("/wikipedia "):
+            query = command[11:]
+            result = self.web.search_wikipedia(query)
+            return {"type": "wikipedia", "result": result}
+
+        elif cmd.startswith("/news "):
+            query = command[6:]
+            results = self.web.search_news(query, max_results=10)
+            return {"type": "news", "results": results}
+
+        elif cmd.startswith("/agent "):
+            parts = command[7:].split(" ", 1)
+            if len(parts) == 2:
+                agent_type_str, task = parts
+                from jarvis.agents.agent_manager import AgentType
+                try:
+                    at = AgentType(agent_type_str)
+                    result = self.agents.run_agent(task, agent_type=at)
+                    return {"type": "agent", "agent": agent_type_str, "result": result}
+                except ValueError:
+                    return {"error": f"Unknown agent type: {agent_type_str}"}
+            return {"error": "Usage: /agent [type] [task]"}
+
+        # ── Iteration 2 신규 명령 ──
+        elif cmd.startswith("/goal "):
+            goal = command[6:]
+            if self.orchestrator:
+                result = self.orchestrator.execute_goal(goal, background=False)
+                return {"type": "orchestrator", "result": result}
+            return self.chat(goal)
+
+        elif cmd.startswith("/goal_bg "):
+            goal = command[9:]
+            if self.orchestrator:
+                result = self.orchestrator.execute_goal(goal, background=True)
+                return {"type": "orchestrator_bg", "task_id": result.get("task_id")}
+            return {"error": "Orchestrator not available"}
+
+        elif cmd.startswith("/task "):
+            task_id = command[6:].strip()
+            if self.orchestrator:
+                return {"type": "task_status", "task": self.orchestrator.get_task(task_id)}
+            return {"error": "Orchestrator not available"}
+
+        elif cmd == "/tasks":
+            if self.orchestrator:
+                return {"type": "task_list", "tasks": self.orchestrator.list_tasks()}
+            return {"error": "Orchestrator not available"}
+
+        elif cmd == "/skills":
+            if self.skills:
+                return {"type": "skills", "skills": self.skills.list_skills(), "stats": self.skills.get_stats()}
+            return {"error": "SkillLibrary not available"}
+
+        elif cmd.startswith("/skill "):
+            name = command[7:].strip()
+            if self.skills:
+                code = self.skills.get_skill_code(name)
+                return {"type": "skill_code", "name": name, "code": code}
+            return {"error": "SkillLibrary not available"}
+
+        elif cmd.startswith("/create_skill "):
+            desc = command[14:]
+            if self.skills:
+                result = self.skills.create_skill(desc)
+                return {"type": "skill_created", "result": result}
+            return {"error": "SkillLibrary not available"}
+
+        elif cmd == "/screen":
+            if self.vision:
+                return self.vision.analyze_screen()
+            return {"error": "VisionSystem not available"}
+
+        elif cmd.startswith("/screen "):
+            question = command[8:]
+            if self.vision:
+                return self.vision.analyze_screen(question=question)
+            return {"error": "VisionSystem not available"}
+
+        elif cmd == "/vision":
+            if self.vision:
+                return {"type": "vision_status", "status": self.vision.get_status()}
+            return {"error": "VisionSystem not available"}
+
+        elif cmd == "/tools":
+            if self.tool_executor:
+                return {"type": "tools", "tools": [t["name"] for t in self.tool_executor.get_tools()], "count": len(self.tool_executor.get_tools())}
+            return {"error": "ToolExecutor not available"}
+
         else:
-            return {"error": f"Unknown command: {command}"}
+            return {"error": f"Unknown command: {command}. Try /status, /system, /search, /code, /goal, /skills, /screen, /tools, /tasks"}
 
     # ==================== 상태 정보 ====================
 
     def get_status(self) -> Dict:
-        """JARVIS 전체 상태"""
+        """JARVIS 전체 상태 — Iteration 2"""
         uptime = time.time() - self.startup_time
         mem_stats = self.memory.get_stats()
         sys_info = self.computer.get_system_info()
 
-        return {
+        status = {
             "status": "operational",
+            "iteration": 2,
             "uptime_seconds": round(uptime, 0),
             "uptime_human": self._format_uptime(uptime),
             "providers": list(self.llm.providers.keys()) if hasattr(self.llm, 'providers') else [],
-            "agents": list(self.agents.agents.keys()) if hasattr(self.agents, 'agents') else [],
+            "agents": [k.value for k in self.agents.agents.keys()] if hasattr(self.agents, 'agents') else [],
             "memory": mem_stats,
             "system": {
                 "cpu": sys_info.get("cpu", {}).get("usage_percent", 0),
@@ -422,8 +608,27 @@ class JarvisEngine:
             },
             "voice": self.voice.get_status() if self.voice else {"available": False},
             "conversation_turns": len(self.conversation_history) // 2,
+            "advanced_systems": {
+                "reasoning": self.reasoning is not None,
+                "self_improvement": self.improvement is not None,
+                "knowledge_updater": self.knowledge_updater is not None,
+                "auto_update_active": self.knowledge_updater.is_running if self.knowledge_updater else False,
+                # Iteration 2
+                "tool_use_api": self._anthropic_client is not None and self.tool_executor is not None,
+                "skill_library": self.skills is not None,
+                "vision_system": self.vision is not None,
+                "orchestrator": self.orchestrator is not None,
+            },
+            "tools": {
+                "count": len(self.tool_executor.get_tools()) if self.tool_executor else 0,
+                "names": [t["name"] for t in self.tool_executor.get_tools()] if self.tool_executor else [],
+            },
+            "skills": self.skills.get_stats() if self.skills else {},
+            "orchestrator": self.orchestrator.get_stats() if self.orchestrator else {},
+            "vision": self.vision.get_status() if self.vision else {"available": False},
             "timestamp": datetime.now().isoformat(),
         }
+        return status
 
     def _format_uptime(self, seconds: float) -> str:
         """업타임 포맷"""
@@ -433,16 +638,30 @@ class JarvisEngine:
         return f"{h}시간 {m}분 {s}초"
 
     def greet(self) -> str:
-        """시작 인사"""
+        """시작 인사 — Iteration 2"""
         sys_info = self.computer.get_system_info()
         cpu = sys_info.get("cpu", {}).get("usage_percent", 0)
         mem = sys_info.get("memory", {}).get("used_percent", 0)
+        providers = list(self.llm.providers.keys()) if hasattr(self.llm, 'providers') and self.llm.providers else ["Mock"]
+        tool_count = len(self.tool_executor.get_tools()) if self.tool_executor else 0
+        skill_count = len(self.skills._registry) if self.skills else 0
 
-        return f"""안녕하세요, 사용자님. JARVIS가 온라인 상태입니다.
+        return f"""안녕하세요, 사용자님. JARVIS Iteration 2가 온라인입니다.
 
 🟢 모든 시스템 정상 작동 중
 📊 CPU: {cpu:.1f}% | 메모리: {mem:.1f}%
-🧠 LLM: {', '.join(self.llm.providers.keys()) if hasattr(self.llm, 'providers') and self.llm.providers else 'Mock mode'}
-🤖 에이전트: {len(self.agents.agents) if hasattr(self.agents, 'agents') else 0}개 대기 중
+🧠 LLM: {', '.join(providers)}
+🔧 도구: {tool_count}개 | 스킬: {skill_count}개
+🤖 에이전트: {len(self.agents.agents) if hasattr(self.agents, 'agents') else 0}개
+{'🔍 Vision: 활성화' if self.vision and self.vision.get_status().get('available') else ''}
+{'🎯 Orchestrator: 활성화' if self.orchestrator else ''}
+{'⚡ 실제 Tool Use API: 활성화' if self._anthropic_client and self.tool_executor else '⚠ Tool Use: 폴백 모드'}
 
-어떻게 도와드릴까요?"""
+**사용 가능한 특수 명령:**
+`/goal [복잡한목표]` — 자율 목표 달성
+`/skills` — 스킬 목록
+`/screen` — 화면 분석
+`/tools` — 사용 가능 도구
+`/reason [문제]` — 심층 추론
+
+어떻게 도와드릴까요, 사용자님?"""

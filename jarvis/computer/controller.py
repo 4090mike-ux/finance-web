@@ -350,3 +350,51 @@ class ComputerController:
                 "percent": swap.percent,
             }
         }
+
+    # ==================== Iteration 2 추가 메서드 ====================
+
+    def execute_command(self, command: str, timeout: int = 30) -> Dict:
+        """run_command의 별칭 — ToolExecutor 호환"""
+        return self.run_command(command, timeout=timeout)
+
+    def get_processes(self, top_n: int = 20, sort_by: str = "cpu") -> List[Dict]:
+        """get_running_processes의 확장 버전"""
+        return self.get_running_processes(top_n=top_n)
+
+    def write_file(self, path: str, content: str, encoding: str = "utf-8", append: bool = False) -> Dict:
+        """파일 쓰기 (인코딩 파라미터 추가)"""
+        try:
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            mode = "a" if append else "w"
+            with open(p, mode, encoding=encoding) as f:
+                f.write(content)
+            return {
+                "success": True,
+                "path": str(p.resolve()),
+                "bytes_written": len(content.encode(encoding)),
+                "append": append,
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e), "path": path}
+
+    def read_file(self, path: str, encoding: str = "utf-8", max_lines: int = 500) -> Dict:
+        """파일 읽기 (인코딩 파라미터 추가)"""
+        try:
+            p = Path(path)
+            if not p.exists():
+                return {"success": False, "error": f"File not found: {path}"}
+            with open(p, "r", encoding=encoding, errors="replace") as f:
+                lines = f.readlines()
+            truncated = len(lines) > max_lines
+            content = "".join(lines[:max_lines])
+            return {
+                "success": True,
+                "path": str(p.resolve()),
+                "content": content,
+                "total_lines": len(lines),
+                "truncated": truncated,
+                "size_bytes": p.stat().st_size,
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e), "path": path}

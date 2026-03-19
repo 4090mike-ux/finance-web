@@ -1,0 +1,236 @@
+{
+  "calculate": {
+    "name": "calculate",
+    "description": "수학 표현식 안전 계산",
+    "category": "math",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "expression",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "2026-03-20T08:46:53.627567",
+    "use_count": 1,
+    "success_count": 1,
+    "fail_count": 0,
+    "avg_duration_ms": 0.037299992982298136,
+    "tags": [
+      "math",
+      "calculate",
+      "compute"
+    ],
+    "file_path": ""
+  },
+  "format_table": {
+    "name": "format_table",
+    "description": "데이터를 Markdown 테이블로 포맷",
+    "category": "formatting",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "data",
+      "headers",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "",
+    "use_count": 0,
+    "success_count": 0,
+    "fail_count": 0,
+    "avg_duration_ms": 0.0,
+    "tags": [
+      "format",
+      "table",
+      "output"
+    ],
+    "file_path": ""
+  },
+  "summarize_text": {
+    "name": "summarize_text",
+    "description": "긴 텍스트를 요약",
+    "category": "nlp",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "text",
+      "max_sentences",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "",
+    "use_count": 0,
+    "success_count": 0,
+    "fail_count": 0,
+    "avg_duration_ms": 0.0,
+    "tags": [
+      "summary",
+      "text",
+      "nlp"
+    ],
+    "file_path": ""
+  },
+  "extract_keywords": {
+    "name": "extract_keywords",
+    "description": "텍스트에서 핵심 키워드 추출",
+    "category": "nlp",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "text",
+      "top_n",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "",
+    "use_count": 0,
+    "success_count": 0,
+    "fail_count": 0,
+    "avg_duration_ms": 0.0,
+    "tags": [
+      "keyword",
+      "extract",
+      "nlp"
+    ],
+    "file_path": ""
+  },
+  "json_to_table": {
+    "name": "json_to_table",
+    "description": "JSON 데이터를 읽기 좋은 형식으로 변환",
+    "category": "formatting",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "data",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "",
+    "use_count": 0,
+    "success_count": 0,
+    "fail_count": 0,
+    "avg_duration_ms": 0.0,
+    "tags": [
+      "json",
+      "format",
+      "convert"
+    ],
+    "file_path": ""
+  },
+  "diff_texts": {
+    "name": "diff_texts",
+    "description": "두 텍스트의 차이점 분석",
+    "category": "analysis",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "text_a",
+      "text_b",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "",
+    "use_count": 0,
+    "success_count": 0,
+    "fail_count": 0,
+    "avg_duration_ms": 0.0,
+    "tags": [
+      "diff",
+      "compare",
+      "text"
+    ],
+    "file_path": ""
+  },
+  "count_words": {
+    "name": "count_words",
+    "description": "텍스트 단어/문자/줄 수 통계",
+    "category": "analysis",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "text",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "2026-03-20T08:46:53.627567",
+    "use_count": 1,
+    "success_count": 1,
+    "fail_count": 0,
+    "avg_duration_ms": 0.16060000052675605,
+    "tags": [
+      "count",
+      "words",
+      "stats"
+    ],
+    "file_path": ""
+  },
+  "detect_language": {
+    "name": "detect_language",
+    "description": "텍스트 언어 감지",
+    "category": "nlp",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "text",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "2026-03-20T08:46:53.629570",
+    "use_count": 1,
+    "success_count": 1,
+    "fail_count": 0,
+    "avg_duration_ms": 1.5275999903678894,
+    "tags": [
+      "language",
+      "detect",
+      "nlp"
+    ],
+    "file_path": ""
+  },
+  "extract_urls": {
+    "name": "extract_urls",
+    "description": "텍스트에서 URL 추출",
+    "category": "extraction",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "text",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "",
+    "use_count": 0,
+    "success_count": 0,
+    "fail_count": 0,
+    "avg_duration_ms": 0.0,
+    "tags": [
+      "url",
+      "extract",
+      "links"
+    ],
+    "file_path": ""
+  },
+  "timestamp_now": {
+    "name": "timestamp_now",
+    "description": "현재 시각 다양한 형식으로 반환",
+    "category": "utility",
+    "author": "JARVIS",
+    "version": "1.0",
+    "params": [
+      "fmt",
+      "kw"
+    ],
+    "created_at": "2026-03-20T08:46:48.777567",
+    "last_used": "",
+    "use_count": 0,
+    "success_count": 0,
+    "fail_count": 0,
+    "avg_duration_ms": 0.0,
+    "tags": [
+      "time",
+      "date",
+      "timestamp"
+    ],
+    "file_path": ""
+  }
+}

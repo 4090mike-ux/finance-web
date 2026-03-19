@@ -263,6 +263,13 @@ class LLMManager:
             finish_reason="mock",
         )
 
+    def add_provider(self, name: str, provider) -> None:
+        """런타임에 새 프로바이더 추가 (Iteration 2: Ollama 등)"""
+        self.providers[name] = provider
+        if not self.fallback and name != self.primary:
+            self.fallback = name
+        logger.info(f"Provider added: {name}")
+
     @property
     def available_models(self) -> Dict[str, List[str]]:
         """사용 가능한 모델 목록"""
@@ -275,4 +282,7 @@ class LLMManager:
             ]
         if "openai" in self.providers:
             models["openai"] = ["gpt-4o", "gpt-4o-mini", "o1-mini"]
+        if "ollama" in self.providers:
+            ollama = self.providers["ollama"]
+            models["ollama"] = ollama.list_models() if hasattr(ollama, "list_models") else []
         return models

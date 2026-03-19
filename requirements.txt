@@ -9,8 +9,8 @@ pandas
 numpy
 flask-socketio
 
-# JARVIS dependencies
-anthropic
+# JARVIS Core
+anthropic>=0.39.0
 openai
 duckduckgo-search
 httpx
@@ -23,7 +23,20 @@ gitpython
 psutil
 watchdog
 cryptography
-pyaudio
 chromadb
 sentence-transformers
 tiktoken
+
+# Iteration 2 — Vision & Screen Control
+Pillow
+pyautogui
+
+# Iteration 2 — Audio (optional)
+pyaudio
+
+# Iteration 2 — Web scraping enhanced
+beautifulsoup4
+lxml
+
+# Iteration 2 — UI
+rich
