@@ -32,6 +32,11 @@ class JarvisEngine:
         skill_library=None,
         vision_system=None,
         orchestrator=None,
+        # Iteration 3
+        autonomous_loop=None,
+        self_modifier=None,
+        deep_researcher=None,
+        code_intelligence=None,
     ):
         self.llm = llm_manager
         self.memory = memory_manager
@@ -43,6 +48,11 @@ class JarvisEngine:
         self.skills = skill_library
         self.vision = vision_system
         self.orchestrator = orchestrator
+        # Iteration 3
+        self.autonomous_loop = autonomous_loop
+        self.self_modifier = self_modifier
+        self.deep_researcher = deep_researcher
+        self.code_intelligence = code_intelligence
 
         self.conversation_history = []
         self.is_thinking = False
@@ -86,7 +96,7 @@ class JarvisEngine:
             logger.warning(f"ToolExecutor init failed: {e}")
             self.tool_executor = None
 
-        logger.info("JARVIS Engine Iteration 2 — All systems operational")
+        logger.info("JARVIS Engine Iteration 3 — All systems operational")
 
     # ==================== Anthropic 클라이언트 초기화 ====================
 
@@ -582,8 +592,88 @@ class JarvisEngine:
                 return {"type": "tools", "tools": [t["name"] for t in self.tool_executor.get_tools()], "count": len(self.tool_executor.get_tools())}
             return {"error": "ToolExecutor not available"}
 
+        # ── Iteration 3 신규 명령 ──
+        elif cmd.startswith("/research "):
+            topic = command[10:]
+            if self.deep_researcher:
+                report = self.deep_researcher.research(topic, depth=2)
+                return {"type": "research", "report": self.deep_researcher.format_report_markdown(report)}
+            return {"type": "research_fallback", "result": self.chat(f"'{topic}'에 대해 연구하고 정리해줘")["response"]}
+
+        elif cmd.startswith("/deep_research "):
+            topic = command[15:]
+            if self.deep_researcher:
+                report = self.deep_researcher.research(topic, depth=4)
+                return {"type": "deep_research", "report": self.deep_researcher.format_report_markdown(report)}
+            return {"error": "DeepResearcher not available"}
+
+        elif cmd.startswith("/code_gen "):
+            req = command[10:]
+            if self.code_intelligence:
+                result = self.code_intelligence.generate(req)
+                return {"type": "code_gen", "code": result.code, "explanation": result.explanation, "tests": result.tests}
+            return {"error": "CodeIntelligence not available"}
+
+        elif cmd.startswith("/debug "):
+            code_snippet = command[7:]
+            if self.code_intelligence:
+                bugs = self.code_intelligence.detect_bugs(code_snippet)
+                return {"type": "debug", "bugs": [{"severity": b.severity, "location": b.location, "description": b.description, "fix": b.fix_suggestion} for b in bugs]}
+            return {"error": "CodeIntelligence not available"}
+
+        elif cmd.startswith("/explain "):
+            code_snippet = command[9:]
+            if self.code_intelligence:
+                explanation = self.code_intelligence.explain(code_snippet)
+                return {"type": "explanation", "result": explanation}
+            return self.chat(f"다음 코드를 설명해줘:\n{code_snippet}")
+
+        elif cmd == "/autoloop":
+            if self.autonomous_loop:
+                return {"type": "autoloop_status", "status": self.autonomous_loop.get_status()}
+            return {"error": "AutonomousLoop not available"}
+
+        elif cmd.startswith("/autoloop "):
+            action = command[10:].strip()
+            if not self.autonomous_loop:
+                return {"error": "AutonomousLoop not available"}
+            if action == "start":
+                self.autonomous_loop.start()
+                return {"type": "autoloop", "action": "started"}
+            elif action == "stop":
+                self.autonomous_loop.stop()
+                return {"type": "autoloop", "action": "stopped"}
+            else:
+                result = self.autonomous_loop.trigger_now(action)
+                return {"type": "autoloop_trigger", "result": result}
+
+        elif cmd == "/events":
+            if self.autonomous_loop:
+                return {"type": "events", "events": self.autonomous_loop.get_recent_events(20)}
+            return {"error": "AutonomousLoop not available"}
+
+        elif cmd == "/selfmod":
+            if self.self_modifier:
+                analysis = self.self_modifier.analyze_all()
+                return {"type": "selfmod_analysis", "files": analysis, "status": self.self_modifier.get_status()}
+            return {"error": "SelfModifier not available"}
+
+        elif cmd.startswith("/selfmod analyze "):
+            file_path = command[17:]
+            if self.self_modifier:
+                analysis = self.self_modifier.analyze_file(file_path)
+                return {"type": "selfmod_file", "file": file_path, "issues": analysis.issues, "suggestions": analysis.suggestions, "complexity": analysis.complexity_score}
+            return {"error": "SelfModifier not available"}
+
+        elif cmd.startswith("/selfmod suggest "):
+            file_path = command[17:]
+            if self.self_modifier:
+                result = self.self_modifier.suggest_improvement(file_path)
+                return {"type": "selfmod_suggestion", "result": result}
+            return {"error": "SelfModifier not available"}
+
         else:
-            return {"error": f"Unknown command: {command}. Try /status, /system, /search, /code, /goal, /skills, /screen, /tools, /tasks"}
+            return {"error": f"Unknown command: {command}. Try /status, /system, /research, /code_gen, /debug, /autoloop, /selfmod, /events"}
 
     # ==================== 상태 정보 ====================
 
@@ -626,6 +716,11 @@ class JarvisEngine:
             "skills": self.skills.get_stats() if self.skills else {},
             "orchestrator": self.orchestrator.get_stats() if self.orchestrator else {},
             "vision": self.vision.get_status() if self.vision else {"available": False},
+            # Iteration 3
+            "autonomous_loop": self.autonomous_loop.get_status() if self.autonomous_loop else {"is_running": False},
+            "self_modifier": self.self_modifier.get_status() if self.self_modifier else {"available": False},
+            "deep_researcher": {"available": self.deep_researcher is not None},
+            "code_intelligence": {"available": self.code_intelligence is not None},
             "timestamp": datetime.now().isoformat(),
         }
         return status
@@ -638,30 +733,40 @@ class JarvisEngine:
         return f"{h}시간 {m}분 {s}초"
 
     def greet(self) -> str:
-        """시작 인사 — Iteration 2"""
+        """시작 인사 — Iteration 3"""
         sys_info = self.computer.get_system_info()
         cpu = sys_info.get("cpu", {}).get("usage_percent", 0)
         mem = sys_info.get("memory", {}).get("used_percent", 0)
         providers = list(self.llm.providers.keys()) if hasattr(self.llm, 'providers') and self.llm.providers else ["Mock"]
         tool_count = len(self.tool_executor.get_tools()) if self.tool_executor else 0
         skill_count = len(self.skills._registry) if self.skills else 0
+        auto_active = self.autonomous_loop and self.autonomous_loop.is_running
 
-        return f"""안녕하세요, 사용자님. JARVIS Iteration 2가 온라인입니다.
+        return f"""안녕하세요, 사용자님. **JARVIS Iteration 3** 가 온라인입니다.
 
-🟢 모든 시스템 정상 작동 중
-📊 CPU: {cpu:.1f}% | 메모리: {mem:.1f}%
-🧠 LLM: {', '.join(providers)}
-🔧 도구: {tool_count}개 | 스킬: {skill_count}개
-🤖 에이전트: {len(self.agents.agents) if hasattr(self.agents, 'agents') else 0}개
-{'🔍 Vision: 활성화' if self.vision and self.vision.get_status().get('available') else ''}
-{'🎯 Orchestrator: 활성화' if self.orchestrator else ''}
-{'⚡ 실제 Tool Use API: 활성화' if self._anthropic_client and self.tool_executor else '⚠ Tool Use: 폴백 모드'}
+JARVIS — Just A Rather Very Intelligent System
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**사용 가능한 특수 명령:**
-`/goal [복잡한목표]` — 자율 목표 달성
-`/skills` — 스킬 목록
-`/screen` — 화면 분석
-`/tools` — 사용 가능 도구
-`/reason [문제]` — 심층 추론
+시스템 상태:
+  CPU: {cpu:.1f}% | 메모리: {mem:.1f}%
+  LLM: {', '.join(providers)}
+  도구: {tool_count}개 | 스킬: {skill_count}개
+  에이전트: {len(self.agents.agents) if hasattr(self.agents, 'agents') else 0}개
+
+활성 시스템:
+  {'자율 루프: 활성화 (백그라운드 학습 중)' if auto_active else '자율 루프: 대기 (/autoloop start)'}
+  {'자기 수정: 준비' if self.self_modifier else ''}
+  {'딥 리서치: 준비' if self.deep_researcher else ''}
+  {'코드 인텔리전스: 준비' if self.code_intelligence else ''}
+  {'Tool Use API: 활성화' if self._anthropic_client and self.tool_executor else 'Tool Use: 폴백 모드'}
+
+Iteration 3 명령어:
+  `/research [주제]`      — 딥 멀티홉 연구
+  `/code_gen [요구사항]`  — 코드 자동 생성
+  `/debug [코드]`         — 버그 자동 감지
+  `/autoloop start`       — 자율 루프 시작
+  `/events`               — 자율 이벤트 로그
+  `/selfmod`              — 자기 코드 분석
+  `/goal [복잡한목표]`    — 오케스트레이터 실행
 
 어떻게 도와드릴까요, 사용자님?"""

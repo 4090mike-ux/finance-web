@@ -42,6 +42,11 @@ from jarvis.skills import SkillLibrary
 from jarvis.computer.vision import VisionSystem
 from jarvis.agents.orchestrator import Orchestrator
 from jarvis.llm.ollama_provider import OllamaProvider
+# Iteration 3
+from jarvis.core.autonomous_loop import AutonomousLoop
+from jarvis.core.self_modifier import SelfModifier
+from jarvis.research.deep_researcher import DeepResearcher
+from jarvis.agents.code_intelligence import CodeIntelligence
 
 # ==================== 앱 초기화 ====================
 
@@ -135,8 +140,25 @@ def create_jarvis() -> JarvisEngine:
 
     orchestrator.on_progress(orch_progress)
 
-    # 최종 엔진 (Orchestrator 포함)
-    jarvis = JarvisEngine(
+    # ── Iteration 3 신규 모듈 ──
+    deep_researcher = DeepResearcher(
+        web_intelligence=web,
+        llm_manager=llm,
+        memory_manager=memory,
+    )
+    logger.info("DeepResearcher initialized")
+
+    code_intelligence = CodeIntelligence(
+        llm_manager=llm,
+        code_executor=executor,
+    )
+    logger.info("CodeIntelligence initialized")
+
+    self_modifier = SelfModifier(llm_manager=llm)
+    logger.info("SelfModifier initialized")
+
+    # 최종 엔진 (Orchestrator + Iteration 3 포함)
+    final_jarvis = JarvisEngine(
         llm_manager=llm,
         memory_manager=memory,
         computer_controller=computer,
@@ -147,10 +169,33 @@ def create_jarvis() -> JarvisEngine:
         skill_library=skills,
         vision_system=vision,
         orchestrator=orchestrator,
+        # Iteration 3
+        self_modifier=self_modifier,
+        deep_researcher=deep_researcher,
+        code_intelligence=code_intelligence,
     )
 
-    logger.info("JARVIS Iteration 2 — All systems operational")
-    return jarvis
+    # 자율 루프 초기화 (JarvisEngine 참조 포함)
+    def auto_event_callback(event):
+        socketio.emit("autonomous_event", {
+            "type": event.type.value,
+            "title": event.title,
+            "content": event.content,
+            "priority": event.priority,
+            "timestamp": event.timestamp,
+        }, namespace="/jarvis")
+
+    autonomous_loop = AutonomousLoop(
+        jarvis_engine=final_jarvis,
+        memory_manager=memory,
+        web_intelligence=web,
+        skill_library=skills,
+        event_callback=auto_event_callback,
+    )
+    final_jarvis.autonomous_loop = autonomous_loop
+
+    logger.info("JARVIS Iteration 3 — All systems operational")
+    return final_jarvis
 
 
 # 전역 JARVIS 인스턴스
@@ -615,7 +660,6 @@ def api_tools():
 
 @app.route("/jarvis/api/tools/run", methods=["POST"])
 def api_tool_run():
-    """단일 도구 직접 실행"""
     try:
         data = request.get_json()
         tool_name = data.get("tool")
@@ -625,6 +669,223 @@ def api_tool_run():
             return jsonify({"error": "ToolExecutor not available"}), 503
         result = j.tool_executor.execute(tool_name, tool_input)
         return jsonify({"tool": tool_name, "result": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 3: 딥 리서치 API ====================
+
+@app.route("/jarvis/api/research", methods=["POST"])
+def api_research():
+    """딥 멀티홉 리서치"""
+    try:
+        data = request.get_json()
+        topic = data.get("topic", "")
+        depth = int(data.get("depth", 2))
+        j = get_jarvis()
+        if not j.deep_researcher:
+            return jsonify({"error": "DeepResearcher not available"}), 503
+        report = j.deep_researcher.research(topic, depth=depth)
+        return jsonify({
+            "topic": report.topic,
+            "summary": report.executive_summary,
+            "findings": report.key_findings,
+            "knowledge_gaps": report.knowledge_gaps,
+            "follow_up": report.follow_up_questions,
+            "sources_count": len(report.sources),
+            "confidence": report.confidence,
+            "markdown": j.deep_researcher.format_report_markdown(report),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 3: 코드 인텔리전스 API ====================
+
+@app.route("/jarvis/api/code/generate", methods=["POST"])
+def api_code_generate():
+    """코드 자동 생성"""
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        if not j.code_intelligence:
+            return jsonify({"error": "CodeIntelligence not available"}), 503
+        result = j.code_intelligence.generate(
+            requirement=data.get("requirement", ""),
+            language=data.get("language", "python"),
+            include_tests=data.get("include_tests", True),
+            style=data.get("style", "production"),
+        )
+        return jsonify({
+            "code": result.code,
+            "explanation": result.explanation,
+            "tests": result.tests,
+            "complexity": result.complexity,
+            "language": result.language,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/code/debug", methods=["POST"])
+def api_code_debug():
+    """코드 버그 감지 및 수정"""
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        if not j.code_intelligence:
+            return jsonify({"error": "CodeIntelligence not available"}), 503
+        code = data.get("code", "")
+        language = data.get("language", "python")
+        bugs = j.code_intelligence.detect_bugs(code, language)
+        fixed_code = j.code_intelligence.fix_bugs(code, bugs, language) if bugs else code
+        return jsonify({
+            "bugs": [
+                {"severity": b.severity, "location": b.location,
+                 "description": b.description, "fix": b.fix_suggestion}
+                for b in bugs
+            ],
+            "bugs_count": len(bugs),
+            "fixed_code": fixed_code,
+            "clean": len(bugs) == 0,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/code/explain", methods=["POST"])
+def api_code_explain():
+    """코드 설명"""
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        if not j.code_intelligence:
+            return jsonify({"error": "CodeIntelligence not available"}), 503
+        explanation = j.code_intelligence.explain(
+            code=data.get("code", ""),
+            detail_level=data.get("detail", "medium"),
+        )
+        return jsonify({"explanation": explanation})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/code/optimize", methods=["POST"])
+def api_code_optimize():
+    """코드 최적화"""
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        if not j.code_intelligence:
+            return jsonify({"error": "CodeIntelligence not available"}), 503
+        result = j.code_intelligence.optimize(
+            code=data.get("code", ""),
+            language=data.get("language", "python"),
+            goal=data.get("goal", "speed"),
+        )
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 3: 자율 루프 API ====================
+
+@app.route("/jarvis/api/autoloop/status")
+def api_autoloop_status():
+    try:
+        j = get_jarvis()
+        if not j.autonomous_loop:
+            return jsonify({"available": False})
+        return jsonify(j.autonomous_loop.get_status())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/autoloop/start", methods=["POST"])
+def api_autoloop_start():
+    try:
+        j = get_jarvis()
+        if not j.autonomous_loop:
+            return jsonify({"error": "AutonomousLoop not available"}), 503
+        j.autonomous_loop.start()
+        return jsonify({"success": True, "status": "started"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/autoloop/stop", methods=["POST"])
+def api_autoloop_stop():
+    try:
+        j = get_jarvis()
+        if not j.autonomous_loop:
+            return jsonify({"error": "AutonomousLoop not available"}), 503
+        j.autonomous_loop.stop()
+        return jsonify({"success": True, "status": "stopped"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/autoloop/events")
+def api_autoloop_events():
+    try:
+        j = get_jarvis()
+        if not j.autonomous_loop:
+            return jsonify({"events": []})
+        n = int(request.args.get("n", 20))
+        event_type = request.args.get("type")
+        return jsonify({"events": j.autonomous_loop.get_recent_events(n, event_type)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/autoloop/trigger", methods=["POST"])
+def api_autoloop_trigger():
+    try:
+        data = request.get_json()
+        task = data.get("task", "knowledge_update")
+        j = get_jarvis()
+        if not j.autonomous_loop:
+            return jsonify({"error": "AutonomousLoop not available"}), 503
+        result = j.autonomous_loop.trigger_now(task)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 3: 자기 수정 API ====================
+
+@app.route("/jarvis/api/selfmod/status")
+def api_selfmod_status():
+    try:
+        j = get_jarvis()
+        if not j.self_modifier:
+            return jsonify({"available": False})
+        return jsonify({"available": True, **j.self_modifier.get_status()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/selfmod/analyze")
+def api_selfmod_analyze():
+    try:
+        j = get_jarvis()
+        if not j.self_modifier:
+            return jsonify({"error": "SelfModifier not available"}), 503
+        return jsonify({"files": j.self_modifier.analyze_all()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/selfmod/suggest", methods=["POST"])
+def api_selfmod_suggest():
+    try:
+        data = request.get_json()
+        file_path = data.get("file_path", "")
+        j = get_jarvis()
+        if not j.self_modifier:
+            return jsonify({"error": "SelfModifier not available"}), 503
+        result = j.self_modifier.suggest_improvement(file_path, focus=data.get("focus", "general"))
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -771,6 +1032,77 @@ def ws_analyze_screen(data):
         emit("error", {"message": str(e)})
 
 
+@socketio.on("deep_research", namespace="/jarvis")
+def ws_deep_research(data):
+    """딥 리서치 (실시간 스트리밍)"""
+    topic = data.get("topic", "").strip()
+    depth = int(data.get("depth", 2))
+    if not topic:
+        return
+
+    emit("thinking", {"status": True})
+    emit("research_start", {"topic": topic})
+    try:
+        j = get_jarvis()
+        if j.deep_researcher:
+            for event in j.deep_researcher.research_streaming(topic, depth=depth):
+                emit("research_progress", event)
+                socketio.sleep(0)
+        else:
+            result = j.chat(f"'{topic}'에 대해 자세히 연구하고 보고서 형식으로 정리해줘")
+            emit("research_progress", {"type": "done", "report": {"summary": result["response"]}})
+    except Exception as e:
+        emit("error", {"message": str(e)})
+    finally:
+        emit("thinking", {"status": False})
+
+
+@socketio.on("code_generate", namespace="/jarvis")
+def ws_code_generate(data):
+    """코드 생성"""
+    requirement = data.get("requirement", "")
+    language = data.get("language", "python")
+    emit("thinking", {"status": True})
+    try:
+        j = get_jarvis()
+        if j.code_intelligence:
+            result = j.code_intelligence.generate(requirement, language=language)
+            emit("code_result", {
+                "code": result.code,
+                "explanation": result.explanation,
+                "tests": result.tests,
+                "complexity": result.complexity,
+            })
+        else:
+            chat_result = j.chat(f"{language}로 다음을 구현해줘: {requirement}")
+            emit("code_result", {"code": chat_result["response"]})
+    except Exception as e:
+        emit("error", {"message": str(e)})
+    finally:
+        emit("thinking", {"status": False})
+
+
+@socketio.on("autoloop_control", namespace="/jarvis")
+def ws_autoloop_control(data):
+    """자율 루프 제어"""
+    action = data.get("action", "status")
+    try:
+        j = get_jarvis()
+        if not j.autonomous_loop:
+            emit("autoloop_status", {"error": "Not available"})
+            return
+        if action == "start":
+            j.autonomous_loop.start()
+            emit("autoloop_status", {"status": "started"})
+        elif action == "stop":
+            j.autonomous_loop.stop()
+            emit("autoloop_status", {"status": "stopped"})
+        else:
+            emit("autoloop_status", j.autonomous_loop.get_status())
+    except Exception as e:
+        emit("error", {"message": str(e)})
+
+
 # ==================== 시스템 모니터 백그라운드 ====================
 
 def system_monitor_thread():
@@ -794,8 +1126,13 @@ def system_monitor_thread():
 
 if __name__ == "__main__":
     # JARVIS 사전 초기화
-    logger.info("Starting JARVIS system...")
-    get_jarvis()
+    logger.info("Starting JARVIS Iteration 3 system...")
+    j = get_jarvis()
+
+    # 자율 루프 자동 시작
+    if j.autonomous_loop:
+        j.autonomous_loop.start()
+        logger.info("Autonomous Loop auto-started")
 
     # 시스템 모니터 시작
     socketio.start_background_task(system_monitor_thread)
