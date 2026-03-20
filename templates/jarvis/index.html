@@ -236,6 +236,82 @@
   .improve-delta{font-size:11px;color:var(--accent3);font-family:var(--font-mono)}
   .insight-item{padding:6px 8px;background:rgba(0,255,159,.05);border-radius:4px;margin:3px 0;font-size:11px;border-left:2px solid var(--accent3)}
 
+  /* EMOTION TAB — Iteration 9 */
+  #tab-emotion{display:flex;flex-direction:column;overflow:hidden;padding:16px;gap:12px}
+  .emotion-ring-container{display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+  .emotion-ring{width:80px;height:80px;border-radius:50%;border:6px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;transition:all 0.8s ease;box-shadow:0 0 20px currentColor}
+  .emotion-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px}
+  .emotion-metric-box{background:var(--panel2);border-radius:var(--radius);padding:10px;text-align:center;border:1px solid var(--border)}
+  .emotion-metric-label{font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase}
+  .emotion-metric-val{font-size:18px;font-weight:700;font-family:var(--font-mono);color:var(--accent)}
+  .emotion-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .emotion-bar-label{font-size:10px;color:var(--text2);width:80px;flex-shrink:0}
+  .emotion-bar-track{flex:1;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}
+  .emotion-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
+  .emotion-history{flex:1;overflow-y:auto}
+  .emotion-history-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #0d1a27;font-size:11px}
+  .emotion-hist-emoji{font-size:16px;min-width:24px}
+  .emotion-hist-name{color:var(--accent);min-width:90px}
+  .emotion-hist-time{font-size:10px;color:var(--text2);margin-left:auto}
+
+  /* SIMULATE TAB — Iteration 9 */
+  #tab-simulate{display:flex;flex-direction:column;overflow:hidden}
+  #sim-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #sim-question-row{display:flex;gap:8px;margin-bottom:8px}
+  #sim-question{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none}
+  #sim-context{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;outline:none;resize:none;height:50px}
+  .btn-sim{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:linear-gradient(135deg,#7b2fff,#5a1fe0);color:white}
+  #sim-depth-select{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px}
+  #sim-output{flex:1;overflow-y:auto;padding:16px}
+  .sim-branch{padding:12px 14px;background:var(--panel2);border-radius:var(--radius);margin-bottom:10px;border-left:4px solid var(--border);position:relative}
+  .sim-branch.best{border-left-color:var(--accent3)}
+  .sim-branch-action{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px}
+  .sim-branch-prob{position:absolute;top:12px;right:12px;font-size:12px;font-family:var(--font-mono);color:var(--accent3);font-weight:700}
+  .sim-branch-reasoning{font-size:11px;color:var(--text2);line-height:1.6;margin-top:4px}
+  .sim-branch-meta{display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--text2)}
+  .sim-prob-bar{height:4px;background:var(--panel);border-radius:2px;margin-top:6px;overflow:hidden}
+  .sim-prob-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent3));border-radius:2px;transition:width 0.5s}
+
+  /* GENESIS TAB — Iteration 9 */
+  #tab-genesis{display:flex;flex-direction:column;overflow:hidden}
+  #genesis-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #genesis-task-row{display:flex;gap:8px;margin-bottom:8px}
+  #genesis-task{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none}
+  .btn-genesis{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:linear-gradient(135deg,#00ff9f,#009955);color:#000}
+  #genesis-output{flex:1;overflow-y:auto;padding:16px}
+  .agent-card-gen{padding:14px;background:var(--panel2);border-radius:var(--radius);margin-bottom:10px;border:1px solid var(--border)}
+  .agent-card-gen.active{border-color:var(--accent3)}
+  .agent-card-gen.retired{border-color:var(--red);opacity:0.6}
+  .agent-gen-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .agent-gen-name{font-size:13px;font-weight:700;color:var(--accent3);font-family:var(--font-mono)}
+  .agent-gen-spec{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(0,255,159,.1);color:var(--accent3);border:1px solid rgba(0,255,159,.3)}
+  .agent-gen-fitness{font-size:12px;font-family:var(--font-mono);color:var(--accent)}
+  .agent-gen-traits{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+  .trait-badge{font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(123,47,255,.15);color:var(--accent2);border:1px solid rgba(123,47,255,.3)}
+  .agent-gen-task{font-size:11px;color:var(--text2);margin-top:4px;border-left:2px solid var(--border);padding-left:8px}
+  .fitness-bar{height:4px;background:var(--panel);border-radius:2px;margin-top:8px;overflow:hidden}
+  .fitness-fill{height:100%;border-radius:2px;transition:width 0.5s}
+
+  /* WISDOM TAB — Iteration 9 */
+  #tab-wisdom{display:flex;flex-direction:column;overflow:hidden;padding:16px;gap:12px}
+  .wisdom-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex-shrink:0}
+  .wisdom-stat-box{background:var(--panel2);border-radius:var(--radius);padding:10px;text-align:center;border:1px solid var(--border)}
+  .wisdom-stat-val{font-size:22px;font-weight:700;color:var(--accent);font-family:var(--font-mono)}
+  .wisdom-stat-label{font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:2px}
+  .wisdom-section-title{font-size:10px;color:var(--accent2);letter-spacing:2px;font-weight:700;margin-bottom:8px}
+  .skill-card{padding:10px 12px;background:var(--panel2);border-radius:var(--radius);margin-bottom:6px;border-left:3px solid var(--accent2)}
+  .skill-card-name{font-size:12px;font-weight:600;color:var(--accent2)}
+  .skill-card-desc{font-size:11px;color:var(--text2);margin-top:3px}
+  .skill-card-meta{display:flex;gap:10px;margin-top:5px;font-size:10px;color:var(--text2)}
+  .principle-card{padding:10px 12px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.2);border-radius:var(--radius);margin-bottom:6px}
+  .principle-card-title{font-size:12px;font-weight:600;color:var(--accent)}
+  .principle-card-text{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5}
+  .domain-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .domain-bar-label{font-size:10px;color:var(--text2);width:70px;flex-shrink:0}
+  .domain-count{font-size:10px;font-family:var(--font-mono);color:var(--accent);width:24px;flex-shrink:0}
+  .domain-bar-track{flex:1;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden}
+  .domain-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:3px}
+
   /* ToT TAB */
   #tab-tot{display:flex;flex-direction:column;overflow:hidden}
   #tot-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -387,6 +463,10 @@
       <button class="tab-btn" data-tab="webagent">🌐 WEB</button>
       <button class="tab-btn" data-tab="improve">🔄 IMPROVE</button>
       <button class="tab-btn" data-tab="mind">🌌 MIND</button>
+      <button class="tab-btn" data-tab="emotion">💜 EMOTION</button>
+      <button class="tab-btn" data-tab="simulate">🌐 SIMULATE</button>
+      <button class="tab-btn" data-tab="genesis">🧬 GENESIS</button>
+      <button class="tab-btn" data-tab="wisdom">📚 WISDOM</button>
     </div>
 
     <!-- CHAT TAB -->
@@ -394,7 +474,7 @@
       <div id="chat-messages">
         <div class="msg jarvis">
           <div class="msg-avatar">🤖</div>
-          <div><div class="msg-bubble"><strong>JARVIS Iteration 6 — Full Autonomy</strong> 온라인.<br>총사령관 · 실시간 모니터 · 기억의 궁전 · Tree of Thoughts · 의식 루프 · 에이전트 스웜 활성화.</div><div class="msg-meta">JARVIS · 지금</div></div>
+          <div><div class="msg-bubble"><strong>JARVIS Iteration 9 — Superhuman Intelligence</strong> 온라인.<br>감정지능 · RL최적화 · 멀티버스 시뮬레이터 · 에이전트 창조 · 경험증류 활성화.</div><div class="msg-meta">JARVIS · 지금</div></div>
         </div>
       </div>
       <div id="input-area">
@@ -679,6 +759,112 @@
       </div>
       <div id="improve-output"><div style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">Recursive Self-Improvement — 모든 AI 시스템을 체인으로 연결<br>MetaLearner → KG → Consciousness → GoalHierarchy → ToT → Swarm → MemoryPalace → ...</div></div>
     </div>
+
+    <!-- EMOTION TAB — Iteration 9 -->
+    <div class="tab-content" id="tab-emotion">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;flex-shrink:0">
+        <div style="flex:1;min-width:180px">
+          <div class="emotion-ring-container">
+            <div class="emotion-ring" id="emotion-ring" style="border-color:#7aa7c7">😐</div>
+          </div>
+          <div style="text-align:center;margin-top:8px">
+            <div style="font-size:14px;font-weight:700;color:var(--accent)" id="emotion-name">NEUTRAL</div>
+            <div style="font-size:10px;color:var(--text2);margin-top:2px" id="emotion-tone">톤: neutral</div>
+          </div>
+        </div>
+        <div style="flex:2;min-width:200px">
+          <div class="emotion-metrics">
+            <div class="emotion-metric-box">
+              <div class="emotion-metric-label">VALENCE</div>
+              <div class="emotion-metric-val" id="emo-valence">0.00</div>
+              <div style="font-size:9px;color:var(--text2)">-1 ~ +1</div>
+            </div>
+            <div class="emotion-metric-box">
+              <div class="emotion-metric-label">AROUSAL</div>
+              <div class="emotion-metric-val" id="emo-arousal">0.30</div>
+              <div style="font-size:9px;color:var(--text2)">0 ~ 1</div>
+            </div>
+            <div class="emotion-metric-box">
+              <div class="emotion-metric-label">INTENSITY</div>
+              <div class="emotion-metric-val" id="emo-intensity">0.50</div>
+              <div style="font-size:9px;color:var(--text2)">0 ~ 1</div>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <div class="emotion-bar-row"><div class="emotion-bar-label">긍정도(+)</div><div class="emotion-bar-track"><div class="emotion-bar-fill" id="emo-bar-pos" style="width:50%;background:linear-gradient(90deg,var(--accent3),#00aa6e)"></div></div></div>
+            <div class="emotion-bar-row"><div class="emotion-bar-label">부정도(-)</div><div class="emotion-bar-track"><div class="emotion-bar-fill" id="emo-bar-neg" style="width:0%;background:linear-gradient(90deg,var(--red),#cc2244)"></div></div></div>
+            <div class="emotion-bar-row"><div class="emotion-bar-label">활성화</div><div class="emotion-bar-track"><div class="emotion-bar-fill" id="emo-bar-arousal" style="width:30%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div style="flex-shrink:0;margin-top:8px">
+        <div style="font-size:10px;color:var(--accent2);letter-spacing:1px;margin-bottom:6px;font-weight:700">RL 최적화 통계</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+          <div class="emotion-metric-box"><div class="emotion-metric-label">EPSILON</div><div class="emotion-metric-val" id="rl-epsilon" style="font-size:14px">0.30</div></div>
+          <div class="emotion-metric-box"><div class="emotion-metric-label">STEPS</div><div class="emotion-metric-val" id="rl-steps" style="font-size:14px">0</div></div>
+          <div class="emotion-metric-box"><div class="emotion-metric-label">AVG REWARD</div><div class="emotion-metric-val" id="rl-reward" style="font-size:14px">0.00</div></div>
+          <div class="emotion-metric-box"><div class="emotion-metric-label">BEST ACTION</div><div class="emotion-metric-val" id="rl-best" style="font-size:11px">-</div></div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;margin-top:8px">
+        <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:6px">감정 이력</div>
+        <div id="emotion-history-list"><div style="color:var(--text2);font-size:11px;text-align:center;margin-top:20px">감정 이력 없음</div></div>
+      </div>
+    </div>
+
+    <!-- SIMULATE TAB — Iteration 9 -->
+    <div class="tab-content" id="tab-simulate">
+      <div id="sim-input-area">
+        <div id="sim-question-row">
+          <input type="text" id="sim-question" placeholder="What-If 질문: '만약 AI가 모든 일자리를 대체한다면?', '기후 변화를 멈추는 최선의 방법은?'" />
+          <select id="sim-depth-select"><option value="2">깊이 2</option><option value="3" selected>깊이 3</option><option value="4">깊이 4</option><option value="5">깊이 5</option></select>
+          <button class="btn-sim" id="btn-sim-run">🌐 시뮬레이션</button>
+        </div>
+        <textarea id="sim-context" placeholder="추가 컨텍스트 (선택): 현재 상황, 제약 조건 등..."></textarea>
+      </div>
+      <div id="sim-output"><div style="color:var(--text2);text-align:center;margin-top:50px;font-size:12px">Reality Simulator — Monte Carlo Tree Search + 멀티버스 분기<br>What-If 시나리오를 입력하면 가능한 미래 분기를 시뮬레이션합니다.</div></div>
+    </div>
+
+    <!-- GENESIS TAB — Iteration 9 -->
+    <div class="tab-content" id="tab-genesis">
+      <div id="genesis-input-area">
+        <div id="genesis-task-row">
+          <input type="text" id="genesis-task" placeholder="에이전트 작업 설명: '복잡한 수학 문제 해결', '창의적 소설 작성', 'Python 코드 최적화'..." />
+          <button class="btn-genesis" id="btn-genesis-run">🧬 에이전트 창조</button>
+          <button onclick="loadAgentRoster()" style="background:var(--panel2);border:1px solid var(--border);color:var(--text2);padding:10px 14px;border-radius:8px;cursor:pointer;font-size:11px">↻ 목록</button>
+        </div>
+        <div style="display:flex;gap:8px;font-size:11px;color:var(--text2);padding:4px 0">
+          <span>사용 가능한 청사진:</span>
+          <span style="color:var(--accent3)">analyzer · creative · coder · researcher · critic · planner · mathematician · generalist</span>
+        </div>
+      </div>
+      <div id="genesis-output"><div style="color:var(--text2);text-align:center;margin-top:50px;font-size:12px">Agent Genesis — DNA 기반 동적 에이전트 창조<br>작업을 설명하면 최적화된 전문 에이전트를 생성합니다.</div></div>
+    </div>
+
+    <!-- WISDOM TAB — Iteration 9 -->
+    <div class="tab-content" id="tab-wisdom">
+      <div class="wisdom-stats-grid">
+        <div class="wisdom-stat-box"><div class="wisdom-stat-val" id="wis-episodes">0</div><div class="wisdom-stat-label">EPISODES</div></div>
+        <div class="wisdom-stat-box"><div class="wisdom-stat-val" id="wis-patterns">0</div><div class="wisdom-stat-label">PATTERNS</div></div>
+        <div class="wisdom-stat-box"><div class="wisdom-stat-val" id="wis-skills">0</div><div class="wisdom-stat-label">SKILLS</div></div>
+        <div class="wisdom-stat-box"><div class="wisdom-stat-val" id="wis-success">0%</div><div class="wisdom-stat-label">SUCCESS RATE</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;overflow:hidden;margin-top:4px">
+        <div style="overflow-y:auto">
+          <div class="wisdom-section-title">결정화된 기술</div>
+          <div id="wis-skills-list"><div style="color:var(--text2);font-size:11px">로딩 중...</div></div>
+          <div class="wisdom-section-title" style="margin-top:12px">도메인 분포</div>
+          <div id="wis-domain-bars"></div>
+        </div>
+        <div style="overflow-y:auto">
+          <div class="wisdom-section-title">추출된 원칙</div>
+          <div id="wis-principles-list"><div style="color:var(--text2);font-size:11px">원칙 없음</div></div>
+          <div style="margin-top:12px">
+            <button onclick="loadWisdom()" style="background:linear-gradient(135deg,var(--accent),#0099bb);border:none;color:#000;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700">↻ 지혜 새로고침</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- SIDEBAR RIGHT -->
@@ -767,6 +953,16 @@ function initSocket(){
   s.on('workspace_event',d=>{
     if(d.type==='broadcast'){addAutoEvent({type:'info',title:`🌀 GW 방송: ${d.module}`,content:`salience ${d.salience} → ${d.responders}개 응답`});}
   });
+  // Iteration 9
+  s.on('emotion_event',d=>{
+    if(d.type==='emotion_change'&&d.state)renderEmotionState(d.state);
+    if(d.type==='emotion_change')showToast(`감정: ${d.from}→${d.to}`,'info');
+  });
+  s.on('simulation_event',d=>{});
+  s.on('genesis_event',d=>{
+    if(d.type==='agent_created')showToast(`에이전트 탄생: ${d.data?.name||'?'}`,'success');
+  });
+  initIteration9Socket(s);
 }
 
 function el(id){return document.getElementById(id);}
@@ -987,6 +1183,9 @@ function bindEvents(){
     if(b.dataset.tab==='palace')loadPalace();
     if(b.dataset.tab==='improve')loadImproveStatus();
     if(b.dataset.tab==='mind'){loadWorkspace();loadHypotheses();loadTimeline();}
+    if(b.dataset.tab==='emotion')loadEmotion();
+    if(b.dataset.tab==='genesis')loadAgentRoster();
+    if(b.dataset.tab==='wisdom')loadWisdom();
   }));
   el('btn-debate-full').addEventListener('click',()=>startDebate(false));
   el('btn-debate-fast').addEventListener('click',()=>startDebate(true));
@@ -1042,6 +1241,11 @@ function bindEvents(){
   el('btn-improve-run').addEventListener('click',triggerImprove);
   el('btn-improve-start').addEventListener('click',startImproveLoop);
   el('btn-improve-stop').addEventListener('click',stopImproveLoop);
+  // Iteration 9
+  if(el('btn-sim-run'))el('btn-sim-run').addEventListener('click',runSimulation);
+  if(el('sim-question'))el('sim-question').addEventListener('keydown',e=>{if(e.key==='Enter')runSimulation();});
+  if(el('btn-genesis-run'))el('btn-genesis-run').addEventListener('click',createAgent);
+  if(el('genesis-task'))el('genesis-task').addEventListener('keydown',e=>{if(e.key==='Enter')createAgent();});
   // MIND sub-tabs
   document.querySelectorAll('.mind-sub-btn').forEach(b=>b.addEventListener('click',()=>{
     const target=b.dataset.mind;
@@ -1512,6 +1716,250 @@ function searchPalace(){
     .catch(()=>showToast('검색 실패','error'));
 }
 
+// ════════════════════════════════════════════════════════════════
+// Iteration 9 — 감정 엔진 + RL + 시뮬레이터 + 에이전트 창조 + 경험증류
+// ════════════════════════════════════════════════════════════════
+
+// ── Emotion Engine ─────────────────────────────────────────────
+const EMOTION_COLORS={
+  curiosity:'#00d4ff',excitement:'#ff9f00',concern:'#ff6b35',
+  satisfaction:'#00ff9f',frustration:'#ff3860',awe:'#7b2fff',
+  determination:'#00aaff',neutral:'#7aa7c7'
+};
+const EMOTION_EMOJIS={
+  curiosity:'🔍',excitement:'⚡',concern:'⚠️',
+  satisfaction:'✅',frustration:'😤',awe:'✨',
+  determination:'💪',neutral:'😐'
+};
+
+function loadEmotion(){
+  fetch('/jarvis/api/emotion').then(r=>r.json()).then(d=>{
+    if(d.error)return;
+    renderEmotionState(d);
+  }).catch(()=>{});
+  fetch('/jarvis/api/rl/stats').then(r=>r.json()).then(d=>{
+    if(d.error)return;
+    el('rl-epsilon').textContent=d.exploration_rate?.toFixed(3)||'0.300';
+    el('rl-steps').textContent=d.total_steps||0;
+    el('rl-reward').textContent=d.avg_reward?.toFixed(3)||'0.000';
+    const best=d.best_strategies&&Object.values(d.best_strategies)[0]||'-';
+    el('rl-best').textContent=best;
+  }).catch(()=>{});
+}
+
+function renderEmotionState(d){
+  const emotion=d.dominant_emotion||'neutral';
+  const color=EMOTION_COLORS[emotion]||'#7aa7c7';
+  const emoji=EMOTION_EMOJIS[emotion]||'😐';
+  const ring=el('emotion-ring');
+  if(ring){
+    ring.textContent=emoji;
+    ring.style.borderColor=color;
+    ring.style.boxShadow=`0 0 24px ${color}88`;
+  }
+  if(el('emotion-name'))el('emotion-name').textContent=emotion.toUpperCase();
+  if(el('emotion-tone')){
+    const mod=d.response_modifiers||{};
+    el('emotion-tone').textContent=`톤: ${mod.tone||'neutral'}`;
+  }
+  const valence=d.valence||0;
+  const arousal=d.arousal||0.3;
+  const intensity=d.intensity||0.5;
+  if(el('emo-valence'))el('emo-valence').textContent=valence.toFixed(2);
+  if(el('emo-arousal'))el('emo-arousal').textContent=arousal.toFixed(2);
+  if(el('emo-intensity'))el('emo-intensity').textContent=intensity.toFixed(2);
+  // 바 업데이트
+  const posBar=el('emo-bar-pos');const negBar=el('emo-bar-neg');const aroBar=el('emo-bar-arousal');
+  if(posBar)posBar.style.width=Math.max(0,valence)*100+'%';
+  if(negBar)negBar.style.width=Math.max(0,-valence)*100+'%';
+  if(aroBar)aroBar.style.width=arousal*100+'%';
+}
+
+// ── Reality Simulator ──────────────────────────────────────────
+function runSimulation(){
+  const q=el('sim-question')?.value.trim();
+  if(!q){showToast('시뮬레이션 질문을 입력하세요','error');return;}
+  const ctx=el('sim-context')?.value.trim()||'';
+  const depth=parseInt(el('sim-depth-select')?.value||'3');
+  const out=el('sim-output');
+  out.innerHTML='<div style="color:var(--accent2);text-align:center;margin-top:40px;font-size:12px;animation:pulse 1.5s infinite">🌐 멀티버스 시뮬레이션 중...</div>';
+  setThinking(true);
+
+  fetch('/jarvis/api/simulate',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({question:q,context:ctx,depth:depth})
+  }).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    if(d.error){out.innerHTML=`<div style="color:var(--red);padding:20px">${d.error}</div>`;return;}
+    renderSimBranches(d.branches||[]);
+  }).catch(e=>{setThinking(false);out.innerHTML=`<div style="color:var(--red);padding:20px">오류: ${e.message}</div>`;});
+}
+
+function renderSimBranches(branches){
+  const out=el('sim-output');
+  if(!branches.length){out.innerHTML='<div style="color:var(--text2);text-align:center;margin-top:40px">분기 없음</div>';return;}
+  const maxProb=Math.max(...branches.map(b=>b.probability||0))||1;
+  out.innerHTML=branches.map((b,i)=>{
+    const prob=(b.probability||0)*100;
+    const conf=Math.round((b.confidence||0)*100);
+    const score=b.outcome_score||0;
+    const scoreColor=score>0?'var(--accent3)':score<0?'var(--red)':'var(--text2)';
+    const scoreStr=(score>0?'+':'')+score.toFixed(2);
+    const isBest=i===0;
+    return `<div class="sim-branch${isBest?' best':''}">
+      <div class="sim-branch-action">${b.action||'시나리오 '+i}</div>
+      <div class="sim-branch-prob">${prob.toFixed(1)}%</div>
+      <div class="sim-branch-reasoning">${(b.reasoning||b.final_description||'').slice(0,300)}</div>
+      <div class="sim-prob-bar"><div class="sim-prob-fill" style="width:${prob}%"></div></div>
+      <div class="sim-branch-meta">
+        <span>신뢰도: ${conf}%</span>
+        <span>결과: <span style="color:${scoreColor}">${scoreStr}</span></span>
+        <span>깊이: ${b.depth||0}</span>
+        ${b.elapsed_time?`<span>${b.elapsed_time.toFixed(1)}s</span>`:''}
+        ${isBest?'<span style="color:var(--accent3);margin-left:auto">★ 최적 결과</span>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Agent Genesis ───────────────────────────────────────────────
+function createAgent(){
+  const task=el('genesis-task')?.value.trim();
+  if(!task){showToast('작업을 설명하세요','error');return;}
+  const out=el('genesis-output');
+  out.innerHTML='<div style="color:var(--accent3);text-align:center;margin-top:40px;font-size:12px;animation:pulse 1.5s infinite">🧬 에이전트 DNA 설계 중...</div>';
+  setThinking(true);
+
+  fetch('/jarvis/api/genesis',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({task:task})
+  }).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    if(d.error){out.innerHTML=`<div style="color:var(--red);padding:20px">${d.error}</div>`;return;}
+    const agent=d.agent||{};
+    out.innerHTML=renderAgentCard(agent,true)+'<div style="margin-top:16px;font-size:11px;color:var(--text2);text-align:center">에이전트가 활성화되었습니다. ↻ 목록을 클릭하여 전체 로스터를 확인하세요.</div>';
+    showToast(`에이전트 창조: ${agent.name||'Unknown'}`,'success');
+  }).catch(e=>{setThinking(false);out.innerHTML=`<div style="color:var(--red);padding:20px">오류: ${e.message}</div>`;});
+}
+
+function loadAgentRoster(){
+  const out=el('genesis-output');
+  out.innerHTML='<div style="color:var(--text2);font-size:11px;text-align:center;margin-top:30px">로딩 중...</div>';
+  fetch('/jarvis/api/agents/roster').then(r=>r.json()).then(d=>{
+    if(d.error){out.innerHTML=`<div style="color:var(--red);padding:20px">${d.error}</div>`;return;}
+    const agents=d.agents||[];
+    if(!agents.length){
+      out.innerHTML=`<div style="text-align:center;margin-top:40px;color:var(--text2);font-size:12px">
+        에이전트 없음 — 작업을 입력하여 첫 에이전트를 창조하세요.<br>
+        <span style="font-size:11px">총 창조: ${d.total_created||0} / 은퇴: ${d.total_retired||0}</span>
+      </div>`;return;
+    }
+    out.innerHTML=`<div style="margin-bottom:8px;font-size:11px;color:var(--text2)">활성 에이전트: ${d.total_agents} / 총 창조: ${d.total_created||0}</div>`
+      +agents.map(a=>renderAgentCard(a,false)).join('');
+  }).catch(e=>{out.innerHTML=`<div style="color:var(--red);padding:20px">${e.message}</div>`;});
+}
+
+function renderAgentCard(a,isNew){
+  const dna=a.dna||{};
+  const fitness=Math.round((a.fitness_score||0.5)*100);
+  const fitnessColor=fitness>70?'var(--accent3)':fitness>40?'var(--accent)':'var(--red)';
+  const traits=(dna.personality_traits||[]).map(t=>`<span class="trait-badge">${t}</span>`).join('');
+  const skills=(dna.skill_domains||[]).join(' · ');
+  const statusColor=a.status==='active'?'var(--accent3)':a.status==='retired'?'var(--red)':'var(--accent2)';
+  return `<div class="agent-card-gen ${a.status||''}">
+    <div class="agent-gen-header">
+      <div class="agent-gen-name">${a.name||'Unknown'}</div>
+      <span class="agent-gen-spec">${dna.specialization||'?'}</span>
+      <div class="agent-gen-fitness" style="color:${fitnessColor}">FIT ${fitness}%</div>
+    </div>
+    <div class="agent-gen-traits">${traits}</div>
+    <div style="font-size:10px;color:var(--text2);margin-bottom:4px">기술: ${skills||'-'} · 추론: ${dna.reasoning_style||'-'}</div>
+    <div class="agent-gen-task">${(a.task_description||'').slice(0,150)}</div>
+    <div class="fitness-bar"><div class="fitness-fill" style="width:${fitness}%;background:${fitnessColor}"></div></div>
+    <div style="display:flex;gap:12px;margin-top:6px;font-size:10px;color:var(--text2)">
+      <span>완료: ${a.tasks_completed||0}</span>
+      <span>실패: ${a.tasks_failed||0}</span>
+      <span>세대: ${dna.generation||0}</span>
+      <span>깊이: ${a.spawn_depth||0}</span>
+      <span style="margin-left:auto;color:${statusColor}">${a.status||'?'}</span>
+    </div>
+  </div>`;
+}
+
+// ── Wisdom / Experience Distiller ─────────────────────────────
+function loadWisdom(){
+  fetch('/jarvis/api/wisdom').then(r=>r.json()).then(d=>{
+    if(d.error)return;
+    if(el('wis-episodes'))el('wis-episodes').textContent=d.total_episodes||0;
+    if(el('wis-patterns'))el('wis-patterns').textContent=d.total_patterns||0;
+    if(el('wis-skills'))el('wis-skills').textContent=d.total_skills||0;
+    if(el('wis-success'))el('wis-success').textContent=Math.round((d.success_rate||0)*100)+'%';
+
+    // 기술 목록
+    const skillList=el('wis-skills-list');
+    if(skillList){
+      const skills=d.recent_skills||[];
+      skillList.innerHTML=skills.length?skills.map(s=>`<div class="skill-card">
+        <div class="skill-card-name">${s.name||'?'}</div>
+        <div class="skill-card-desc">${(s.description||'').slice(0,150)}</div>
+        <div class="skill-card-meta">
+          <span style="color:var(--accent2)">${s.domain||'?'}</span>
+          <span>성공률 ${Math.round((s.success_rate||0)*100)}%</span>
+        </div>
+      </div>`).join(''):'<div style="color:var(--text2);font-size:11px">기술 없음</div>';
+    }
+
+    // 원칙 목록
+    const princList=el('wis-principles-list');
+    if(princList){
+      const prins=d.top_principles||[];
+      princList.innerHTML=prins.length?prins.map(p=>`<div class="principle-card">
+        <div class="principle-card-title">${p.title||'원칙'}</div>
+        <div class="principle-card-text">${(p.principle||'').slice(0,200)}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px">신뢰도 ${Math.round((p.confidence||0)*100)}% · 사용 ${p.usage_count||0}회</div>
+      </div>`).join(''):'<div style="color:var(--text2);font-size:11px">원칙 없음</div>';
+    }
+
+    // 도메인 분포 바
+    const domBars=el('wis-domain-bars');
+    if(domBars){
+      const dist=d.domain_distribution||{};
+      const maxCount=Math.max(...Object.values(dist),1);
+      domBars.innerHTML=Object.entries(dist).sort(([,a],[,b])=>b-a).slice(0,6).map(([domain,count])=>`
+        <div class="domain-bar-row">
+          <div class="domain-bar-label">${domain}</div>
+          <div class="domain-count">${count}</div>
+          <div class="domain-bar-track"><div class="domain-bar-fill" style="width:${(count/maxCount)*100}%"></div></div>
+        </div>`).join('');
+    }
+  }).catch(()=>{});
+}
+
+// ── Socket 이벤트 — Iteration 9 ────────────────────────────────
+function initIteration9Socket(socket){
+  socket.on('emotion_event',function(e){
+    if(e.type==='emotion_change'&&e.state){
+      renderEmotionState(e.state);
+      showToast(`감정 변화: ${e.from} → ${e.to}`,'info');
+    }
+  });
+  socket.on('simulation_event',function(e){
+    const out=el('sim-output');
+    if(e.type==='simulation_start'){
+      // 시작 이벤트 — 이미 처리됨
+    }else if(e.type==='simulation_done'&&out){
+      // 완료 — runSimulation 응답으로 처리됨
+    }
+  });
+  socket.on('genesis_event',function(e){
+    if(e.type==='agent_created'){
+      showToast(`에이전트 창조: ${e.data?.name||'Unknown'}`,'success');
+    }
+  });
+}
+
 function init(){
   bindEvents();initSocket();
   setInterval(()=>el('sb-time').textContent=new Date().toLocaleTimeString('ko-KR'),1000);
@@ -1519,7 +1967,12 @@ function init(){
   setInterval(loadFeed,60000);
   setInterval(loadImproveStatus,30000);
   setInterval(loadWorkspace,20000);
+  // Iteration 9 자동 갱신
+  setInterval(loadEmotion,5000);
+  setInterval(loadWisdom,60000);
   loadStatus();
+  loadEmotion();
+  loadWisdom();
 }
 document.addEventListener('DOMContentLoaded',init);
 </script>

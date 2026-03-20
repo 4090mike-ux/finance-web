@@ -50,6 +50,12 @@ class JarvisEngine:
         consciousness_loop=None,
         agent_swarm=None,
         meta_learner=None,
+        # Iteration 9
+        emotion_engine=None,
+        rl_optimizer=None,
+        reality_simulator=None,
+        agent_genesis=None,
+        experience_distiller=None,
     ):
         self.llm = llm_manager
         self.memory = memory_manager
@@ -77,6 +83,12 @@ class JarvisEngine:
         self.consciousness = consciousness_loop  # 의식 루프
         self.swarm = agent_swarm            # 에이전트 스웜
         self.meta_learner = meta_learner    # 메타 학습
+        # Iteration 9
+        self.emotion_engine = emotion_engine          # 감정 인텔리전스
+        self.rl_optimizer = rl_optimizer              # RL 자율최적화
+        self.reality_simulator = reality_simulator    # 현실 시뮬레이터
+        self.agent_genesis = agent_genesis            # 에이전트 창조
+        self.experience_distiller = experience_distiller  # 경험 증류
 
         self.conversation_history = []
         self.is_thinking = False
@@ -124,7 +136,7 @@ class JarvisEngine:
         if self.consciousness:
             self.consciousness.activate()
 
-        logger.info("JARVIS Engine Iteration 5 — Superintelligence online")
+        logger.info("JARVIS Engine Iteration 9 — Superhuman Intelligence online")
 
     # ==================== Anthropic 클라이언트 초기화 ====================
 

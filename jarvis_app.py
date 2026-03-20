@@ -70,6 +70,12 @@ from jarvis.core.recursive_improver import RecursiveImprover
 from jarvis.intelligence.hypothesis_engine import HypothesisEngine
 from jarvis.intelligence.temporal_engine import TemporalEngine
 from jarvis.core.global_workspace import GlobalWorkspace
+# Iteration 9
+from jarvis.intelligence.emotion_engine import EmotionEngine
+from jarvis.core.rl_optimizer import RLOptimizer
+from jarvis.intelligence.reality_simulator import RealitySimulator
+from jarvis.core.agent_genesis import AgentGenesis
+from jarvis.intelligence.experience_distiller import ExperienceDistiller
 
 # ==================== 앱 초기화 ====================
 
@@ -350,6 +356,38 @@ def create_jarvis() -> JarvisEngine:
     logger.info("GlobalWorkspace started — Baars cognitive architecture active")
 
     logger.info("JARVIS Iteration 8 — Hypothesis Engine + Temporal Reasoning + Global Workspace 🌌")
+
+    # ── Iteration 9 신규 모듈 ──
+    def emotion_event_cb(event):
+        socketio.emit("emotion_event", event, namespace="/jarvis")
+
+    emotion_engine = EmotionEngine(llm_manager=llm, event_callback=emotion_event_cb)
+    final_jarvis.emotion_engine = emotion_engine
+    logger.info(f"EmotionEngine initialized — current mood: {emotion_engine.get_emotional_context()['dominant_emotion']}")
+
+    rl_optimizer = RLOptimizer(llm_manager=llm)
+    final_jarvis.rl_optimizer = rl_optimizer
+    logger.info(f"RLOptimizer initialized — {rl_optimizer.get_stats()['total_steps']} steps")
+
+    def sim_event_cb(event):
+        socketio.emit("simulation_event", event, namespace="/jarvis")
+
+    reality_simulator = RealitySimulator(llm_manager=llm, event_callback=sim_event_cb)
+    final_jarvis.reality_simulator = reality_simulator
+    logger.info("RealitySimulator initialized — MCTS multiverse ready")
+
+    def genesis_event_cb(event):
+        socketio.emit("genesis_event", event, namespace="/jarvis")
+
+    agent_genesis = AgentGenesis(llm_manager=llm, event_callback=genesis_event_cb)
+    final_jarvis.agent_genesis = agent_genesis
+    logger.info(f"AgentGenesis initialized — {agent_genesis.get_agent_roster()['total_agents']} agents")
+
+    experience_distiller = ExperienceDistiller(llm_manager=llm)
+    final_jarvis.experience_distiller = experience_distiller
+    logger.info(f"ExperienceDistiller initialized — {experience_distiller.get_wisdom_summary()['total_episodes']} episodes")
+
+    logger.info("JARVIS Iteration 9 — 감정 + RL최적화 + 멀티버스 + 에이전트 창조 + 경험증류")
     return final_jarvis
 
 
@@ -2704,6 +2742,86 @@ def ws_autoloop_control(data):
 
 # ==================== 시스템 모니터 백그라운드 ====================
 
+@app.route("/jarvis/api/emotion")
+def api_emotion():
+    """감정 상태 조회"""
+    try:
+        j = get_jarvis()
+        if hasattr(j, 'emotion_engine') and j.emotion_engine:
+            return jsonify(j.emotion_engine.get_emotional_context())
+        return jsonify({"error": "EmotionEngine not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/simulate", methods=["POST"])
+def api_simulate():
+    """현실 시뮬레이션 실행"""
+    try:
+        data = request.get_json()
+        question = data.get("question", "")
+        context = data.get("context", "")
+        depth = data.get("depth", 3)
+        j = get_jarvis()
+        if hasattr(j, 'reality_simulator') and j.reality_simulator:
+            results = j.reality_simulator.simulate(question, context, depth=depth)
+            return jsonify({"success": True, "branches": [b.__dict__ if not hasattr(b, 'to_dict') else b.to_dict() for b in results[:5]]})
+        return jsonify({"error": "RealitySimulator not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/genesis", methods=["POST"])
+def api_genesis():
+    """새 에이전트 생성"""
+    try:
+        data = request.get_json()
+        task = data.get("task", "")
+        j = get_jarvis()
+        if hasattr(j, 'agent_genesis') and j.agent_genesis:
+            agent = j.agent_genesis.genesis(task)
+            return jsonify({"success": True, "agent": agent.to_dict()})
+        return jsonify({"error": "AgentGenesis not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/agents/roster")
+def api_agent_roster():
+    """생성된 에이전트 목록"""
+    try:
+        j = get_jarvis()
+        if hasattr(j, 'agent_genesis') and j.agent_genesis:
+            return jsonify(j.agent_genesis.get_agent_roster())
+        return jsonify({"error": "AgentGenesis not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/wisdom")
+def api_wisdom():
+    """경험 증류 요약"""
+    try:
+        j = get_jarvis()
+        if hasattr(j, 'experience_distiller') and j.experience_distiller:
+            return jsonify(j.experience_distiller.get_wisdom_summary())
+        return jsonify({"error": "ExperienceDistiller not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/rl/stats")
+def api_rl_stats():
+    """RL 최적화 통계"""
+    try:
+        j = get_jarvis()
+        if hasattr(j, 'rl_optimizer') and j.rl_optimizer:
+            return jsonify(j.rl_optimizer.get_stats())
+        return jsonify({"error": "RLOptimizer not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 def system_monitor_thread():
     """주기적 시스템 상태 브로드캐스트"""
     while True:
@@ -2725,7 +2843,7 @@ def system_monitor_thread():
 
 if __name__ == "__main__":
     # JARVIS 사전 초기화
-    logger.info("Starting JARVIS Iteration 8 system...")
+    logger.info("Starting JARVIS Iteration 9 system...")
     j = get_jarvis()
 
     # 자율 루프 자동 시작
