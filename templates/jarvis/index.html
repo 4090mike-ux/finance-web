@@ -155,6 +155,37 @@
   #statusbar .sb-left,#statusbar .sb-right{display:flex;gap:16px}
   #statusbar .sb-item{display:flex;align-items:center;gap:4px} #statusbar .sb-item .label{color:var(--border)}
 
+  /* MIND TAB */
+  #tab-mind{display:flex;flex-direction:column;overflow:hidden}
+  #mind-sub-tabs{display:flex;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
+  .mind-sub-btn{padding:8px 14px;font-size:11px;cursor:pointer;background:none;border:none;color:var(--text2);border-bottom:2px solid transparent;transition:all .2s}
+  .mind-sub-btn.active{color:var(--accent2);border-bottom-color:var(--accent2)}
+  .mind-panel{display:none;flex:1;overflow-y:auto;padding:16px;flex-direction:column}
+  .mind-panel.active{display:flex}
+  /* Global Workspace */
+  .gw-item{padding:8px 12px;background:var(--panel2);border-radius:6px;margin-bottom:6px;border-left:3px solid var(--border);display:flex;align-items:flex-start;gap:10px}
+  .gw-salience{font-size:11px;font-family:var(--font-mono);min-width:36px;color:var(--accent3)}
+  .gw-module{font-size:10px;color:var(--accent2);min-width:80px}
+  .gw-content{font-size:11px;color:var(--text2);flex:1}
+  .gw-broadcast{padding:8px 12px;background:rgba(123,47,255,.08);border-radius:6px;margin-bottom:4px;border-left:3px solid var(--accent2)}
+  .gw-bc-module{font-size:10px;color:var(--accent2);font-weight:700}
+  .gw-bc-content{font-size:11px;color:var(--text2);margin-top:2px}
+  .gw-bc-resp{font-size:10px;color:var(--accent3);margin-top:2px}
+  /* Hypothesis */
+  .hyp-card{padding:10px 12px;background:var(--panel2);border-radius:var(--radius);margin-bottom:8px;border-left:3px solid var(--border)}
+  .hyp-card.supported{border-left-color:var(--accent3)} .hyp-card.refuted{border-left-color:var(--red)} .hyp-card.uncertain{border-left-color:var(--warn)}
+  .hyp-claim{font-size:12px;font-weight:600;color:var(--text)}
+  .hyp-prob{font-size:11px;font-family:var(--font-mono);float:right;color:var(--accent3)}
+  .hyp-rationale{font-size:11px;color:var(--text2);margin-top:4px}
+  .hyp-preds{font-size:10px;color:var(--accent);margin-top:4px}
+  .theory-card{padding:12px;background:rgba(0,255,159,.05);border:1px solid var(--accent3);border-radius:var(--radius);margin-bottom:10px}
+  /* Timeline */
+  .timeline-item{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #0d1a27}
+  .tl-date{font-size:10px;color:var(--text2);min-width:100px;font-family:var(--font-mono);flex-shrink:0}
+  .tl-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:3px}
+  .tl-content{font-size:11px;flex:1}
+  .pred-item{padding:8px 12px;background:rgba(0,212,255,.05);border-left:3px solid var(--accent);border-radius:6px;margin-bottom:6px}
+
   /* CAUSAL TAB */
   #tab-causal{display:flex;flex-direction:column;overflow:hidden}
   #causal-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -321,6 +352,10 @@
       <div class="module-item"><div class="module-dot off" id="mod-executive"></div><span class="module-name">총사령관</span><span class="module-info" id="mod-executive-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-livemon"></div><span class="module-name">실시간 모니터</span><span class="module-info" id="mod-livemon-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-palace"></div><span class="module-name">기억의 궁전</span><span class="module-info" id="mod-palace-info">-</span></div>
+      <div style="font-size:9px;color:var(--text2);letter-spacing:1px;padding:4px 0 2px">ITERATION 8</div>
+      <div class="module-item"><div class="module-dot off" id="mod-hypothesis"></div><span class="module-name">가설 엔진</span><span class="module-info" id="mod-hypothesis-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-temporal"></div><span class="module-name">시간 추론</span><span class="module-info" id="mod-temporal-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-gworkspace"></div><span class="module-name">전역 작업공간</span><span class="module-info" id="mod-gworkspace-info">-</span></div>
       <div style="font-size:9px;color:var(--text2);letter-spacing:1px;padding:4px 0 2px">ITERATION 7</div>
       <div class="module-item"><div class="module-dot off" id="mod-causal"></div><span class="module-name">인과 추론</span><span class="module-info" id="mod-causal-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-webagent"></div><span class="module-name">웹 에이전트</span><span class="module-info" id="mod-webagent-info">-</span></div>
@@ -351,6 +386,7 @@
       <button class="tab-btn" data-tab="causal">🔗 CAUSAL</button>
       <button class="tab-btn" data-tab="webagent">🌐 WEB</button>
       <button class="tab-btn" data-tab="improve">🔄 IMPROVE</button>
+      <button class="tab-btn" data-tab="mind">🌌 MIND</button>
     </div>
 
     <!-- CHAT TAB -->
@@ -521,6 +557,84 @@
       </div>
       <div id="palace-memories"><div style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">기억의 궁전 — Ebbinghaus 망각 곡선 기반 계층적 메모리<br>탭을 클릭하면 기억이 로드됩니다.</div></div>
     </div>
+    <!-- MIND TAB (Iteration 8: GlobalWorkspace + Hypothesis + Temporal) -->
+    <div class="tab-content" id="tab-mind">
+      <div id="mind-sub-tabs">
+        <button class="mind-sub-btn active" data-mind="workspace">🌀 전역 작업공간</button>
+        <button class="mind-sub-btn" data-mind="hypothesis">🔬 가설 엔진</button>
+        <button class="mind-sub-btn" data-mind="timeline">⏱️ 타임라인</button>
+      </div>
+
+      <!-- Global Workspace Panel -->
+      <div class="mind-panel active" id="mind-workspace">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-shrink:0">
+          <button onclick="loadWorkspace()" style="background:linear-gradient(135deg,var(--accent2),#5a1fe0);border:none;color:white;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700">↻ 새로고침</button>
+          <button onclick="triggerBroadcast()" style="background:linear-gradient(135deg,var(--accent),#0099bb);border:none;color:#000;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700">📡 강제 방송</button>
+          <div style="margin-left:auto;font-size:11px;color:var(--text2)">Baars Global Workspace Theory</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;overflow:hidden">
+          <div style="overflow-y:auto">
+            <div style="font-size:10px;color:var(--accent2);letter-spacing:1px;margin-bottom:8px;font-weight:700">현재 작업공간</div>
+            <div id="gw-workspace-list"><div style="color:var(--text2);font-size:11px">로딩 중...</div></div>
+          </div>
+          <div style="overflow-y:auto">
+            <div style="font-size:10px;color:var(--accent);letter-spacing:1px;margin-bottom:8px;font-weight:700">최근 방송 이력</div>
+            <div id="gw-broadcast-list"><div style="color:var(--text2);font-size:11px">방송 대기 중...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hypothesis Panel -->
+      <div class="mind-panel" id="mind-hypothesis">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-shrink:0;flex-wrap:wrap">
+          <input type="text" id="hyp-topic" placeholder="가설 주제 (비워두면 최근 관찰 기반)" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;outline:none;min-width:180px"/>
+          <button onclick="generateHypotheses()" style="background:linear-gradient(135deg,var(--accent3),#009955);border:none;color:#000;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700">🔬 가설 생성</button>
+          <button onclick="synthesizeTheory()" style="background:var(--panel2);border:1px solid var(--accent3);color:var(--accent3);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:11px">📚 이론 합성</button>
+          <button onclick="loadHypotheses()" style="background:none;border:1px solid var(--border);color:var(--text2);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:11px">↻</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;overflow:hidden">
+          <div style="overflow-y:auto">
+            <div style="font-size:10px;color:var(--accent3);letter-spacing:1px;margin-bottom:8px">가설 목록</div>
+            <div id="hyp-list"><div style="color:var(--text2);font-size:11px">로딩 중...</div></div>
+          </div>
+          <div style="overflow-y:auto">
+            <div style="font-size:10px;color:var(--accent2);letter-spacing:1px;margin-bottom:8px">검증된 이론</div>
+            <div id="theory-list"><div style="color:var(--text2);font-size:11px">이론 없음</div></div>
+            <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin:12px 0 8px">가설 검증 (증거 입력)</div>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="hyp-test-id" placeholder="가설 ID" style="width:70px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;font-size:11px;outline:none"/>
+              <input type="text" id="hyp-test-evidence" placeholder="증거 내용" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;font-size:11px;outline:none"/>
+              <button onclick="testHypothesis()" style="background:var(--panel2);border:1px solid var(--warn);color:var(--warn);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:11px">검증</button>
+            </div>
+            <div id="hyp-test-result" style="margin-top:8px;font-size:11px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline Panel -->
+      <div class="mind-panel" id="mind-timeline">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-shrink:0;flex-wrap:wrap">
+          <input type="text" id="tl-text-input" placeholder="타임라인 분석할 텍스트 (이벤트 자동 추출)" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;outline:none;min-width:200px"/>
+          <button onclick="extractTimelineEvents()" style="background:linear-gradient(135deg,var(--accent),#0099bb);border:none;color:#000;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700">📅 이벤트 추출</button>
+          <button onclick="detectPatterns()" style="background:var(--panel2);border:1px solid var(--accent);color:var(--accent);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:11px">🔍 패턴</button>
+          <button onclick="predictFuture()" style="background:var(--panel2);border:1px solid var(--accent2);color:var(--accent2);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:11px">🔮 예측</button>
+          <button onclick="loadTimeline()" style="background:none;border:1px solid var(--border);color:var(--text2);padding:8px 10px;border-radius:8px;cursor:pointer;font-size:11px">↻</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;overflow:hidden">
+          <div style="overflow-y:auto">
+            <div style="font-size:10px;color:var(--accent);letter-spacing:1px;margin-bottom:8px">이벤트 타임라인</div>
+            <div id="timeline-list"><div style="color:var(--text2);font-size:11px">로딩 중...</div></div>
+          </div>
+          <div style="overflow-y:auto">
+            <div style="font-size:10px;color:var(--accent2);letter-spacing:1px;margin-bottom:8px">미래 예측</div>
+            <div id="prediction-future-list"><div style="color:var(--text2);font-size:11px">예측 없음</div></div>
+            <div style="font-size:10px;color:var(--warn);letter-spacing:1px;margin:12px 0 8px">감지된 패턴</div>
+            <div id="temporal-patterns-list"><div style="color:var(--text2);font-size:11px">패턴 없음</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- CAUSAL TAB -->
     <div class="tab-content" id="tab-causal">
       <div id="causal-input-area">
@@ -650,6 +764,9 @@ function initSocket(){
   });
   s.on('executive_event',d=>addAutoEvent({type:'info',title:'총사령관',content:d.message||JSON.stringify(d)}));
   s.on('live_feed_event',d=>{el('hdr-feed').textContent=parseInt(el('hdr-feed').textContent||'0')+1;});
+  s.on('workspace_event',d=>{
+    if(d.type==='broadcast'){addAutoEvent({type:'info',title:`🌀 GW 방송: ${d.module}`,content:`salience ${d.salience} → ${d.responders}개 응답`});}
+  });
 }
 
 function el(id){return document.getElementById(id);}
@@ -794,6 +911,10 @@ function loadStatus(){
     const ce=d.causal_engine||{};setMod('mod-causal',ce.available,ce.available?`${ce.nodes||0} nodes`:'OFF');
     const wa=d.web_agent||{};setMod('mod-webagent',wa.available,wa.available?wa.mode:'OFF');
     const ri=d.recursive_improver||{};setMod('mod-improver',ri.available,ri.available?`${ri.total_cycles||0} cycles`:'OFF');
+    // iteration 8
+    const he=d.hypothesis_engine||{};setMod('mod-hypothesis',he.available,he.available?`${he.total_hypotheses||0}h`:'OFF');
+    const te=d.temporal_engine||{};setMod('mod-temporal',te.available,te.available?`${te.total_events||0}ev`:'OFF');
+    const gw=d.global_workspace||{};setMod('mod-gworkspace',gw.available,gw.available?`${gw.total_broadcasts||0}bc`:'OFF');
   }).catch(()=>{});
 }
 
@@ -865,6 +986,7 @@ function bindEvents(){
     if(b.dataset.tab==='feed')loadFeed();
     if(b.dataset.tab==='palace')loadPalace();
     if(b.dataset.tab==='improve')loadImproveStatus();
+    if(b.dataset.tab==='mind'){loadWorkspace();loadHypotheses();loadTimeline();}
   }));
   el('btn-debate-full').addEventListener('click',()=>startDebate(false));
   el('btn-debate-fast').addEventListener('click',()=>startDebate(true));
@@ -920,6 +1042,181 @@ function bindEvents(){
   el('btn-improve-run').addEventListener('click',triggerImprove);
   el('btn-improve-start').addEventListener('click',startImproveLoop);
   el('btn-improve-stop').addEventListener('click',stopImproveLoop);
+  // MIND sub-tabs
+  document.querySelectorAll('.mind-sub-btn').forEach(b=>b.addEventListener('click',()=>{
+    const target=b.dataset.mind;
+    document.querySelectorAll('.mind-sub-btn').forEach(x=>x.classList.toggle('active',x===b));
+    document.querySelectorAll('.mind-panel').forEach(p=>p.classList.toggle('active',p.id==='mind-'+target));
+    if(target==='workspace')loadWorkspace();
+    if(target==='hypothesis')loadHypotheses();
+    if(target==='timeline')loadTimeline();
+  }));
+}
+
+// ── Global Workspace ─────────────────────────────────────────────
+function loadWorkspace(){
+  fetch('/jarvis/api/workspace/state').then(r=>r.json()).then(d=>{
+    const wl=el('gw-workspace-list');const bl=el('gw-broadcast-list');
+    // Workspace items
+    const items=d.workspace||[];
+    if(!items.length){wl.innerHTML='<div style="color:var(--text2);font-size:11px">작업공간 비어 있음</div>';}
+    else{wl.innerHTML=items.map(i=>`<div class="gw-item">
+      <span class="gw-salience">${(i.salience*100).toFixed(0)}%</span>
+      <span class="gw-module">${i.module}</span>
+      <span class="gw-content">${i.preview}</span>
+      <span style="font-size:9px;color:var(--text2)">${i.age_s}s</span>
+    </div>`).join('');}
+    // Broadcasts
+    const bcs=d.recent_broadcasts||[];
+    if(!bcs.length){bl.innerHTML='<div style="color:var(--text2);font-size:11px">방송 없음</div>';}
+    else{bl.innerHTML=bcs.map(b=>`<div class="gw-broadcast">
+      <div class="gw-bc-module">📡 ${b.module} <span style="color:var(--text2);font-weight:normal">[${(b.salience*100).toFixed(0)}%]</span></div>
+      <div class="gw-bc-content">${b.preview}</div>
+      <div class="gw-bc-resp">→ ${b.responders.join(', ')||'(no responders)'}</div>
+    </div>`).join('');}
+    // Status
+    const st=d.status||{};
+    setMod('mod-gworkspace',st.available,st.available?`${st.total_broadcasts||0} bc`:'OFF');
+  }).catch(()=>{});
+}
+
+function triggerBroadcast(){
+  fetch('/jarvis/api/workspace/broadcast',{method:'POST'})
+    .then(r=>r.json()).then(d=>{
+      if(d.winner_module)showToast(`방송: ${d.winner_module} → ${d.responders?.length||0} 응답`,'success');
+      else showToast(d.message||'방송 없음','info');
+      loadWorkspace();
+    }).catch(()=>showToast('방송 실패','error'));
+}
+
+// ── Hypothesis Engine ─────────────────────────────────────────────
+function loadHypotheses(){
+  fetch('/jarvis/api/hypothesis/list').then(r=>r.json()).then(d=>{
+    const hl=el('hyp-list');const tl=el('theory-list');
+    const hyps=d.hypotheses||[];
+    if(!hyps.length){hl.innerHTML='<div style="color:var(--text2);font-size:11px">가설 없음</div>';}
+    else{hl.innerHTML=hyps.map(h=>`<div class="hyp-card ${h.status}">
+      <div class="hyp-prob">${(h.posterior_probability*100).toFixed(0)}%</div>
+      <div class="hyp-claim">${h.claim}</div>
+      <div style="font-size:9px;color:var(--text2);margin-top:2px">[${h.domain}] ID: ${h.id}</div>
+    </div>`).join('');}
+    const theories=d.theories||[];
+    if(!theories.length){tl.innerHTML='<div style="color:var(--text2);font-size:11px">이론 없음 (가설 2개 이상 지지되면 합성 가능)</div>';}
+    else{tl.innerHTML=theories.map(t=>`<div class="theory-card">
+      <div style="font-size:12px;font-weight:700;color:var(--accent3)">${t.name}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">${t.description.slice(0,200)}</div>
+      <div style="font-size:10px;color:var(--accent3);margin-top:4px">신뢰도 ${(t.confidence*100).toFixed(0)}% · ${t.domain}</div>
+    </div>`).join('');}
+    // Sidebar
+    const st=d.status||{};
+    setMod('mod-hypothesis',st.available,st.available?`${st.total_hypotheses}h/${st.total_theories}t`:'OFF');
+  }).catch(()=>{});
+}
+
+function generateHypotheses(){
+  const topic=el('hyp-topic').value.trim();
+  setThinking(true);
+  fetch('/jarvis/api/hypothesis/generate',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({topic,max_hyp:3})
+  }).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    if(d.error){showToast(d.error,'error');return;}
+    loadHypotheses();
+    showToast(`${d.hypotheses?.length||0}개 가설 생성됨`,'success');
+  }).catch(e=>{setThinking(false);showToast('실패: '+e.message,'error');});
+}
+
+function testHypothesis(){
+  const id=el('hyp-test-id').value.trim();
+  const evidence=el('hyp-test-evidence').value.trim();
+  if(!id||!evidence){showToast('ID와 증거를 입력하세요','error');return;}
+  setThinking(true);
+  fetch('/jarvis/api/hypothesis/test',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({hyp_id:id,evidence})
+  }).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    if(d.error){showToast(d.error,'error');return;}
+    const statusColors={supported:'var(--accent3)',refuted:'var(--red)',uncertain:'var(--warn)'};
+    el('hyp-test-result').innerHTML=`<div style="padding:8px;background:var(--panel2);border-radius:6px;border-left:3px solid ${statusColors[d.status]||'var(--border)'}">
+      <div style="font-size:11px;font-weight:700;color:${statusColors[d.status]||'var(--text)'}">${d.status.toUpperCase()} — ${(d.posterior_probability*100).toFixed(0)}%</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">${d.claim}</div>
+    </div>`;
+    loadHypotheses();
+  }).catch(e=>{setThinking(false);showToast('실패','error');});
+}
+
+function synthesizeTheory(){
+  setThinking(true);
+  fetch('/jarvis/api/hypothesis/synthesize',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({domain:''})
+  }).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    if(d.error){showToast(d.error,'error');return;}
+    loadHypotheses();
+    showToast(`이론 합성: "${d.name}"`,'success');
+  }).catch(e=>{setThinking(false);showToast('실패','error');});
+}
+
+// ── Temporal Engine ───────────────────────────────────────────────
+function loadTimeline(){
+  fetch('/jarvis/api/temporal/timeline').then(r=>r.json()).then(d=>{
+    const tl=el('timeline-list');const pl=el('prediction-future-list');const patl=el('temporal-patterns-list');
+    const evts=d.timeline||[];
+    if(!evts.length){tl.innerHTML='<div style="color:var(--text2);font-size:11px">이벤트 없음</div>';}
+    else{tl.innerHTML=evts.map(e=>`<div class="timeline-item">
+      <span class="tl-date">${e.date||''}</span>
+      <div class="tl-dot"></div>
+      <span class="tl-content">${e.description.slice(0,120)}</span>
+    </div>`).join('');}
+    const preds=d.predictions||[];
+    if(!preds.length){pl.innerHTML='<div style="color:var(--text2);font-size:11px">예측 없음</div>';}
+    else{pl.innerHTML=preds.map(p=>{
+      const dt=new Date(p.predicted_time*1000).toLocaleDateString('ko-KR');
+      return `<div class="pred-item"><div style="font-size:11px;font-weight:600">${p.description}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:2px">${dt} · 신뢰도 ${(p.confidence*100).toFixed(0)}%</div>
+        <div style="font-size:10px;color:var(--text2)">${p.basis?.slice(0,80)||''}</div></div>`;
+    }).join('');}
+    const st=d.status||{};
+    setMod('mod-temporal',st.available,st.available?`${st.total_events}evt`:'OFF');
+  }).catch(()=>{});
+}
+
+function extractTimelineEvents(){
+  const text=el('tl-text-input').value.trim();if(!text){showToast('텍스트를 입력하세요','error');return;}
+  setThinking(true);
+  fetch('/jarvis/api/temporal/extract',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text,domain:''})
+  }).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    showToast(`${d.events?.length||0}개 이벤트 추출됨`,'success');
+    loadTimeline();
+  }).catch(e=>{setThinking(false);showToast('실패','error');});
+}
+
+function detectPatterns(){
+  setThinking(true);
+  fetch('/jarvis/api/temporal/patterns',{method:'POST'}).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    const patl=el('temporal-patterns-list');
+    const pats=d.patterns||[];
+    if(!pats.length){patl.innerHTML='<div style="color:var(--text2);font-size:11px">패턴 없음</div>';}
+    else{patl.innerHTML=pats.map(p=>`<div class="pred-item" style="border-left-color:var(--accent2)">
+      <div style="font-size:10px;color:var(--accent2);font-weight:700">${p.type?.toUpperCase()} · ${(p.confidence*100).toFixed(0)}%</div>
+      <div style="font-size:11px">${p.description}</div>
+    </div>`).join('');}
+    showToast(`${pats.length}개 패턴 감지`,'info');
+  }).catch(e=>{setThinking(false);showToast('실패','error');});
+}
+
+function predictFuture(){
+  setThinking(true);
+  fetch('/jarvis/api/temporal/predict',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({horizon_days:30,domain:''})
+  }).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    showToast(`${d.predictions?.length||0}개 예측 생성`,'success');
+    loadTimeline();
+  }).catch(e=>{setThinking(false);showToast('실패','error');});
 }
 
 // ── Causal Reasoning ─────────────────────────────────────────────
@@ -1221,6 +1518,7 @@ function init(){
   setInterval(loadStatus,10000);setInterval(loadPredictions,30000);
   setInterval(loadFeed,60000);
   setInterval(loadImproveStatus,30000);
+  setInterval(loadWorkspace,20000);
   loadStatus();
 }
 document.addEventListener('DOMContentLoaded',init);

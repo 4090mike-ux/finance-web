@@ -66,6 +66,10 @@ from jarvis.core.memory_palace import MemoryPalace
 from jarvis.intelligence.causal_engine import CausalEngine
 from jarvis.tools.web_agent import WebAgent
 from jarvis.core.recursive_improver import RecursiveImprover
+# Iteration 8
+from jarvis.intelligence.hypothesis_engine import HypothesisEngine
+from jarvis.intelligence.temporal_engine import TemporalEngine
+from jarvis.core.global_workspace import GlobalWorkspace
 
 # ==================== 앱 초기화 ====================
 
@@ -321,7 +325,31 @@ def create_jarvis() -> JarvisEngine:
     final_jarvis.recursive_improver = recursive_improver
     logger.info("RecursiveImprover initialized")
 
-    logger.info("JARVIS Iteration 7 — Recursive Self-Improvement + Causal Reasoning + Web Agent 🧠⚡🔄")
+    # ── Iteration 8 신규 모듈 ──
+    hypothesis_engine = HypothesisEngine(
+        llm_manager=llm,
+        knowledge_graph=knowledge_graph,
+    )
+    final_jarvis.hypothesis_engine = hypothesis_engine
+    logger.info(f"HypothesisEngine: {len(hypothesis_engine.hypotheses)} hypotheses, "
+                f"{len(hypothesis_engine.theories)} theories")
+
+    temporal_engine = TemporalEngine(llm_manager=llm)
+    final_jarvis.temporal_engine = temporal_engine
+    logger.info(f"TemporalEngine: {len(temporal_engine.events)} events")
+
+    def gw_event_cb(event):
+        socketio.emit("workspace_event", event, namespace="/jarvis")
+
+    global_workspace = GlobalWorkspace(
+        jarvis_engine=final_jarvis,
+        event_callback=gw_event_cb,
+    )
+    global_workspace.start()
+    final_jarvis.global_workspace = global_workspace
+    logger.info("GlobalWorkspace started — Baars cognitive architecture active")
+
+    logger.info("JARVIS Iteration 8 — Hypothesis Engine + Temporal Reasoning + Global Workspace 🌌")
     return final_jarvis
 
 
@@ -2091,6 +2119,267 @@ def api_improve_status():
         return jsonify({"error": str(e)}), 500
 
 
+# ==================== Iteration 8: Hypothesis Engine API ====================
+
+@app.route("/jarvis/api/hypothesis/observe", methods=["POST"])
+def api_hyp_observe():
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        he = getattr(j, "hypothesis_engine", None)
+        if not he:
+            return jsonify({"error": "HypothesisEngine not available"}), 503
+        obs = he.observe(data.get("content", ""), data.get("source", "api"),
+                         float(data.get("reliability", 0.8)))
+        return jsonify({"id": obs.id, "content": obs.content, "source": obs.source})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/hypothesis/generate", methods=["POST"])
+def api_hyp_generate():
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        he = getattr(j, "hypothesis_engine", None)
+        if not he:
+            return jsonify({"error": "HypothesisEngine not available"}), 503
+        hyps = he.generate_hypotheses(
+            topic=data.get("topic", ""),
+            max_hyp=int(data.get("max_hyp", 3)),
+        )
+        return jsonify({"hypotheses": [
+            {"id": h.id, "claim": h.claim, "rationale": h.rationale,
+             "prior_probability": h.prior_probability,
+             "predictions": h.predictions, "domain": h.domain,
+             "status": h.status.value}
+            for h in hyps
+        ]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/hypothesis/test", methods=["POST"])
+def api_hyp_test():
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        he = getattr(j, "hypothesis_engine", None)
+        if not he:
+            return jsonify({"error": "HypothesisEngine not available"}), 503
+        hyp = he.test_hypothesis(data.get("hyp_id", ""), data.get("evidence", ""))
+        return jsonify({
+            "id": hyp.id, "claim": hyp.claim,
+            "posterior_probability": hyp.posterior_probability,
+            "status": hyp.status.value,
+            "evidence_for":     hyp.evidence_for[-3:],
+            "evidence_against": hyp.evidence_against[-3:],
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/hypothesis/synthesize", methods=["POST"])
+def api_hyp_synthesize():
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        he = getattr(j, "hypothesis_engine", None)
+        if not he:
+            return jsonify({"error": "HypothesisEngine not available"}), 503
+        theory = he.synthesize_theory(domain=data.get("domain", ""))
+        if not theory:
+            return jsonify({"error": "지지된 가설이 충분하지 않습니다 (최소 2개 필요)"}), 400
+        return jsonify({"name": theory.name, "description": theory.description,
+                        "confidence": theory.confidence, "domain": theory.domain,
+                        "key_principles": theory.key_principles})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/hypothesis/list")
+def api_hyp_list():
+    try:
+        j = get_jarvis()
+        he = getattr(j, "hypothesis_engine", None)
+        if not he:
+            return jsonify({"available": False})
+        return jsonify({
+            "hypotheses": [
+                {"id": h.id, "claim": h.claim,
+                 "posterior_probability": h.posterior_probability,
+                 "status": h.status.value, "domain": h.domain}
+                for h in sorted(he.hypotheses.values(),
+                                key=lambda x: x.posterior_probability, reverse=True)[:20]
+            ],
+            "theories": [
+                {"name": t.name, "description": t.description[:200],
+                 "confidence": t.confidence, "domain": t.domain}
+                for t in he.theories[-5:]
+            ],
+            "status": he.get_status(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 8: Temporal Engine API ====================
+
+@app.route("/jarvis/api/temporal/add_event", methods=["POST"])
+def api_temporal_add():
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        te = getattr(j, "temporal_engine", None)
+        if not te:
+            return jsonify({"error": "TemporalEngine not available"}), 503
+        evt = te.add_event(
+            description=data.get("description", ""),
+            timestamp=data.get("timestamp"),
+            domain=data.get("domain", ""),
+        )
+        return jsonify({"id": evt.id, "description": evt.description,
+                        "timestamp": evt.timestamp})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/temporal/extract", methods=["POST"])
+def api_temporal_extract():
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        te = getattr(j, "temporal_engine", None)
+        if not te:
+            return jsonify({"error": "TemporalEngine not available"}), 503
+        events = te.extract_events_from_text(data.get("text", ""),
+                                              data.get("domain", ""))
+        return jsonify({"events": [
+            {"id": e.id, "description": e.description,
+             "timestamp": e.timestamp, "domain": e.domain}
+            for e in events
+        ]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/temporal/patterns", methods=["POST"])
+def api_temporal_patterns():
+    try:
+        j = get_jarvis()
+        te = getattr(j, "temporal_engine", None)
+        if not te:
+            return jsonify({"error": "TemporalEngine not available"}), 503
+        patterns = te.detect_patterns()
+        return jsonify({"patterns": [
+            {"type": p.pattern_type, "description": p.description,
+             "confidence": p.confidence, "trend": p.trend_direction}
+            for p in patterns
+        ]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/temporal/predict", methods=["POST"])
+def api_temporal_predict():
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        te = getattr(j, "temporal_engine", None)
+        if not te:
+            return jsonify({"error": "TemporalEngine not available"}), 503
+        preds = te.predict_future(
+            domain=data.get("domain", ""),
+            horizon_days=int(data.get("horizon_days", 30)),
+        )
+        return jsonify({"predictions": [
+            {"description": p.event_description,
+             "predicted_time": p.predicted_time,
+             "confidence": p.confidence, "basis": p.basis}
+            for p in preds
+        ]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/temporal/timeline")
+def api_temporal_timeline():
+    try:
+        domain = request.args.get("domain", "")
+        j = get_jarvis()
+        te = getattr(j, "temporal_engine", None)
+        if not te:
+            return jsonify({"available": False})
+        return jsonify({
+            "timeline": te.get_timeline(domain=domain, limit=50),
+            "predictions": [
+                {"description": p.event_description,
+                 "predicted_time": p.predicted_time,
+                 "confidence": p.confidence}
+                for p in sorted(te.predictions,
+                                key=lambda x: x.predicted_time)[:10]
+            ],
+            "status": te.get_status(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 8: Global Workspace API ====================
+
+@app.route("/jarvis/api/workspace/contribute", methods=["POST"])
+def api_ws_contribute():
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        gw = getattr(j, "global_workspace", None)
+        if not gw:
+            return jsonify({"error": "GlobalWorkspace not available"}), 503
+        item = gw.contribute(
+            module_id=data.get("module", "user"),
+            content=data.get("content", ""),
+            salience_boost=float(data.get("salience_boost", 0.0)),
+            tags=data.get("tags", []),
+        )
+        return jsonify({"item_id": item.id, "salience": item.salience})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/workspace/broadcast", methods=["POST"])
+def api_ws_broadcast():
+    try:
+        j = get_jarvis()
+        gw = getattr(j, "global_workspace", None)
+        if not gw:
+            return jsonify({"error": "GlobalWorkspace not available"}), 503
+        evt = gw.compete_and_broadcast()
+        if not evt:
+            return jsonify({"message": "작업공간이 비어 있습니다"})
+        return jsonify({"winner_module": evt.winner_module,
+                        "salience": evt.salience,
+                        "responders": evt.responders,
+                        "preview": evt.content_preview})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/workspace/state")
+def api_ws_state():
+    try:
+        j = get_jarvis()
+        gw = getattr(j, "global_workspace", None)
+        if not gw:
+            return jsonify({"available": False})
+        return jsonify({
+            "workspace": gw.get_workspace_state(),
+            "recent_broadcasts": gw.get_recent_broadcasts(15),
+            "status": gw.get_status(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ==================== 통합 상태 API ====================
 
 @app.route("/jarvis/api/superintelligence/status")
@@ -2105,8 +2394,8 @@ def api_superintelligence_status():
         web_agent = getattr(j, "web_agent", None)
         recursive_improver = getattr(j, "recursive_improver", None)
         return jsonify({
-            "iteration": 7,
-            "codename": "Recursive Self-Improvement",
+            "iteration": 8,
+            "codename": "Global Workspace & Hypothesis Engine",
             "systems": {
                 "tree_of_thoughts": j.tot is not None,
                 "goal_hierarchy": j.goals is not None,
@@ -2130,6 +2419,10 @@ def api_superintelligence_status():
                 "causal_engine": causal_engine is not None,
                 "web_agent": web_agent is not None,
                 "recursive_improver": recursive_improver is not None,
+                # Iteration 8
+                "hypothesis_engine": getattr(j, "hypothesis_engine", None) is not None,
+                "temporal_engine": getattr(j, "temporal_engine", None) is not None,
+                "global_workspace": getattr(j, "global_workspace", None) is not None,
             },
             "stats": {
                 "kg_nodes": j.kg.get_stats()["total_nodes"] if j.kg else 0,
@@ -2146,6 +2439,11 @@ def api_superintelligence_status():
                 "web_tasks": web_agent.get_status()["tasks_total"] if web_agent else 0,
                 "improvement_cycles": recursive_improver.get_status()["total_cycles"] if recursive_improver else 0,
                 "quality_delta": recursive_improver.get_status()["total_quality_delta"] if recursive_improver else 0.0,
+                # Iteration 8
+                "hypothesis_count": getattr(j, "hypothesis_engine", None) and j.hypothesis_engine.get_status()["total_hypotheses"] or 0,
+                "theories_count":   getattr(j, "hypothesis_engine", None) and j.hypothesis_engine.get_status()["total_theories"] or 0,
+                "timeline_events":  getattr(j, "temporal_engine", None) and j.temporal_engine.get_status()["total_events"] or 0,
+                "workspace_broadcasts": getattr(j, "global_workspace", None) and j.global_workspace.get_status()["total_broadcasts"] or 0,
             },
             # For UI header stats
             "memory_palace": {"available": memory_palace is not None, "total_memories": memory_palace.get_stats()["total_memories"] if memory_palace else 0},
@@ -2160,6 +2458,10 @@ def api_superintelligence_status():
             "causal_engine": causal_engine.get_status() if causal_engine else {"available": False},
             "web_agent": web_agent.get_status() if web_agent else {"available": False},
             "recursive_improver": recursive_improver.get_status() if recursive_improver else {"available": False},
+            # Iteration 8
+            "hypothesis_engine": getattr(j, "hypothesis_engine", None) and j.hypothesis_engine.get_status() or {"available": False},
+            "temporal_engine":   getattr(j, "temporal_engine", None) and j.temporal_engine.get_status() or {"available": False},
+            "global_workspace":  getattr(j, "global_workspace", None) and j.global_workspace.get_status() or {"available": False},
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -2423,7 +2725,7 @@ def system_monitor_thread():
 
 if __name__ == "__main__":
     # JARVIS 사전 초기화
-    logger.info("Starting JARVIS Iteration 7 system...")
+    logger.info("Starting JARVIS Iteration 8 system...")
     j = get_jarvis()
 
     # 자율 루프 자동 시작
