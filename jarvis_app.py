@@ -58,6 +58,10 @@ from jarvis.intelligence.knowledge_graph import KnowledgeGraph
 from jarvis.core.consciousness_loop import ConsciousnessLoop
 from jarvis.agents.swarm import AgentSwarm
 from jarvis.core.meta_learner import MetaLearner
+# Iteration 6
+from jarvis.core.executive import ExecutiveController
+from jarvis.intelligence.live_monitor import LiveMonitor
+from jarvis.core.memory_palace import MemoryPalace
 
 # ==================== 앱 초기화 ====================
 
@@ -271,7 +275,29 @@ def create_jarvis() -> JarvisEngine:
     )
     final_jarvis.autonomous_loop = autonomous_loop
 
-    logger.info("JARVIS Iteration 5 — Superintelligence online 🧠")
+    # ── Iteration 6 신규 모듈 ──
+    def live_monitor_cb(event):
+        socketio.emit("live_feed_event", event, namespace="/jarvis")
+
+    live_monitor = LiveMonitor(llm_manager=llm, event_callback=live_monitor_cb)
+    live_monitor.start()
+    logger.info("LiveMonitor started — real-time feeds active")
+
+    memory_palace = MemoryPalace(llm_manager=llm)
+    logger.info(f"MemoryPalace initialized: {memory_palace.get_stats()['total_memories']} memories")
+
+    def exec_progress_cb(event):
+        socketio.emit("executive_event", event, namespace="/jarvis")
+
+    # ExecutiveController는 JarvisEngine 완성 후 생성
+    final_jarvis.live_monitor = live_monitor
+    final_jarvis.memory_palace = memory_palace
+
+    executive = ExecutiveController(jarvis_engine=final_jarvis, progress_callback=exec_progress_cb)
+    final_jarvis.executive = executive
+    logger.info("ExecutiveController online — all systems under command")
+
+    logger.info("JARVIS Iteration 6 — Full Autonomy Achieved 🧠⚡")
     return final_jarvis
 
 
@@ -1636,14 +1662,229 @@ def api_superintelligence():
         return jsonify({"error": str(e)}), 500
 
 
+
+# ==================== Iteration 6: Executive Controller API ====================
+
+@app.route("/jarvis/api/executive", methods=["POST"])
+def api_executive():
+    """총사령관 모드 — 최적 시스템 자동 선택 및 실행"""
+    try:
+        data = request.get_json()
+        problem = data.get("problem", "")
+        force_ultra = data.get("force_ultra", False)
+        j = get_jarvis()
+        if not hasattr(j, "executive") or not j.executive:
+            return jsonify({"error": "ExecutiveController not available"}), 503
+        result = j.executive.execute(problem, force_ultra=force_ultra)
+        return jsonify({
+            "problem": result.problem,
+            "final_answer": result.final_answer,
+            "confidence": result.confidence,
+            "duration": result.total_duration,
+            "systems_used": result.systems_used,
+            "insights": result.insights,
+            "complexity": result.plan.complexity,
+            "rationale": result.plan.rationale,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/executive/stream", methods=["POST"])
+def api_executive_stream():
+    """총사령관 스트리밍"""
+    data = request.get_json()
+    problem = data.get("problem", "")
+
+    def generate():
+        j = get_jarvis()
+        if not hasattr(j, "executive") or not j.executive:
+            yield "data: " + json.dumps({"error": "Not available"}) + "\n\n"
+            return
+        for event in j.executive.execute_streaming(problem):
+            yield "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.route("/jarvis/api/executive/stats")
+def api_executive_stats():
+    try:
+        j = get_jarvis()
+        if not hasattr(j, "executive") or not j.executive:
+            return jsonify({"available": False})
+        return jsonify({"available": True, **j.executive.get_stats(), "history": j.executive.get_history()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 6: Live Monitor API ====================
+
+@app.route("/jarvis/api/feed")
+def api_feed():
+    """실시간 피드 조회"""
+    try:
+        j = get_jarvis()
+        monitor = getattr(j, "live_monitor", None)
+        if not monitor:
+            return jsonify({"error": "LiveMonitor not available"}), 503
+        category = request.args.get("category")
+        source = request.args.get("source")
+        limit = int(request.args.get("limit", 20))
+        min_score = float(request.args.get("min_score", 0))
+        new_only = request.args.get("new_only", "false").lower() == "true"
+        return jsonify({
+            "items": monitor.get_feed(category=category, source=source, limit=limit,
+                                       min_score=min_score, new_only=new_only),
+            "stats": monitor.get_stats(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/feed/digest")
+def api_feed_digest():
+    """AI 뉴스 다이제스트"""
+    try:
+        j = get_jarvis()
+        monitor = getattr(j, "live_monitor", None)
+        if not monitor:
+            return jsonify({"error": "LiveMonitor not available"}), 503
+        hours = int(request.args.get("hours", 24))
+        return jsonify(monitor.get_ai_digest(hours=hours))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/feed/stats")
+def api_feed_stats():
+    try:
+        j = get_jarvis()
+        monitor = getattr(j, "live_monitor", None)
+        if not monitor:
+            return jsonify({"available": False})
+        return jsonify({"available": True, **monitor.get_stats()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 6: Memory Palace API ====================
+
+@app.route("/jarvis/api/palace/stats")
+def api_palace_stats():
+    try:
+        j = get_jarvis()
+        palace = getattr(j, "memory_palace", None)
+        if not palace:
+            return jsonify({"available": False})
+        return jsonify({"available": True, **palace.get_stats()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/palace/recall")
+def api_palace_recall():
+    """기억 검색"""
+    try:
+        q = request.args.get("q", "")
+        memory_type = request.args.get("type")
+        top_k = int(request.args.get("k", 5))
+        j = get_jarvis()
+        palace = getattr(j, "memory_palace", None)
+        if not palace:
+            return jsonify({"error": "MemoryPalace not available"}), 503
+        memories = palace.recall(q, memory_type=memory_type, top_k=top_k)
+        return jsonify({
+            "query": q,
+            "memories": [
+                {"id": m.id, "type": m.type, "content": m.content[:300], "summary": m.summary,
+                 "importance": m.importance, "strength": m.current_strength(), "tags": m.tags}
+                for m in memories
+            ],
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/palace/remember", methods=["POST"])
+def api_palace_remember():
+    """기억 저장"""
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        palace = getattr(j, "memory_palace", None)
+        if not palace:
+            return jsonify({"error": "MemoryPalace not available"}), 503
+        mem = palace.remember(
+            content=data.get("content", ""),
+            memory_type=data.get("type", "semantic"),
+            summary=data.get("summary", ""),
+            importance=float(data.get("importance", 0.5)),
+            tags=data.get("tags", []),
+        )
+        return jsonify({"id": mem.id, "type": mem.type, "summary": mem.summary})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/palace/memories")
+def api_palace_memories():
+    try:
+        j = get_jarvis()
+        palace = getattr(j, "memory_palace", None)
+        if not palace:
+            return jsonify({"error": "MemoryPalace not available"}), 503
+        memory_type = request.args.get("type")
+        limit = int(request.args.get("limit", 30))
+        return jsonify({"memories": palace.get_all_memories(memory_type=memory_type, limit=limit)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/palace/consolidate", methods=["POST"])
+def api_palace_consolidate():
+    """기억 통합 (수면 효과)"""
+    try:
+        j = get_jarvis()
+        palace = getattr(j, "memory_palace", None)
+        if not palace:
+            return jsonify({"error": "MemoryPalace not available"}), 503
+        return jsonify(palace.consolidate())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/palace/context")
+def api_palace_context():
+    """현재 작업 컨텍스트"""
+    try:
+        j = get_jarvis()
+        palace = getattr(j, "memory_palace", None)
+        if not palace:
+            return jsonify({"context": ""})
+        return jsonify({
+            "context": palace.get_working_context(),
+            "preferences": palace.get_user_preferences(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/jarvis/api/superintelligence/status")
 def api_superintelligence_status():
     """초지능 시스템 전체 상태"""
     try:
         j = get_jarvis()
+        live_monitor = getattr(j, "live_monitor", None)
+        memory_palace = getattr(j, "memory_palace", None)
+        executive = getattr(j, "executive", None)
         return jsonify({
-            "iteration": 5,
-            "codename": "Superintelligence",
+            "iteration": 6,
+            "codename": "Full Autonomy",
             "systems": {
                 "tree_of_thoughts": j.tot is not None,
                 "goal_hierarchy": j.goals is not None,
@@ -1660,6 +1901,10 @@ def api_superintelligence_status():
                 "tool_executor": j.tool_executor is not None,
                 "vision_system": j.vision is not None,
                 "skill_library": j.skills is not None,
+                # Iteration 6
+                "executive_controller": executive is not None,
+                "live_monitor": live_monitor is not None,
+                "memory_palace": memory_palace is not None,
             },
             "stats": {
                 "kg_nodes": j.kg.get_stats()["total_nodes"] if j.kg else 0,
@@ -1668,6 +1913,9 @@ def api_superintelligence_status():
                 "consciousness_evals": j.consciousness.get_cognitive_status()["stats"]["total_evaluations"] if j.consciousness else 0,
                 "tot_runs": j.tot.get_stats()["total_runs"] if j.tot else 0,
                 "meta_strategies": len(j.meta_learner.get_status().get("strategies", {})) if j.meta_learner else 0,
+                "live_feed_items": live_monitor.get_stats()["total_items"] if live_monitor else 0,
+                "palace_memories": memory_palace.get_stats()["total_memories"] if memory_palace else 0,
+                "executive_executions": executive.get_stats().get("total_executions", 0) if executive else 0,
             },
         })
     except Exception as e:

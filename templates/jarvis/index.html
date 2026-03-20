@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JARVIS — Iteration 4</title>
+<title>JARVIS — Iteration 6: Full Autonomy</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -155,6 +155,65 @@
   #statusbar .sb-left,#statusbar .sb-right{display:flex;gap:16px}
   #statusbar .sb-item{display:flex;align-items:center;gap:4px} #statusbar .sb-item .label{color:var(--border)}
 
+  /* ToT TAB */
+  #tab-tot{display:flex;flex-direction:column;overflow:hidden}
+  #tot-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #tot-problem-row{display:flex;gap:8px;margin-bottom:8px}
+  #tot-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none}
+  .tot-strategy-btn{padding:8px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;background:var(--panel2);color:var(--text2);transition:all .2s}
+  .tot-strategy-btn:hover,.tot-strategy-btn.active{border-color:var(--accent2);color:var(--accent2);background:rgba(123,47,255,.1)}
+  #tot-output{flex:1;overflow-y:auto;padding:16px}
+  .tot-tree{font-family:var(--font-mono);font-size:11px}
+  .tot-node{padding:8px 10px;margin:4px 0;border-radius:6px;border-left:3px solid var(--border);background:var(--panel2)}
+  .tot-node.best{border-left-color:var(--accent3)} .tot-node.pruned{opacity:.4} .tot-node.current{border-left-color:var(--accent)}
+  .tot-score{font-size:10px;color:var(--accent3);float:right}
+  .tot-solution{padding:14px;background:rgba(0,255,159,.05);border:1px solid var(--accent3);border-radius:var(--radius);margin-top:12px}
+
+  /* EXECUTIVE TAB */
+  #tab-executive{display:flex;flex-direction:column;overflow:hidden}
+  #exec-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #exec-query-row{display:flex;gap:8px;margin-bottom:8px}
+  #exec-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none}
+  .btn-exec{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:linear-gradient(135deg,#ff6b35,#cc3300);color:white;letter-spacing:1px}
+  #exec-output{flex:1;overflow-y:auto;padding:16px;font-size:12px;line-height:1.7}
+  .exec-plan-item{padding:8px 12px;background:var(--panel2);border-radius:6px;margin-bottom:6px;border-left:3px solid var(--accent2)}
+  .exec-system-badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(123,47,255,.2);color:var(--accent2);border:1px solid rgba(123,47,255,.4);margin:2px}
+  #exec-streaming{min-height:60px;padding:12px;background:var(--panel2);border-radius:var(--radius);border:1px solid var(--border);white-space:pre-wrap;font-size:12px;line-height:1.7}
+
+  /* LIVE FEED TAB */
+  #tab-feed{display:flex;flex-direction:column;overflow:hidden}
+  #feed-controls{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0}
+  .feed-filter-btn{padding:5px 12px;border:1px solid var(--border);border-radius:12px;cursor:pointer;font-size:10px;background:var(--panel2);color:var(--text2);transition:all .2s}
+  .feed-filter-btn:hover,.feed-filter-btn.active{border-color:var(--accent);color:var(--accent)}
+  #feed-items{flex:1;overflow-y:auto;padding:10px 16px}
+  .feed-item{padding:10px 12px;background:var(--panel2);border-radius:var(--radius);margin-bottom:8px;border-left:3px solid var(--border);cursor:pointer;transition:all .2s}
+  .feed-item:hover{border-left-color:var(--accent);background:var(--panel)}
+  .feed-item.hn{border-left-color:#ff6600} .feed-item.github{border-left-color:#7b2fff} .feed-item.arxiv{border-left-color:#00d4ff} .feed-item.news{border-left-color:#00ff9f}
+  .feed-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+  .feed-meta{display:flex;gap:10px;font-size:10px;color:var(--text2)}
+  .feed-source-badge{font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,.05)}
+  .feed-importance{font-size:10px;color:var(--accent3)}
+  #feed-digest{padding:12px 16px;border-top:1px solid var(--border);background:var(--panel);flex-shrink:0}
+  .digest-header{font-size:10px;color:var(--accent2);font-weight:700;letter-spacing:1px;margin-bottom:6px}
+  #digest-text{font-size:11px;color:var(--text2);line-height:1.5;max-height:80px;overflow-y:auto}
+
+  /* MEMORY PALACE TAB */
+  #tab-palace{display:flex;flex-direction:column;overflow:hidden}
+  #palace-search-area{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+  #palace-search{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px;outline:none}
+  .btn-palace-search{padding:8px 14px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:linear-gradient(135deg,#7b2fff,#5a1fe0);color:white}
+  #palace-type-filter{display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
+  .palace-type-btn{padding:4px 10px;border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:10px;background:var(--panel2);color:var(--text2);white-space:nowrap;transition:all .2s}
+  .palace-type-btn.active{border-color:var(--accent2);color:var(--accent2)}
+  #palace-memories{flex:1;overflow-y:auto;padding:10px 16px}
+  .palace-memory{padding:10px 12px;background:var(--panel2);border-radius:var(--radius);margin-bottom:8px;border-left:3px solid var(--border)}
+  .palace-memory.episodic{border-left-color:#00d4ff} .palace-memory.semantic{border-left-color:#7b2fff}
+  .palace-memory.procedural{border-left-color:#ff6b35} .palace-memory.working{border-left-color:#00ff9f} .palace-memory.emotional{border-left-color:#ff3860}
+  .palace-mem-type{font-size:9px;font-weight:700;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase}
+  .palace-mem-content{font-size:12px;color:var(--text);margin-bottom:4px}
+  .palace-mem-meta{display:flex;gap:10px;font-size:10px;color:var(--text2)}
+  .palace-strength{color:var(--accent3)}
+
   /* TOAST */
   #toast-container{position:fixed;bottom:50px;right:16px;display:flex;flex-direction:column;gap:6px;z-index:1000}
   .toast{padding:10px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text);box-shadow:0 4px 20px rgba(0,0,0,.5);animation:toastIn .3s ease;max-width:280px}
@@ -171,7 +230,7 @@
   <header id="header">
     <div class="logo">
       <span class="logo-icon">🤖</span>
-      <div><div class="logo-text">JARVIS</div><div class="logo-iter">ITERATION 4 · ONLINE</div></div>
+      <div><div class="logo-text">JARVIS</div><div class="logo-iter">ITERATION 6 · FULL AUTONOMY</div></div>
     </div>
     <div class="header-stats">
       <div class="stat-item"><div class="stat-label">CPU</div><div class="stat-val" id="hdr-cpu">--%</div></div>
@@ -179,6 +238,9 @@
       <div class="stat-item"><div class="stat-label">TURNS</div><div class="stat-val" id="hdr-turns">0</div></div>
       <div class="stat-item"><div class="stat-label">TOOLS</div><div class="stat-val" id="hdr-tools">0</div></div>
       <div class="stat-item"><div class="stat-label">UPTIME</div><div class="stat-val" id="hdr-uptime">--</div></div>
+      <div class="stat-item"><div class="stat-label">MEMORIES</div><div class="stat-val" id="hdr-memories">0</div></div>
+      <div class="stat-item"><div class="stat-label">KG NODES</div><div class="stat-val" id="hdr-kg">0</div></div>
+      <div class="stat-item"><div class="stat-label">FEED</div><div class="stat-val" id="hdr-feed">0</div></div>
     </div>
     <div class="status-indicator">
       <div id="thinking-indicator"><div class="dot-anim"><span></span><span></span><span></span></div> THINKING</div>
@@ -197,13 +259,24 @@
     </div>
     <div class="panel-header"><span class="panel-title">MODULES</span></div>
     <div id="module-status">
+      <div style="font-size:9px;color:var(--text2);letter-spacing:1px;padding:4px 0 2px">ITERATION 5</div>
       <div class="module-item"><div class="module-dot off" id="mod-tooluse"></div><span class="module-name">Tool Use API</span><span class="module-info" id="mod-tooluse-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-tot"></div><span class="module-name">Tree of Thoughts</span><span class="module-info" id="mod-tot-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-swarm"></div><span class="module-name">Agent Swarm</span><span class="module-info" id="mod-swarm-info">6 agents</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-kg"></div><span class="module-name">지식 그래프</span><span class="module-info" id="mod-kg-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-consciousness"></div><span class="module-name">의식 루프</span><span class="module-info" id="mod-consciousness-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-goals"></div><span class="module-name">목표 계층</span><span class="module-info" id="mod-goals-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-meta"></div><span class="module-name">메타 학습</span><span class="module-info" id="mod-meta-info">-</span></div>
+      <div style="font-size:9px;color:var(--text2);letter-spacing:1px;padding:4px 0 2px">ITERATION 6</div>
+      <div class="module-item"><div class="module-dot off" id="mod-executive"></div><span class="module-name">총사령관</span><span class="module-info" id="mod-executive-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-livemon"></div><span class="module-name">실시간 모니터</span><span class="module-info" id="mod-livemon-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-palace"></div><span class="module-name">기억의 궁전</span><span class="module-info" id="mod-palace-info">-</span></div>
+      <div style="font-size:9px;color:var(--text2);letter-spacing:1px;padding:4px 0 2px">이전 ITERATION</div>
       <div class="module-item"><div class="module-dot off" id="mod-autoloop"></div><span class="module-name">자율 루프</span><span class="module-info" id="mod-autoloop-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-debate"></div><span class="module-name">토론 엔진</span><span class="module-info" id="mod-debate-info">5 agents</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-research"></div><span class="module-name">딥 리서치</span><span class="module-info" id="mod-research-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-code"></div><span class="module-name">코드 AI</span><span class="module-info" id="mod-code-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-vision"></div><span class="module-name">비전 시스템</span><span class="module-info" id="mod-vision-info">-</span></div>
-      <div class="module-item"><div class="module-dot off" id="mod-selfmod"></div><span class="module-name">자기 수정</span><span class="module-info" id="mod-selfmod-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-predict"></div><span class="module-name">예측 엔진</span><span class="module-info" id="mod-predict-info">-</span></div>
     </div>
     <div class="panel-header"><span class="panel-title">예측</span></div>
@@ -217,6 +290,10 @@
       <button class="tab-btn" data-tab="debate">⚔️ DEBATE</button>
       <button class="tab-btn" data-tab="research">🔬 RESEARCH</button>
       <button class="tab-btn" data-tab="code">💻 CODE AI</button>
+      <button class="tab-btn" data-tab="tot">🧠 ToT</button>
+      <button class="tab-btn" data-tab="executive">⚡ EXECUTIVE</button>
+      <button class="tab-btn" data-tab="feed">📡 LIVE FEED</button>
+      <button class="tab-btn" data-tab="palace">💎 PALACE</button>
     </div>
 
     <!-- CHAT TAB -->
@@ -224,7 +301,7 @@
       <div id="chat-messages">
         <div class="msg jarvis">
           <div class="msg-avatar">🤖</div>
-          <div><div class="msg-bubble"><strong>JARVIS Iteration 4</strong> 온라인.<br>멀티 에이전트 토론 · 문서 처리 · 선제적 예측 시스템 활성화.</div><div class="msg-meta">JARVIS · 지금</div></div>
+          <div><div class="msg-bubble"><strong>JARVIS Iteration 6 — Full Autonomy</strong> 온라인.<br>총사령관 · 실시간 모니터 · 기억의 궁전 · Tree of Thoughts · 의식 루프 · 에이전트 스웜 활성화.</div><div class="msg-meta">JARVIS · 지금</div></div>
         </div>
       </div>
       <div id="input-area">
@@ -310,6 +387,82 @@
         <div id="code-explanation" style="display:none"></div>
         <pre id="code-tests" style="display:none"></pre>
       </div>
+    </div>
+
+    <!-- ToT TAB -->
+    <div class="tab-content" id="tab-tot">
+      <div id="tot-input-area">
+        <div id="tot-problem-row">
+          <input type="text" id="tot-input" placeholder="Tree of Thoughts로 분석할 문제를 입력하세요..." />
+          <button class="tot-strategy-btn active" data-strategy="beam" id="tot-beam">Beam</button>
+          <button class="tot-strategy-btn" data-strategy="bfs" id="tot-bfs">BFS</button>
+          <button class="tot-strategy-btn" data-strategy="greedy" id="tot-greedy">Greedy</button>
+          <button class="btn-exec" id="btn-tot-run" style="background:linear-gradient(135deg,var(--accent2),#5a1fe0)">🧠 분석</button>
+        </div>
+      </div>
+      <div id="tot-output"><div style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">Tree of Thoughts — 다중 경로 추론 엔진<br>복잡한 문제를 여러 사고 경로로 탐색합니다.</div></div>
+    </div>
+
+    <!-- EXECUTIVE TAB -->
+    <div class="tab-content" id="tab-executive">
+      <div id="exec-input-area">
+        <div id="exec-query-row">
+          <input type="text" id="exec-input" placeholder="총사령관에게 명령을 입력하세요 — 최적 AI 시스템을 자동 조합합니다..." />
+          <button class="btn-exec" id="btn-exec-run">⚡ 실행</button>
+        </div>
+        <div id="exec-systems" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">
+          <span class="exec-system-badge">ToT</span><span class="exec-system-badge">Swarm</span><span class="exec-system-badge">KnowledgeGraph</span>
+          <span class="exec-system-badge">Consciousness</span><span class="exec-system-badge">GoalHierarchy</span><span class="exec-system-badge">MetaLearner</span>
+          <span class="exec-system-badge">MemoryPalace</span><span class="exec-system-badge">LiveMonitor</span>
+        </div>
+      </div>
+      <div id="exec-output">
+        <div id="exec-plan-section" style="display:none">
+          <div style="font-size:10px;color:var(--accent2);letter-spacing:1px;margin-bottom:8px">실행 계획</div>
+          <div id="exec-plan-list"></div>
+        </div>
+        <div id="exec-streaming-section" style="display:none;margin-top:12px">
+          <div style="font-size:10px;color:var(--accent);letter-spacing:1px;margin-bottom:8px">총사령관 응답</div>
+          <div id="exec-streaming"></div>
+        </div>
+        <div id="exec-placeholder" style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">총사령관 (Executive Controller)<br>복잡도에 따라 최적 AI 시스템 조합을 자동 선택하여 실행합니다.</div>
+      </div>
+    </div>
+
+    <!-- LIVE FEED TAB -->
+    <div class="tab-content" id="tab-feed">
+      <div id="feed-controls">
+        <button class="feed-filter-btn active" data-source="all">전체</button>
+        <button class="feed-filter-btn" data-source="hackernews">HN</button>
+        <button class="feed-filter-btn" data-source="github">GitHub</button>
+        <button class="feed-filter-btn" data-source="arxiv">ArXiv</button>
+        <button class="feed-filter-btn" data-source="news">뉴스</button>
+        <button onclick="loadFeed()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--accent);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10px">↻ 새로고침</button>
+        <button onclick="loadFeedDigest()" style="background:none;border:1px solid var(--accent2);color:var(--accent2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10px">📋 요약</button>
+      </div>
+      <div id="feed-items"><div style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">실시간 피드 로딩 중...</div></div>
+      <div id="feed-digest" style="display:none">
+        <div class="digest-header">AI 다이제스트</div>
+        <div id="digest-text"></div>
+      </div>
+    </div>
+
+    <!-- MEMORY PALACE TAB -->
+    <div class="tab-content" id="tab-palace">
+      <div id="palace-search-area">
+        <input type="text" id="palace-search" placeholder="기억 검색 (의미적 유사도 검색)..." />
+        <button class="btn-palace-search" id="btn-palace-search">🔍 검색</button>
+        <button onclick="loadPalace()" style="background:none;border:1px solid var(--border);color:var(--text2);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:11px">↻</button>
+      </div>
+      <div id="palace-type-filter">
+        <button class="palace-type-btn active" data-type="all">전체</button>
+        <button class="palace-type-btn" data-type="episodic">에피소드</button>
+        <button class="palace-type-btn" data-type="semantic">의미</button>
+        <button class="palace-type-btn" data-type="procedural">절차</button>
+        <button class="palace-type-btn" data-type="working">작업</button>
+        <button class="palace-type-btn" data-type="emotional">감정</button>
+      </div>
+      <div id="palace-memories"><div style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">기억의 궁전 — Ebbinghaus 망각 곡선 기반 계층적 메모리<br>탭을 클릭하면 기억이 로드됩니다.</div></div>
     </div>
   </main>
 
@@ -511,8 +664,25 @@ function loadStatus(){
     setMod('mod-research',d.deep_researcher?.available,d.deep_researcher?.available?'READY':'OFF');
     setMod('mod-code',d.code_intelligence?.available,d.code_intelligence?.available?'READY':'OFF');
     setMod('mod-vision',d.vision?.available,d.vision?.available?'READY':'OFF');
-    setMod('mod-selfmod',d.self_modifier?.available,d.self_modifier?.available?'READY':'OFF');
     setMod('mod-predict',d.prediction_engine?.available,`${d.prediction_engine?.stats?.total_interactions||0} 학습`);
+  }).catch(()=>{});
+  // Iteration 5 & 6 extended status
+  fetch('/jarvis/api/superintelligence/status').then(r=>r.json()).then(d=>{
+    // header stats
+    el('hdr-memories').textContent=d.memory_palace?.total_memories||0;
+    el('hdr-kg').textContent=d.knowledge_graph?.nodes||0;
+    el('hdr-feed').textContent=d.live_monitor?.feed_items||0;
+    // iteration 5 modules
+    const tot=d.tree_of_thoughts||{};setMod('mod-tot',tot.available,tot.available?'READY':'OFF');
+    const sw=d.agent_swarm||{};setMod('mod-swarm',sw.available,sw.available?`${sw.agent_count||6} agents`:'OFF');
+    const kg=d.knowledge_graph||{};setMod('mod-kg',kg.available,kg.available?`${kg.nodes||0} nodes`:'OFF');
+    const con=d.consciousness_loop||{};setMod('mod-consciousness',con.available,con.available?'ACTIVE':'OFF');
+    const gl=d.goal_hierarchy||{};setMod('mod-goals',gl.available,gl.available?`${gl.active_goals||0} goals`:'OFF');
+    const ml=d.meta_learner||{};setMod('mod-meta',ml.available,ml.available?`${ml.strategies||0} strats`:'OFF');
+    // iteration 6 modules
+    const ex=d.executive_controller||{};setMod('mod-executive',ex.available,ex.available?'ONLINE':'OFF');
+    const lm=d.live_monitor||{};setMod('mod-livemon',lm.available,lm.available?(lm.is_running?'LIVE':'IDLE'):'OFF');
+    const mp=d.memory_palace||{};setMod('mod-palace',mp.available,mp.available?`${mp.total_memories||0} mems`:'OFF');
   }).catch(()=>{});
 }
 
@@ -579,7 +749,11 @@ function bindEvents(){
     setTimeout(()=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';},0);
   });
   document.querySelectorAll('.qcmd-btn').forEach(b=>b.addEventListener('click',()=>{el('user-input').value=b.dataset.cmd;el('user-input').focus();}));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{
+    switchTab(b.dataset.tab);
+    if(b.dataset.tab==='feed')loadFeed();
+    if(b.dataset.tab==='palace')loadPalace();
+  }));
   el('btn-debate-full').addEventListener('click',()=>startDebate(false));
   el('btn-debate-fast').addEventListener('click',()=>startDebate(true));
   el('debate-input').addEventListener('keydown',e=>{if(e.key==='Enter')startDebate(false);});
@@ -587,12 +761,189 @@ function bindEvents(){
   el('research-input').addEventListener('keydown',e=>{if(e.key==='Enter')startResearch();});
   el('btn-code-gen').addEventListener('click',generateCode);
   el('code-requirement').addEventListener('keydown',e=>{if(e.key==='Enter')generateCode();});
+  // ToT
+  el('btn-tot-run').addEventListener('click',runToT);
+  el('tot-input').addEventListener('keydown',e=>{if(e.key==='Enter')runToT();});
+  document.querySelectorAll('.tot-strategy-btn').forEach(b=>b.addEventListener('click',()=>{
+    totStrategy=b.dataset.strategy;
+    document.querySelectorAll('.tot-strategy-btn').forEach(x=>x.classList.toggle('active',x===b));
+  }));
+  // Executive
+  el('btn-exec-run').addEventListener('click',runExecutive);
+  el('exec-input').addEventListener('keydown',e=>{if(e.key==='Enter')runExecutive();});
+  // Feed filter
+  document.querySelectorAll('.feed-filter-btn').forEach(b=>b.addEventListener('click',()=>{
+    feedFilter=b.dataset.source;
+    document.querySelectorAll('.feed-filter-btn').forEach(x=>x.classList.toggle('active',x===b));
+    loadFeed();
+  }));
+  // Palace filter & search
+  el('btn-palace-search').addEventListener('click',searchPalace);
+  el('palace-search').addEventListener('keydown',e=>{if(e.key==='Enter')searchPalace();});
+  document.querySelectorAll('.palace-type-btn').forEach(b=>b.addEventListener('click',()=>{
+    palaceFilter=b.dataset.type;
+    document.querySelectorAll('.palace-type-btn').forEach(x=>x.classList.toggle('active',x===b));
+    loadPalace();
+  }));
+}
+
+// ── Tree of Thoughts ─────────────────────────────────────────────
+let totStrategy='beam';
+function runToT(){
+  const prob=el('tot-input').value.trim();if(!prob){showToast('문제를 입력하세요','error');return;}
+  const out=el('tot-output');out.innerHTML='<div style="color:var(--text2);font-size:12px">🧠 Tree of Thoughts 탐색 중...</div>';
+  setThinking(true);
+  fetch('/jarvis/api/tot',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({problem:prob,strategy:totStrategy,branching:3,beam_width:2,max_depth:4})
+  }).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    if(d.error){out.innerHTML=`<div style="color:var(--red)">${d.error}</div>`;return;}
+    let html=`<div class="tot-tree">`;
+    const thoughts=d.tree?.thoughts||[];
+    thoughts.slice(0,20).forEach(t=>{
+      const cls=t.is_solution?'best':t.is_pruned?'pruned':'';
+      html+=`<div class="tot-node ${cls}" style="margin-left:${(t.depth||0)*16}px">
+        <span class="tot-score">${((t.value||0)*100).toFixed(0)}%</span>
+        <div style="font-size:11px;color:var(--text2)">깊이 ${t.depth||0} · ${t.thought_type||'thought'}</div>
+        <div style="margin-top:4px">${(t.content||'').slice(0,150)}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+    if(d.solution){
+      html+=`<div class="tot-solution"><div style="font-size:10px;color:var(--accent3);font-weight:700;margin-bottom:8px">최적 해결책 (신뢰도: ${((d.best_value||0)*100).toFixed(0)}%)</div>${renderMd(d.solution)}</div>`;
+    }
+    out.innerHTML=html;
+    showToast('ToT 분석 완료','success');
+  }).catch(e=>{setThinking(false);out.innerHTML=`<div style="color:var(--red)">오류: ${e.message}</div>`;});
+}
+
+// ── Executive Controller ──────────────────────────────────────────
+function runExecutive(){
+  const q=el('exec-input').value.trim();if(!q){showToast('명령을 입력하세요','error');return;}
+  el('exec-placeholder').style.display='none';
+  el('exec-plan-section').style.display='block';el('exec-plan-list').innerHTML='<div style="color:var(--text2);font-size:11px">계획 수립 중...</div>';
+  el('exec-streaming-section').style.display='block';el('exec-streaming').textContent='';
+  setThinking(true);
+  // Use streaming endpoint
+  fetch('/jarvis/api/executive/stream',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({query:q})
+  }).then(r=>{
+    if(!r.body){return r.json().then(d=>{el('exec-streaming').textContent=d.response||JSON.stringify(d);setThinking(false);});}
+    const reader=r.body.getReader();const dec=new TextDecoder();let buf='';
+    function pump(){return reader.read().then(({done,value})=>{
+      if(done){setThinking(false);return;}
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop();
+      lines.forEach(line=>{
+        if(line.startsWith('data:')){
+          try{
+            const ev=JSON.parse(line.slice(5).trim());
+            if(ev.type==='plan'){renderExecPlan(ev.plan);}
+            else if(ev.type==='chunk'){el('exec-streaming').textContent+=ev.content;}
+            else if(ev.type==='done'){setThinking(false);showToast('실행 완료','success');}
+            else if(ev.type==='error'){setThinking(false);showToast(ev.message||'오류','error');}
+          }catch(e){}
+        }
+      });
+      return pump();
+    });}
+    return pump();
+  }).catch(e=>{setThinking(false);showToast('실행 실패: '+e.message,'error');});
+}
+
+function renderExecPlan(plan){
+  if(!plan||!plan.steps)return;
+  el('exec-plan-list').innerHTML=plan.steps.map((s,i)=>`
+    <div class="exec-plan-item">
+      <span style="font-size:10px;color:var(--text2)">${i+1}. [${s.system||'?'}]</span>
+      <span style="font-size:12px;margin-left:6px">${s.action||s}</span>
+    </div>`).join('');
+}
+
+// ── Live Feed ─────────────────────────────────────────────────────
+let feedFilter='all';
+function loadFeed(){
+  fetch('/jarvis/api/feed').then(r=>r.json()).then(d=>{
+    const items=d.feed||d.items||[];
+    el('hdr-feed').textContent=items.length;
+    renderFeedItems(items);
+  }).catch(()=>el('feed-items').innerHTML='<div style="color:var(--red);padding:20px">피드 로드 실패</div>');
+}
+
+function renderFeedItems(items){
+  const container=el('feed-items');
+  const filtered=feedFilter==='all'?items:items.filter(i=>(i.source||'').toLowerCase()===feedFilter);
+  if(!filtered.length){container.innerHTML='<div style="color:var(--text2);text-align:center;margin-top:30px;font-size:12px">피드 항목 없음</div>';return;}
+  container.innerHTML=filtered.slice(0,50).map(item=>{
+    const src=(item.source||'').toLowerCase();
+    const srcClass=src.includes('hack')?'hn':src.includes('github')?'github':src.includes('arxiv')?'arxiv':'news';
+    const imp=item.importance||0;
+    return `<div class="feed-item ${srcClass}" onclick="window.open('${item.url||'#'}','_blank')">
+      <div class="feed-title">${item.title||'(제목 없음)'}</div>
+      <div class="feed-meta">
+        <span class="feed-source-badge">${item.source||'?'}</span>
+        <span>${item.author||''}</span>
+        <span class="feed-importance">${imp>0?'★'.repeat(Math.min(imp,5)):''}</span>
+        <span style="margin-left:auto">${item.timestamp?new Date(item.timestamp*1000).toLocaleTimeString():''}</span>
+      </div>
+      ${item.summary?`<div style="font-size:11px;color:var(--text2);margin-top:4px">${item.summary.slice(0,100)}...</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function loadFeedDigest(){
+  const dig=el('feed-digest');const txt=el('digest-text');
+  dig.style.display='block';txt.textContent='다이제스트 생성 중...';
+  fetch('/jarvis/api/feed/digest').then(r=>r.json()).then(d=>{
+    txt.innerHTML=renderMd(d.digest||d.summary||'다이제스트 없음');
+    showToast('다이제스트 생성 완료','success');
+  }).catch(()=>{txt.textContent='다이제스트 생성 실패';});
+}
+
+// ── Memory Palace ─────────────────────────────────────────────────
+let palaceFilter='all';
+function loadPalace(){
+  const url=palaceFilter==='all'?'/jarvis/api/palace/memories':`/jarvis/api/palace/memories?memory_type=${palaceFilter}`;
+  fetch(url).then(r=>r.json()).then(d=>{
+    const mems=d.memories||[];
+    renderPalaceMemories(mems);
+    el('hdr-memories').textContent=d.total||mems.length;
+  }).catch(()=>el('palace-memories').innerHTML='<div style="color:var(--red);padding:20px">메모리 로드 실패</div>');
+}
+
+function renderPalaceMemories(mems){
+  const container=el('palace-memories');
+  if(!mems.length){container.innerHTML='<div style="color:var(--text2);text-align:center;margin-top:30px;font-size:12px">기억 없음</div>';return;}
+  const typeColors={episodic:'#00d4ff',semantic:'#7b2fff',procedural:'#ff6b35',working:'#00ff9f',emotional:'#ff3860'};
+  container.innerHTML=mems.slice(0,30).map(m=>{
+    const t=(m.memory_type||m.type||'semantic').toLowerCase();
+    const strength=((m.current_strength||m.strength||0)*100).toFixed(0);
+    const color=typeColors[t]||'var(--border)';
+    return `<div class="palace-memory ${t}">
+      <div class="palace-mem-type" style="color:${color}">${t}</div>
+      <div class="palace-mem-content">${(m.content||'').slice(0,200)}</div>
+      <div class="palace-mem-meta">
+        <span class="palace-strength">강도 ${strength}%</span>
+        <span>접근 ${m.access_count||0}회</span>
+        <span>${m.importance?'중요도 '+m.importance:''}</span>
+        <span style="margin-left:auto;font-size:9px">${m.created_at?new Date(m.created_at).toLocaleDateString():''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function searchPalace(){
+  const q=el('palace-search').value.trim();if(!q){loadPalace();return;}
+  fetch(`/jarvis/api/palace/recall?query=${encodeURIComponent(q)}&limit=20`)
+    .then(r=>r.json()).then(d=>renderPalaceMemories(d.memories||[]))
+    .catch(()=>showToast('검색 실패','error'));
 }
 
 function init(){
   bindEvents();initSocket();
   setInterval(()=>el('sb-time').textContent=new Date().toLocaleTimeString('ko-KR'),1000);
   setInterval(loadStatus,10000);setInterval(loadPredictions,30000);
+  setInterval(loadFeed,60000);
   loadStatus();
 }
 document.addEventListener('DOMContentLoaded',init);
