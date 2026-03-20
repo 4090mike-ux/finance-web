@@ -51,6 +51,13 @@ from jarvis.agents.code_intelligence import CodeIntelligence
 from jarvis.core.debate_engine import DebateEngine
 from jarvis.intelligence.document_processor import DocumentProcessor
 from jarvis.core.prediction_engine import PredictionEngine
+# Iteration 5
+from jarvis.core.tree_of_thoughts import TreeOfThoughts
+from jarvis.core.goal_hierarchy import GoalHierarchy
+from jarvis.intelligence.knowledge_graph import KnowledgeGraph
+from jarvis.core.consciousness_loop import ConsciousnessLoop
+from jarvis.agents.swarm import AgentSwarm
+from jarvis.core.meta_learner import MetaLearner
 
 # ==================== 앱 초기화 ====================
 
@@ -177,7 +184,44 @@ def create_jarvis() -> JarvisEngine:
     )
     logger.info(f"PredictionEngine initialized ({prediction_engine.get_stats()['total_interactions']} patterns)")
 
-    # 최종 엔진 (Orchestrator + Iteration 3 + Iteration 4)
+    # ── Iteration 5 신규 모듈 ──
+    tree_of_thoughts = TreeOfThoughts(llm_manager=llm)
+    logger.info("TreeOfThoughts initialized")
+
+    def goal_event_cb(event):
+        socketio.emit("goal_event", event, namespace="/jarvis")
+
+    goal_hierarchy = GoalHierarchy(
+        llm_manager=llm,
+        memory_manager=memory,
+        event_callback=goal_event_cb,
+    )
+    logger.info(f"GoalHierarchy initialized: {goal_hierarchy.get_stats()['total_goals']} goals")
+
+    knowledge_graph = KnowledgeGraph(llm_manager=llm)
+    knowledge_graph.compute_pagerank()
+    logger.info(f"KnowledgeGraph initialized: {knowledge_graph.get_stats()['total_nodes']} nodes")
+
+    def consciousness_event_cb(event):
+        socketio.emit("consciousness_event", event, namespace="/jarvis")
+
+    consciousness_loop = ConsciousnessLoop(
+        llm_manager=llm,
+        memory_manager=memory,
+        event_callback=consciousness_event_cb,
+    )
+    logger.info("ConsciousnessLoop initialized")
+
+    def swarm_progress_cb(event):
+        socketio.emit("swarm_event", event, namespace="/jarvis")
+
+    agent_swarm = AgentSwarm(llm_manager=llm, progress_callback=swarm_progress_cb)
+    logger.info("AgentSwarm initialized")
+
+    meta_learner = MetaLearner(llm_manager=llm)
+    logger.info(f"MetaLearner initialized")
+
+    # 최종 엔진 (Orchestrator + Iteration 3 + Iteration 4 + Iteration 5)
     final_jarvis = JarvisEngine(
         llm_manager=llm,
         memory_manager=memory,
@@ -197,7 +241,16 @@ def create_jarvis() -> JarvisEngine:
         debate_engine=debate_engine,
         document_processor=document_processor,
         prediction_engine=prediction_engine,
+        # Iteration 5
+        tree_of_thoughts=tree_of_thoughts,
+        goal_hierarchy=goal_hierarchy,
+        knowledge_graph=knowledge_graph,
+        consciousness_loop=consciousness_loop,
+        agent_swarm=agent_swarm,
+        meta_learner=meta_learner,
     )
+    # GoalHierarchy에 tool_executor 주입 (엔진 초기화 후)
+    goal_hierarchy.tool_executor = final_jarvis.tool_executor
 
     # 자율 루프 초기화 (JarvisEngine 참조 포함)
     def auto_event_callback(event):
@@ -218,7 +271,7 @@ def create_jarvis() -> JarvisEngine:
     )
     final_jarvis.autonomous_loop = autonomous_loop
 
-    logger.info("JARVIS Iteration 4 — All systems operational")
+    logger.info("JARVIS Iteration 5 — Superintelligence online 🧠")
     return final_jarvis
 
 
@@ -1067,6 +1120,555 @@ def api_predict():
             ],
             "suggestions": suggestions,
             "stats": j.prediction_engine.get_stats(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 5: Tree of Thoughts API ====================
+
+@app.route("/jarvis/api/tot", methods=["POST"])
+def api_tot():
+    """Tree of Thoughts 추론"""
+    try:
+        data = request.get_json()
+        problem = data.get("problem", "")
+        strategy = data.get("strategy", "beam")
+        branching = int(data.get("branching", 3))
+        beam_width = int(data.get("beam_width", 2))
+        max_depth = int(data.get("max_depth", 4))
+
+        j = get_jarvis()
+        if not j.tot:
+            return jsonify({"error": "TreeOfThoughts not available"}), 503
+
+        tree = j.tot.think(
+            problem=problem,
+            strategy=strategy,
+            branching=branching,
+            beam_width=beam_width,
+            max_depth=max_depth,
+        )
+        return jsonify({
+            "problem": tree.problem,
+            "final_answer": tree.final_answer,
+            "confidence": tree.confidence,
+            "total_thoughts": tree.total_thoughts,
+            "pruned_branches": tree.pruned_branches,
+            "duration": tree.duration,
+            "strategy": tree.strategy,
+            "best_path": tree.get_path_contents(),
+            "markdown": j.tot.format_tree_markdown(tree),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/tot/stream", methods=["POST"])
+def api_tot_stream():
+    """Tree of Thoughts 스트리밍 추론"""
+    data = request.get_json()
+    problem = data.get("problem", "")
+
+    def generate():
+        j = get_jarvis()
+        if not j.tot:
+            yield "data: " + json.dumps({"error": "Not available"}) + "\n\n"
+            return
+        for event in j.tot.think_streaming(problem, branching=int(data.get("branching", 3))):
+            yield "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.route("/jarvis/api/tot/stats")
+def api_tot_stats():
+    try:
+        j = get_jarvis()
+        if not j.tot:
+            return jsonify({"available": False})
+        return jsonify({"available": True, **j.tot.get_stats(), "history": j.tot.get_history()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 5: Goal Hierarchy API ====================
+
+@app.route("/jarvis/api/goals", methods=["GET"])
+def api_goals_list():
+    """목표 목록 조회"""
+    try:
+        j = get_jarvis()
+        if not j.goals:
+            return jsonify({"error": "GoalHierarchy not available"}), 503
+        status = request.args.get("status")
+        root_only = request.args.get("root_only", "true").lower() == "true"
+        return jsonify({
+            "goals": j.goals.list_goals(status=status, root_only=root_only),
+            "stats": j.goals.get_stats(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/goals", methods=["POST"])
+def api_goals_create():
+    """목표 생성 및 자동 분해"""
+    try:
+        data = request.get_json()
+        goal_desc = data.get("goal", "")
+        priority = data.get("priority", "MEDIUM")
+        auto_execute = data.get("auto_execute", False)
+        j = get_jarvis()
+        if not j.goals:
+            return jsonify({"error": "GoalHierarchy not available"}), 503
+
+        goal = j.goals.create_goal(
+            description=goal_desc,
+            priority=priority,
+            auto_decompose=True,
+        )
+
+        result = {"goal_id": goal.id, "goal": j.goals.get_goal_tree(goal.id)}
+        if auto_execute:
+            j.goals.execute_goal_background(goal.id)
+            result["execution"] = "started_background"
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/goals/<goal_id>")
+def api_goal_get(goal_id):
+    try:
+        j = get_jarvis()
+        if not j.goals:
+            return jsonify({"error": "GoalHierarchy not available"}), 503
+        tree = j.goals.get_goal_tree(goal_id)
+        if not tree:
+            return jsonify({"error": "Goal not found"}), 404
+        return jsonify(tree)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/goals/<goal_id>/execute", methods=["POST"])
+def api_goal_execute(goal_id):
+    """목표 실행"""
+    try:
+        data = request.get_json() or {}
+        background = data.get("background", True)
+        j = get_jarvis()
+        if not j.goals:
+            return jsonify({"error": "GoalHierarchy not available"}), 503
+
+        if background:
+            result = j.goals.execute_goal_background(goal_id)
+        else:
+            result = j.goals.execute_goal(goal_id)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/goals/<goal_id>/cancel", methods=["POST"])
+def api_goal_cancel(goal_id):
+    try:
+        j = get_jarvis()
+        if not j.goals:
+            return jsonify({"error": "GoalHierarchy not available"}), 503
+        success = j.goals.cancel_goal(goal_id)
+        return jsonify({"success": success})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 5: Knowledge Graph API ====================
+
+@app.route("/jarvis/api/kg/stats")
+def api_kg_stats():
+    try:
+        j = get_jarvis()
+        if not j.kg:
+            return jsonify({"available": False})
+        return jsonify({"available": True, **j.kg.get_stats()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/kg/nodes")
+def api_kg_nodes():
+    try:
+        j = get_jarvis()
+        if not j.kg:
+            return jsonify({"error": "KnowledgeGraph not available"}), 503
+        limit = int(request.args.get("limit", 100))
+        return jsonify({"nodes": j.kg.get_all_nodes(limit=limit)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/kg/edges")
+def api_kg_edges():
+    try:
+        j = get_jarvis()
+        if not j.kg:
+            return jsonify({"error": "KnowledgeGraph not available"}), 503
+        return jsonify({"edges": j.kg.get_all_edges()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/kg/search")
+def api_kg_search():
+    try:
+        q = request.args.get("q", "")
+        j = get_jarvis()
+        if not j.kg:
+            return jsonify({"error": "KnowledgeGraph not available"}), 503
+        return jsonify({"query": q, "results": j.kg.semantic_search(q)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/kg/neighbors")
+def api_kg_neighbors():
+    try:
+        name = request.args.get("name", "")
+        depth = int(request.args.get("depth", 1))
+        j = get_jarvis()
+        if not j.kg:
+            return jsonify({"error": "KnowledgeGraph not available"}), 503
+        return jsonify(j.kg.get_neighbors(name, depth=depth))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/kg/path")
+def api_kg_path():
+    try:
+        src = request.args.get("from", "")
+        tgt = request.args.get("to", "")
+        j = get_jarvis()
+        if not j.kg:
+            return jsonify({"error": "KnowledgeGraph not available"}), 503
+        path = j.kg.find_path(src, tgt)
+        if not path:
+            return jsonify({"found": False, "from": src, "to": tgt})
+        node_names = [j.kg._nodes[nid].name for nid in path.nodes if nid in j.kg._nodes]
+        return jsonify({"found": True, "path": node_names, "description": path.description, "hops": len(path.nodes) - 1})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/kg/reason", methods=["POST"])
+def api_kg_reason():
+    """지식 그래프 기반 추론"""
+    try:
+        data = request.get_json()
+        question = data.get("question", "")
+        j = get_jarvis()
+        if not j.kg:
+            return jsonify({"error": "KnowledgeGraph not available"}), 503
+        return jsonify(j.kg.reason(question))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/kg/extract", methods=["POST"])
+def api_kg_extract():
+    """텍스트에서 지식 추출"""
+    try:
+        data = request.get_json()
+        text = data.get("text", "")
+        source = data.get("source", "manual")
+        j = get_jarvis()
+        if not j.kg:
+            return jsonify({"error": "KnowledgeGraph not available"}), 503
+        result = j.kg.extract_from_text(text, source=source)
+        j.kg.compute_pagerank()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/kg/clusters")
+def api_kg_clusters():
+    try:
+        j = get_jarvis()
+        if not j.kg:
+            return jsonify({"error": "KnowledgeGraph not available"}), 503
+        return jsonify({"clusters": j.kg.get_clusters()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 5: Consciousness API ====================
+
+@app.route("/jarvis/api/consciousness/status")
+def api_consciousness_status():
+    try:
+        j = get_jarvis()
+        if not j.consciousness:
+            return jsonify({"available": False})
+        return jsonify({"available": True, **j.consciousness.get_cognitive_status()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/consciousness/reflect")
+def api_consciousness_reflect():
+    """자기 성찰"""
+    try:
+        j = get_jarvis()
+        if not j.consciousness:
+            return jsonify({"error": "ConsciousnessLoop not available"}), 503
+        return jsonify(j.consciousness.self_reflect())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/consciousness/evaluate", methods=["POST"])
+def api_consciousness_evaluate():
+    """응답 품질 즉시 평가"""
+    try:
+        data = request.get_json()
+        query = data.get("query", "")
+        response_text = data.get("response", "")
+        deep = data.get("deep", False)
+        j = get_jarvis()
+        if not j.consciousness:
+            return jsonify({"error": "ConsciousnessLoop not available"}), 503
+
+        if deep:
+            return jsonify(j.consciousness.deep_evaluate(query, response_text))
+
+        eval_result = j.consciousness.evaluate_response(query, response_text)
+        return jsonify({
+            "quality_score": eval_result.quality_score,
+            "confidence": eval_result.confidence,
+            "hallucination_risk": eval_result.hallucination_risk,
+            "needs_rethink": eval_result.needs_rethink,
+            "rethink_reason": eval_result.rethink_reason,
+            "uncertainty_flags": eval_result.uncertainty_flags,
+            "contradictions": eval_result.contradictions,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/consciousness/history")
+def api_consciousness_history():
+    try:
+        j = get_jarvis()
+        if not j.consciousness:
+            return jsonify({"evaluations": []})
+        n = int(request.args.get("n", 20))
+        return jsonify({"evaluations": j.consciousness.get_recent_evaluations(n)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 5: Agent Swarm API ====================
+
+@app.route("/jarvis/api/swarm", methods=["POST"])
+def api_swarm():
+    """에이전트 스웜 실행"""
+    try:
+        data = request.get_json()
+        goal = data.get("goal", "")
+        roles = data.get("roles", None)
+        max_agents = int(data.get("max_agents", 4))
+        j = get_jarvis()
+        if not j.swarm:
+            return jsonify({"error": "AgentSwarm not available"}), 503
+
+        result = j.swarm.execute(goal=goal, roles=roles, max_agents=max_agents)
+        return jsonify({
+            "goal": result.goal,
+            "synthesis": result.synthesis,
+            "confidence": result.confidence,
+            "success_rate": result.success_rate,
+            "consensus_points": result.consensus_points,
+            "contradictions": result.contradictions,
+            "recommended_action": result.recommended_action,
+            "total_duration": result.total_duration,
+            "agents": [
+                {"role": a.role, "success": a.success, "confidence": a.confidence, "result": a.result[:300]}
+                for a in result.agents
+            ],
+            "markdown": j.swarm.format_markdown(result),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/swarm/history")
+def api_swarm_history():
+    try:
+        j = get_jarvis()
+        if not j.swarm:
+            return jsonify({"history": []})
+        return jsonify({"history": j.swarm.get_history()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 5: Meta Learner API ====================
+
+@app.route("/jarvis/api/meta/status")
+def api_meta_status():
+    try:
+        j = get_jarvis()
+        if not j.meta_learner:
+            return jsonify({"available": False})
+        return jsonify({"available": True, **j.meta_learner.get_status()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/meta/optimize", methods=["POST"])
+def api_meta_optimize():
+    """전략 최적화 실행"""
+    try:
+        j = get_jarvis()
+        if not j.meta_learner:
+            return jsonify({"error": "MetaLearner not available"}), 503
+        result = j.meta_learner.optimize_strategies()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 5: 초지능 통합 API ====================
+
+@app.route("/jarvis/api/superintelligence", methods=["POST"])
+def api_superintelligence():
+    """
+    JARVIS 초지능 모드 — 모든 Iteration 5 시스템을 통합하여
+    최고 수준의 문제 해결 수행
+    """
+    try:
+        data = request.get_json()
+        problem = data.get("problem", "")
+        mode = data.get("mode", "full")  # full / fast / research
+
+        j = get_jarvis()
+        results = {"problem": problem, "mode": mode, "components": {}}
+
+        # 1. Tree of Thoughts 추론
+        if j.tot and mode in ("full", "fast"):
+            strategy = "greedy" if mode == "fast" else "beam"
+            tree = j.tot.think(problem, strategy=strategy, branching=3, max_depth=3)
+            results["components"]["tree_of_thoughts"] = {
+                "answer": tree.final_answer,
+                "confidence": tree.confidence,
+                "thoughts_explored": tree.total_thoughts,
+            }
+
+        # 2. 멀티 에이전트 스웜
+        if j.swarm and mode == "full":
+            swarm_result = j.swarm.execute(goal=problem, max_agents=4)
+            results["components"]["swarm"] = {
+                "synthesis": swarm_result.synthesis[:500],
+                "confidence": swarm_result.confidence,
+                "consensus_points": swarm_result.consensus_points[:3],
+            }
+
+        # 3. 지식 그래프 추론
+        if j.kg and j.kg.get_stats()["total_nodes"] > 0:
+            kg_result = j.kg.reason(problem)
+            results["components"]["knowledge_graph"] = {
+                "answer": kg_result.get("answer", "")[:300],
+                "relevant_concepts": kg_result.get("relevant_concepts", [])[:5],
+            }
+
+        # 4. 딥 리서치 (research 모드)
+        if j.deep_researcher and mode == "research":
+            research = j.deep_researcher.research(problem, depth=2)
+            results["components"]["deep_research"] = {
+                "summary": research.executive_summary[:400],
+                "key_findings": research.key_findings[:3],
+            }
+
+        # 5. 최종 통합 답변 (LLM)
+        component_texts = []
+        for comp_name, comp_data in results["components"].items():
+            answer = comp_data.get("answer") or comp_data.get("synthesis") or comp_data.get("summary", "")
+            if answer:
+                component_texts.append(f"[{comp_name}]\n{answer}")
+
+        if component_texts:
+            from jarvis.llm.manager import Message
+            synthesis_prompt = f"""문제: {problem}
+
+여러 AI 시스템의 분석 결과:
+{chr(10).join(component_texts[:3])}
+
+이 모든 분석을 통합하여 최고 수준의 종합 답변을 제공하세요.
+각 시스템의 핵심 인사이트를 모두 반영하되, 명확하고 실용적으로 작성하세요."""
+
+            resp = j.llm.chat([Message(role="user", content=synthesis_prompt)], max_tokens=4096)
+            results["final_answer"] = resp.content
+        else:
+            # 단순 채팅으로 폴백
+            chat_result = j.chat(problem)
+            results["final_answer"] = chat_result["response"]
+
+        # 6. 의식 루프 평가
+        if j.consciousness and results.get("final_answer"):
+            eval_r = j.consciousness.evaluate_response(problem, results["final_answer"])
+            results["quality"] = {
+                "score": eval_r.quality_score,
+                "confidence": eval_r.confidence,
+                "hallucination_risk": eval_r.hallucination_risk,
+            }
+
+        return jsonify(results)
+
+    except Exception as e:
+        logger.error(f"Superintelligence API error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/superintelligence/status")
+def api_superintelligence_status():
+    """초지능 시스템 전체 상태"""
+    try:
+        j = get_jarvis()
+        return jsonify({
+            "iteration": 5,
+            "codename": "Superintelligence",
+            "systems": {
+                "tree_of_thoughts": j.tot is not None,
+                "goal_hierarchy": j.goals is not None,
+                "knowledge_graph": j.kg is not None,
+                "consciousness_loop": j.consciousness is not None,
+                "agent_swarm": j.swarm is not None,
+                "meta_learner": j.meta_learner is not None,
+                "debate_engine": j.debate_engine is not None,
+                "deep_researcher": j.deep_researcher is not None,
+                "autonomous_loop": j.autonomous_loop is not None,
+                "self_modifier": j.self_modifier is not None,
+                "code_intelligence": j.code_intelligence is not None,
+                "prediction_engine": j.prediction_engine is not None,
+                "tool_executor": j.tool_executor is not None,
+                "vision_system": j.vision is not None,
+                "skill_library": j.skills is not None,
+            },
+            "stats": {
+                "kg_nodes": j.kg.get_stats()["total_nodes"] if j.kg else 0,
+                "kg_edges": j.kg.get_stats()["total_edges"] if j.kg else 0,
+                "goals_total": j.goals.get_stats()["total_goals"] if j.goals else 0,
+                "consciousness_evals": j.consciousness.get_cognitive_status()["stats"]["total_evaluations"] if j.consciousness else 0,
+                "tot_runs": j.tot.get_stats()["total_runs"] if j.tot else 0,
+                "meta_strategies": len(j.meta_learner.get_status().get("strategies", {})) if j.meta_learner else 0,
+            },
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

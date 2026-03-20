@@ -1,8 +1,9 @@
 """
-JARVIS 핵심 엔진 — Iteration 4
+JARVIS 핵심 엔진 — Iteration 5 (초지능)
 모든 모듈을 통합하는 중앙 오케스트레이터
 실제 Claude Tool Use API + 고급 추론 + 오케스트레이터 + 스킬 라이브러리
 + 멀티 에이전트 토론 + 문서 처리 + 선제적 예측 엔진
++ Tree of Thoughts + 목표 계층 + 지식 그래프 + 의식 루프 + 메타 학습
 """
 
 import re
@@ -42,6 +43,13 @@ class JarvisEngine:
         debate_engine=None,
         document_processor=None,
         prediction_engine=None,
+        # Iteration 5
+        tree_of_thoughts=None,
+        goal_hierarchy=None,
+        knowledge_graph=None,
+        consciousness_loop=None,
+        agent_swarm=None,
+        meta_learner=None,
     ):
         self.llm = llm_manager
         self.memory = memory_manager
@@ -62,6 +70,13 @@ class JarvisEngine:
         self.debate_engine = debate_engine
         self.document_processor = document_processor
         self.prediction_engine = prediction_engine
+        # Iteration 5
+        self.tot = tree_of_thoughts         # Tree of Thoughts
+        self.goals = goal_hierarchy         # 목표 계층
+        self.kg = knowledge_graph           # 지식 그래프
+        self.consciousness = consciousness_loop  # 의식 루프
+        self.swarm = agent_swarm            # 에이전트 스웜
+        self.meta_learner = meta_learner    # 메타 학습
 
         self.conversation_history = []
         self.is_thinking = False
@@ -105,7 +120,11 @@ class JarvisEngine:
             logger.warning(f"ToolExecutor init failed: {e}")
             self.tool_executor = None
 
-        logger.info("JARVIS Engine Iteration 3 — All systems operational")
+        # ── Iteration 5: 의식 루프 활성화 ──
+        if self.consciousness:
+            self.consciousness.activate()
+
+        logger.info("JARVIS Engine Iteration 5 — Superintelligence online")
 
     # ==================== Anthropic 클라이언트 초기화 ====================
 
@@ -158,12 +177,56 @@ class JarvisEngine:
                 except Exception:
                     pass
 
+            # ── Iteration 5: 의식 루프 평가 ──
+            consciousness_eval = None
+            if self.consciousness and self.consciousness.is_active():
+                try:
+                    eval_result = self.consciousness.evaluate_response(user_input, response)
+                    consciousness_eval = {
+                        "quality_score": eval_result.quality_score,
+                        "confidence": eval_result.confidence,
+                        "needs_rethink": eval_result.needs_rethink,
+                        "hallucination_risk": eval_result.hallucination_risk,
+                    }
+                except Exception:
+                    pass
+
+            # ── Iteration 5: 메타 학습 ──
+            if self.meta_learner:
+                try:
+                    strategy = tools_list[0] if tools_list else "direct"
+                    quality_rating = float(consciousness_eval["quality_score"] * 5) if consciousness_eval else 3.0
+                    self.meta_learner.record_outcome(
+                        query=user_input,
+                        strategy=strategy,
+                        tools_used=tools_list,
+                        success=True,
+                        duration=duration,
+                        rating=quality_rating,
+                    )
+                except Exception:
+                    pass
+
+            # ── Iteration 5: 지식 그래프 업데이트 (중요 응답만) ──
+            if self.kg and len(response) > 200:
+                try:
+                    import threading
+                    def _bg_kg_update():
+                        self.kg.extract_from_text(
+                            text=f"Q: {user_input}\nA: {response[:1500]}",
+                            source="conversation",
+                        )
+                    threading.Thread(target=_bg_kg_update, daemon=True).start()
+                except Exception:
+                    pass
+
             self.is_thinking = False
             return {
                 "response": response,
                 "tools_used": tools_list,
                 "duration": round(duration, 2),
                 "timestamp": datetime.now().isoformat(),
+                "consciousness": consciousness_eval,
             }
 
         except Exception as e:
