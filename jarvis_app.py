@@ -47,6 +47,10 @@ from jarvis.core.autonomous_loop import AutonomousLoop
 from jarvis.core.self_modifier import SelfModifier
 from jarvis.research.deep_researcher import DeepResearcher
 from jarvis.agents.code_intelligence import CodeIntelligence
+# Iteration 4
+from jarvis.core.debate_engine import DebateEngine
+from jarvis.intelligence.document_processor import DocumentProcessor
+from jarvis.core.prediction_engine import PredictionEngine
 
 # ==================== 앱 초기화 ====================
 
@@ -64,8 +68,8 @@ socketio = SocketIO(
 # ==================== JARVIS 초기화 ====================
 
 def create_jarvis() -> JarvisEngine:
-    """JARVIS 엔진 생성 — Iteration 2"""
-    logger.info("Initializing JARVIS Iteration 2...")
+    """JARVIS 엔진 생성 — Iteration 4"""
+    logger.info("Initializing JARVIS Iteration 4...")
 
     # ── 핵심 모듈 ──
     llm = LLMManager(
@@ -157,7 +161,23 @@ def create_jarvis() -> JarvisEngine:
     self_modifier = SelfModifier(llm_manager=llm)
     logger.info("SelfModifier initialized")
 
-    # 최종 엔진 (Orchestrator + Iteration 3 포함)
+    # ── Iteration 4 신규 모듈 ──
+    debate_engine = DebateEngine(llm_manager=llm)
+    logger.info("DebateEngine initialized (5 agents)")
+
+    document_processor = DocumentProcessor(llm_manager=llm)
+    logger.info("DocumentProcessor initialized")
+
+    def pred_bg_callback(event):
+        socketio.emit("prediction_event", event, namespace="/jarvis")
+
+    prediction_engine = PredictionEngine(
+        llm_manager=llm,
+        background_callback=pred_bg_callback,
+    )
+    logger.info(f"PredictionEngine initialized ({prediction_engine.get_stats()['total_interactions']} patterns)")
+
+    # 최종 엔진 (Orchestrator + Iteration 3 + Iteration 4)
     final_jarvis = JarvisEngine(
         llm_manager=llm,
         memory_manager=memory,
@@ -173,6 +193,10 @@ def create_jarvis() -> JarvisEngine:
         self_modifier=self_modifier,
         deep_researcher=deep_researcher,
         code_intelligence=code_intelligence,
+        # Iteration 4
+        debate_engine=debate_engine,
+        document_processor=document_processor,
+        prediction_engine=prediction_engine,
     )
 
     # 자율 루프 초기화 (JarvisEngine 참조 포함)
@@ -194,7 +218,7 @@ def create_jarvis() -> JarvisEngine:
     )
     final_jarvis.autonomous_loop = autonomous_loop
 
-    logger.info("JARVIS Iteration 3 — All systems operational")
+    logger.info("JARVIS Iteration 4 — All systems operational")
     return final_jarvis
 
 
@@ -890,6 +914,164 @@ def api_selfmod_suggest():
         return jsonify({"error": str(e)}), 500
 
 
+# ==================== Iteration 4: 멀티 에이전트 토론 API ====================
+
+@app.route("/jarvis/api/debate", methods=["POST"])
+def api_debate():
+    """멀티 에이전트 토론"""
+    try:
+        data = request.get_json()
+        question = data.get("question", "")
+        fast_mode = data.get("fast_mode", False)
+        agents = data.get("agents", None)
+        j = get_jarvis()
+        if not j.debate_engine:
+            return jsonify({"error": "DebateEngine not available"}), 503
+        result = j.debate_engine.debate(question, agents=agents, fast_mode=fast_mode)
+        return jsonify({
+            "question": result.question,
+            "synthesis": result.synthesis,
+            "consensus_level": result.consensus_level,
+            "confidence": result.confidence,
+            "dissenting_views": result.dissenting_views,
+            "recommended_action": result.recommended_action,
+            "duration": result.duration,
+            "perspectives": [
+                {"agent": p.agent_name, "role": p.role, "confidence": p.confidence,
+                 "argument": p.argument[:500], "key_points": p.key_points}
+                for p in result.perspectives
+            ],
+            "markdown": j.debate_engine.format_debate_markdown(result),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/debate/factcheck", methods=["POST"])
+def api_factcheck():
+    """사실 검증"""
+    try:
+        data = request.get_json()
+        claim = data.get("claim", "")
+        j = get_jarvis()
+        if not j.debate_engine:
+            return jsonify({"error": "DebateEngine not available"}), 503
+        return jsonify(j.debate_engine.quick_fact_check(claim))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/debate/history")
+def api_debate_history():
+    try:
+        j = get_jarvis()
+        if not j.debate_engine:
+            return jsonify({"history": []})
+        return jsonify({"history": j.debate_engine.get_history()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 4: 문서 처리 API ====================
+
+@app.route("/jarvis/api/document/analyze", methods=["POST"])
+def api_document_analyze():
+    """문서 분석"""
+    try:
+        j = get_jarvis()
+        if not j.document_processor:
+            return jsonify({"error": "DocumentProcessor not available"}), 503
+
+        # 파일 경로 방식
+        data = request.get_json(silent=True) or {}
+        file_path = data.get("file_path", "")
+
+        if file_path:
+            result = j.document_processor.process(file_path)
+        else:
+            return jsonify({"error": "file_path required"}), 400
+
+        return jsonify({
+            "title": result.title,
+            "summary": result.summary,
+            "key_facts": result.key_facts,
+            "entities": result.entities,
+            "word_count": result.word_count,
+            "page_count": result.page_count,
+            "tables_count": len(result.tables),
+            "language": result.language,
+            "markdown": j.document_processor.format_markdown(result),
+        })
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/document/upload", methods=["POST"])
+def api_document_upload():
+    """파일 업로드 후 분석"""
+    try:
+        j = get_jarvis()
+        if not j.document_processor:
+            return jsonify({"error": "DocumentProcessor not available"}), 503
+        if "file" not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+        f = request.files["file"]
+        content = f.read()
+        result = j.document_processor.process_bytes(content, f.filename)
+        return jsonify({
+            "title": result.title,
+            "summary": result.summary,
+            "key_facts": result.key_facts,
+            "word_count": result.word_count,
+            "tables_count": len(result.tables),
+            "markdown": j.document_processor.format_markdown(result),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/document/ask", methods=["POST"])
+def api_document_ask():
+    """문서 Q&A"""
+    try:
+        data = request.get_json()
+        j = get_jarvis()
+        if not j.document_processor:
+            return jsonify({"error": "DocumentProcessor not available"}), 503
+        result = j.document_processor.process(data.get("file_path", ""))
+        answer = j.document_processor.ask(result, data.get("question", ""))
+        return jsonify({"question": data.get("question"), "answer": answer})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 4: 예측 엔진 API ====================
+
+@app.route("/jarvis/api/predict")
+def api_predict():
+    """다음 요청 예측"""
+    try:
+        j = get_jarvis()
+        if not j.prediction_engine:
+            return jsonify({"error": "PredictionEngine not available"}), 503
+        current = request.args.get("context", "")
+        predictions = j.prediction_engine.predict_next(current)
+        suggestions = j.prediction_engine.get_proactive_suggestions()
+        return jsonify({
+            "predictions": [
+                {"intent": p.intent, "topic": p.topic, "action": p.suggested_action,
+                 "confidence": p.confidence, "reason": p.reason}
+                for p in predictions
+            ],
+            "suggestions": suggestions,
+            "stats": j.prediction_engine.get_stats(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ==================== WebSocket 이벤트 ====================
 
 @socketio.on("connect", namespace="/jarvis")
@@ -1082,6 +1264,28 @@ def ws_code_generate(data):
         emit("thinking", {"status": False})
 
 
+@socketio.on("debate", namespace="/jarvis")
+def ws_debate(data):
+    """멀티 에이전트 토론 (실시간)"""
+    question = data.get("question", "").strip()
+    if not question:
+        return
+    emit("thinking", {"status": True})
+    try:
+        j = get_jarvis()
+        if j.debate_engine:
+            for event in j.debate_engine.debate_streaming(question):
+                emit("debate_progress", event)
+                socketio.sleep(0)
+        else:
+            result = j.chat(question)
+            emit("debate_progress", {"type": "done", "synthesis": result["response"]})
+    except Exception as e:
+        emit("error", {"message": str(e)})
+    finally:
+        emit("thinking", {"status": False})
+
+
 @socketio.on("autoloop_control", namespace="/jarvis")
 def ws_autoloop_control(data):
     """자율 루프 제어"""
@@ -1126,7 +1330,7 @@ def system_monitor_thread():
 
 if __name__ == "__main__":
     # JARVIS 사전 초기화
-    logger.info("Starting JARVIS Iteration 3 system...")
+    logger.info("Starting JARVIS Iteration 4 system...")
     j = get_jarvis()
 
     # 자율 루프 자동 시작

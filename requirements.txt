@@ -40,3 +40,9 @@ lxml
 
 # Iteration 2 — UI
 rich
+
+# Iteration 4 — Document Processing
+pdfplumber
+PyPDF2
+python-docx
+openpyxl

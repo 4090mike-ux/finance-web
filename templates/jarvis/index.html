@@ -1,1533 +1,601 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS - Just A Rather Very Intelligent System</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
-    <style>
-        /* ===== 기본 스타일 (아이언맨 HUD 테마) ===== */
-        :root {
-            --bg-primary: #030a0f;
-            --bg-secondary: #061520;
-            --bg-card: #0a1e2e;
-            --accent-blue: #00d4ff;
-            --accent-gold: #ffd700;
-            --accent-red: #ff3333;
-            --accent-green: #00ff88;
-            --text-primary: #e0f4ff;
-            --text-secondary: #7ac0d8;
-            --border: #0d3045;
-            --glow-blue: rgba(0, 212, 255, 0.3);
-            --glow-gold: rgba(255, 215, 0, 0.2);
-            --font-mono: 'Courier New', monospace;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            height: 100vh;
-            overflow: hidden;
-            background-image:
-                radial-gradient(ellipse at 20% 50%, rgba(0, 50, 80, 0.15) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(0, 80, 120, 0.1) 0%, transparent 60%);
-        }
-
-        /* ===== 스캔라인 효과 ===== */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0, 212, 255, 0.01) 2px,
-                rgba(0, 212, 255, 0.01) 4px
-            );
-            pointer-events: none;
-            z-index: 1000;
-        }
-
-        /* ===== 메인 레이아웃 ===== */
-        .container {
-            display: grid;
-            grid-template-columns: 280px 1fr 280px;
-            grid-template-rows: 60px 1fr;
-            height: 100vh;
-            gap: 2px;
-            background: #020810;
-        }
-
-        /* ===== 헤더 ===== */
-        .header {
-            grid-column: 1 / -1;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            background: linear-gradient(90deg, var(--bg-secondary), var(--bg-card), var(--bg-secondary));
-            border-bottom: 1px solid var(--accent-blue);
-            box-shadow: 0 2px 20px var(--glow-blue);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-gold), var(--accent-blue), transparent);
-            animation: headerLine 3s linear infinite;
-        }
-
-        @keyframes headerLine {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-arc {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--accent-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px var(--glow-blue), inset 0 0 10px rgba(0, 212, 255, 0.2);
-            animation: arcPulse 2s ease-in-out infinite;
-            background: radial-gradient(circle, rgba(0, 212, 255, 0.3), transparent);
-        }
-
-        @keyframes arcPulse {
-            0%, 100% { box-shadow: 0 0 15px var(--glow-blue), inset 0 0 10px rgba(0, 212, 255, 0.2); }
-            50% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), inset 0 0 20px rgba(0, 212, 255, 0.4); }
-        }
-
-        .logo-arc svg { width: 24px; height: 24px; fill: var(--accent-blue); }
-
-        .logo-text {
-            font-size: 22px;
-            font-weight: bold;
-            color: var(--accent-blue);
-            letter-spacing: 4px;
-            text-shadow: 0 0 10px var(--glow-blue);
-        }
-
-        .logo-sub {
-            font-size: 9px;
-            color: var(--text-secondary);
-            letter-spacing: 2px;
-        }
-
-        .header-center {
-            text-align: center;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent-green);
-            box-shadow: 0 0 8px var(--accent-green);
-            animation: statusBlink 1.5s ease-in-out infinite;
-        }
-
-        @keyframes statusBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .sys-meter {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .sys-meter-label { font-size: 9px; color: var(--text-secondary); letter-spacing: 1px; }
-
-        .sys-meter-bar {
-            width: 60px;
-            height: 4px;
-            background: var(--bg-card);
-            border-radius: 2px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-
-        .sys-meter-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-gold));
-            transition: width 0.5s ease;
-        }
-
-        .sys-meter-value { font-size: 9px; color: var(--accent-blue); }
-
-        /* ===== 좌측 패널 ===== */
-        .panel-left {
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .panel-section {
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
-        }
-
-        .panel-title {
-            padding: 10px 14px;
-            font-size: 10px;
-            letter-spacing: 2px;
-            color: var(--accent-blue);
-            background: rgba(0, 212, 255, 0.05);
-            border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
-        }
-
-        /* ===== 채팅 메인 영역 ===== */
-        .chat-area {
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-primary);
-            overflow: hidden;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .chat-messages::-webkit-scrollbar { width: 4px; }
-        .chat-messages::-webkit-scrollbar-track { background: var(--bg-secondary); }
-        .chat-messages::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 2px; }
-
-        /* ===== 메시지 스타일 ===== */
-        .message {
-            display: flex;
-            gap: 10px;
-            max-width: 100%;
-            animation: msgSlide 0.3s ease-out;
-        }
-
-        @keyframes msgSlide {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.user { flex-direction: row-reverse; }
-
-        .message-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .message.user .message-avatar {
-            background: rgba(255, 215, 0, 0.2);
-            border: 1px solid var(--accent-gold);
-            color: var(--accent-gold);
-        }
-
-        .message.jarvis .message-avatar {
-            background: rgba(0, 212, 255, 0.15);
-            border: 1px solid var(--accent-blue);
-            color: var(--accent-blue);
-            box-shadow: 0 0 10px var(--glow-blue);
-        }
-
-        .message-content {
-            max-width: calc(100% - 80px);
-            padding: 10px 14px;
-            border-radius: 4px;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .message.user .message-content {
-            background: rgba(255, 215, 0, 0.08);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 4px 0 4px 4px;
-            color: #ffe080;
-        }
-
-        .message.jarvis .message-content {
-            background: rgba(0, 212, 255, 0.06);
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            border-radius: 0 4px 4px 4px;
-            color: var(--text-primary);
-        }
-
-        /* 마크다운 스타일 */
-        .message-content h1, .message-content h2, .message-content h3 {
-            color: var(--accent-blue);
-            margin: 8px 0 4px;
-        }
-
-        .message-content code {
-            background: rgba(0, 212, 255, 0.1);
-            padding: 1px 4px;
-            border-radius: 2px;
-            font-family: var(--font-mono);
-            font-size: 12px;
-            color: var(--accent-green);
-        }
-
-        .message-content pre {
-            background: #020810;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 10px;
-            overflow-x: auto;
-            margin: 8px 0;
-        }
-
-        .message-content pre code {
-            background: none;
-            padding: 0;
-            color: var(--accent-green);
-        }
-
-        .message-content ul, .message-content ol {
-            padding-left: 20px;
-            margin: 4px 0;
-        }
-
-        .message-content a { color: var(--accent-blue); }
-        .message-content strong { color: var(--accent-gold); }
-
-        .message-meta {
-            font-size: 9px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-            display: flex;
-            gap: 8px;
-        }
-
-        .message-tool-badge {
-            font-size: 9px;
-            padding: 1px 5px;
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 10px;
-            color: var(--accent-blue);
-        }
-
-        /* ===== 입력 영역 ===== */
-        .chat-input-area {
-            padding: 12px 16px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-        }
-
-        .quick-cmds {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-        }
-
-        .quick-cmd {
-            padding: 3px 10px;
-            background: rgba(0, 212, 255, 0.08);
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 12px;
-            color: var(--accent-blue);
-            font-size: 10px;
-            cursor: pointer;
-            font-family: var(--font-mono);
-            transition: all 0.2s;
-        }
-
-        .quick-cmd:hover {
-            background: rgba(0, 212, 255, 0.2);
-            box-shadow: 0 0 8px var(--glow-blue);
-        }
-
-        .input-row {
-            display: flex;
-            gap: 8px;
-            align-items: flex-end;
-        }
-
-        .chat-input {
-            flex: 1;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 10px 14px;
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            font-size: 13px;
-            resize: none;
-            min-height: 42px;
-            max-height: 120px;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .chat-input:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 10px var(--glow-blue);
-        }
-
-        .chat-input::placeholder { color: var(--text-secondary); }
-
-        .btn-send {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, var(--accent-blue), #0088cc);
-            border: none;
-            border-radius: 4px;
-            color: var(--bg-primary);
-            font-family: var(--font-mono);
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            letter-spacing: 1px;
-            transition: all 0.2s;
-            text-transform: uppercase;
-        }
-
-        .btn-send:hover {
-            background: linear-gradient(135deg, #00f0ff, var(--accent-blue));
-            box-shadow: 0 0 15px var(--glow-blue);
-        }
-
-        .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* ===== 사고 중 표시 ===== */
-        .thinking-indicator {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            color: var(--accent-blue);
-            font-size: 11px;
-        }
-
-        .thinking-indicator.active { display: flex; }
-
-        .thinking-dots span {
-            display: inline-block;
-            width: 4px;
-            height: 4px;
-            background: var(--accent-blue);
-            border-radius: 50%;
-            animation: thinkDot 1.4s ease-in-out infinite;
-        }
-
-        .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes thinkDot {
-            0%, 80%, 100% { transform: scale(1); opacity: 0.5; }
-            40% { transform: scale(1.5); opacity: 1; }
-        }
-
-        /* ===== 우측 패널 ===== */
-        .panel-right {
-            background: var(--bg-secondary);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* ===== 시스템 모니터 ===== */
-        .monitor-item {
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .monitor-label {
-            font-size: 9px;
-            color: var(--text-secondary);
-            letter-spacing: 2px;
-            margin-bottom: 4px;
-        }
-
-        .monitor-bar {
-            height: 6px;
-            background: var(--bg-card);
-            border-radius: 3px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .monitor-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.5s ease;
-            position: relative;
-        }
-
-        .monitor-fill::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: white;
-            opacity: 0.6;
-            border-radius: 0 3px 3px 0;
-        }
-
-        .monitor-fill.cpu { background: linear-gradient(90deg, #00d4ff, #0088ff); }
-        .monitor-fill.mem { background: linear-gradient(90deg, #ffd700, #ff8800); }
-        .monitor-fill.disk { background: linear-gradient(90deg, #00ff88, #00cc44); }
-
-        .monitor-value {
-            font-size: 10px;
-            color: var(--accent-blue);
-            margin-top: 2px;
-            text-align: right;
-        }
-
-        /* ===== 에이전트 상태 ===== */
-        .agent-item {
-            padding: 8px 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid rgba(13, 48, 69, 0.5);
-        }
-
-        .agent-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--accent-green);
-            box-shadow: 0 0 4px var(--accent-green);
-        }
-
-        .agent-name { font-size: 10px; color: var(--text-secondary); }
-        .agent-status { font-size: 9px; color: var(--accent-green); margin-left: auto; }
-
-        /* ===== 코드 에디터 탭 ===== */
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .tab {
-            padding: 8px 16px;
-            font-size: 10px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            color: var(--text-secondary);
-            letter-spacing: 1px;
-            transition: all 0.2s;
-        }
-
-        .tab:hover { color: var(--accent-blue); }
-
-        .tab.active {
-            color: var(--accent-blue);
-            border-bottom-color: var(--accent-blue);
-            background: rgba(0, 212, 255, 0.05);
-        }
-
-        .tab-content { display: none; flex: 1; overflow-y: auto; }
-        .tab-content.active { display: block; }
-
-        /* ===== 코드 에디터 ===== */
-        .code-editor {
-            width: 100%;
-            min-height: 200px;
-            background: #020810;
-            border: none;
-            color: var(--accent-green);
-            font-family: var(--font-mono);
-            font-size: 12px;
-            padding: 12px;
-            outline: none;
-            resize: none;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .code-result {
-            padding: 10px;
-            font-size: 11px;
-            min-height: 80px;
-            max-height: 200px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            color: var(--accent-green);
-        }
-
-        .btn-run {
-            padding: 6px 16px;
-            background: rgba(0, 255, 136, 0.15);
-            border: 1px solid var(--accent-green);
-            border-radius: 3px;
-            color: var(--accent-green);
-            font-family: var(--font-mono);
-            font-size: 10px;
-            cursor: pointer;
-            margin: 6px;
-            letter-spacing: 1px;
-        }
-
-        .btn-run:hover { background: rgba(0, 255, 136, 0.3); }
-
-        /* ===== 검색 패널 ===== */
-        .search-input {
-            width: 100%;
-            background: var(--bg-card);
-            border: none;
-            border-bottom: 1px solid var(--border);
-            padding: 8px 12px;
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            font-size: 11px;
-            outline: none;
-        }
-
-        .search-result-item {
-            padding: 8px 12px;
-            border-bottom: 1px solid rgba(13, 48, 69, 0.5);
-            cursor: pointer;
-        }
-
-        .search-result-item:hover { background: rgba(0, 212, 255, 0.05); }
-
-        .search-result-title { font-size: 11px; color: var(--accent-blue); margin-bottom: 2px; }
-        .search-result-snippet { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
-
-        /* ===== 작업 이력 ===== */
-        .task-item {
-            padding: 8px 12px;
-            border-bottom: 1px solid rgba(13, 48, 69, 0.5);
-        }
-
-        .task-type {
-            font-size: 9px;
-            padding: 1px 6px;
-            border-radius: 8px;
-            margin-right: 4px;
-        }
-
-        .task-type.research { background: rgba(0, 212, 255, 0.15); color: var(--accent-blue); }
-        .task-type.code { background: rgba(0, 255, 136, 0.15); color: var(--accent-green); }
-        .task-type.system { background: rgba(255, 215, 0, 0.15); color: var(--accent-gold); }
-
-        .task-desc { font-size: 10px; color: var(--text-secondary); margin-top: 3px; }
-
-        /* ===== 스크롤바 ===== */
-        .panel-left, .panel-right, .tab-content {
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-
-        /* ===== 반응형 ===== */
-        @media (max-width: 1200px) {
-            .container { grid-template-columns: 0 1fr 240px; }
-            .panel-left { display: none; }
-        }
-
-        @media (max-width: 900px) {
-            .container { grid-template-columns: 1fr; grid-template-rows: 60px 1fr; }
-            .panel-left, .panel-right { display: none; }
-        }
-
-        /* ===== 전원 버튼 ===== */
-        .btn-power {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: transparent;
-            border: 1px solid var(--accent-red);
-            color: var(--accent-red);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-
-        .btn-power:hover { background: rgba(255, 51, 51, 0.2); box-shadow: 0 0 10px rgba(255, 51, 51, 0.4); }
-
-        /* ===== 토스트 알림 ===== */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--accent-blue);
-            border-radius: 4px;
-            color: var(--accent-blue);
-            font-size: 12px;
-            z-index: 9999;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s;
-        }
-
-        .toast.show { opacity: 1; transform: translateY(0); }
-
-        /* ===== 웰컴 메시지 ===== */
-        .welcome-msg {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-secondary);
-        }
-
-        .welcome-msg .arc-reactor {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid var(--accent-blue);
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            box-shadow: 0 0 30px var(--glow-blue);
-            animation: arcPulse 2s ease-in-out infinite;
-            background: radial-gradient(circle, rgba(0, 212, 255, 0.2), transparent);
-        }
-
-        .welcome-msg h2 { color: var(--accent-blue); font-size: 18px; margin-bottom: 8px; letter-spacing: 3px; }
-        .welcome-msg p { font-size: 12px; line-height: 1.6; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS — Iteration 4</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #050a0f; --panel: #090f17; --panel2: #0d1520; --border: #0f3460;
+    --accent: #00d4ff; --accent2: #7b2fff; --accent3: #00ff9f;
+    --warn: #ff6b35; --red: #ff3860; --text: #c8e6f8; --text2: #7aa7c7;
+    --glow: 0 0 12px rgba(0,212,255,.4); --radius: 8px;
+    --font-mono: 'Consolas','Courier New',monospace; --font-ui: 'Segoe UI',system-ui,sans-serif;
+  }
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:13px;overflow:hidden}
+  ::-webkit-scrollbar{width:5px;height:5px} ::-webkit-scrollbar-track{background:var(--panel)} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+  #app{display:grid;height:100vh;grid-template-rows:48px 1fr 36px;grid-template-columns:240px 1fr 280px;gap:0}
+
+  /* HEADER */
+  #header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,#05080e,#0a1929,#05080e);border-bottom:1px solid var(--border);padding:0 16px;gap:16px}
+  .logo{display:flex;align-items:center;gap:10px} .logo-icon{font-size:22px}
+  .logo-text{font-size:15px;font-weight:700;letter-spacing:3px;color:var(--accent);text-shadow:var(--glow)}
+  .logo-iter{font-size:10px;color:var(--text2);letter-spacing:1px}
+  .header-stats{display:flex;gap:20px}
+  .stat-item{display:flex;flex-direction:column;align-items:center}
+  .stat-label{font-size:9px;color:var(--text2);letter-spacing:1px}
+  .stat-val{font-size:13px;font-weight:600;color:var(--accent);font-family:var(--font-mono)}
+  .status-indicator{display:flex;align-items:center;gap:6px}
+  #status-dot{width:8px;height:8px;border-radius:50%;background:var(--accent3);box-shadow:0 0 8px var(--accent3);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  #thinking-indicator{display:none;align-items:center;gap:6px;color:var(--warn);font-size:11px}
+  #thinking-indicator.active{display:flex}
+  .dot-anim{display:flex;gap:3px} .dot-anim span{width:5px;height:5px;border-radius:50%;background:var(--warn);animation:dotbounce 1.2s infinite}
+  .dot-anim span:nth-child(2){animation-delay:.2s} .dot-anim span:nth-child(3){animation-delay:.4s}
+  @keyframes dotbounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+
+  /* SIDEBAR LEFT */
+  #sidebar-left{grid-row:2;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  .panel-header{padding:10px 12px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .panel-title{font-size:10px;letter-spacing:2px;color:var(--accent);font-weight:600}
+  .panel-badge{font-size:10px;background:var(--border);color:var(--accent);padding:1px 6px;border-radius:10px}
+  #sys-monitor{padding:10px 12px;border-bottom:1px solid var(--border)}
+  .gauge-row{margin-bottom:8px} .gauge-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:3px}
+  .gauge-bar{height:4px;background:var(--panel2);border-radius:2px;overflow:hidden}
+  .gauge-fill{height:100%;border-radius:2px;transition:width .5s ease}
+  .gauge-fill.cpu{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .gauge-fill.mem{background:linear-gradient(90deg,var(--accent3),#00aa6e)}
+  .gauge-fill.disk{background:linear-gradient(90deg,var(--warn),#cc4400)}
+  #module-status{padding:10px 12px;flex:1;overflow-y:auto}
+  .module-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #0d1a27}
+  .module-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .module-dot.on{background:var(--accent3);box-shadow:0 0 6px var(--accent3)} .module-dot.off{background:#333} .module-dot.warn{background:var(--warn)}
+  .module-name{font-size:11px;flex:1} .module-info{font-size:10px;color:var(--text2)}
+  #prediction-panel{padding:10px 12px;border-top:1px solid var(--border)}
+  .prediction-item{padding:6px 8px;background:var(--panel2);border-radius:var(--radius);margin-bottom:6px;border-left:3px solid var(--accent2)}
+  .prediction-topic{font-size:11px;font-weight:600;color:var(--accent)} .prediction-action{font-size:10px;color:var(--text2);margin-top:2px} .prediction-conf{font-size:9px;color:var(--accent3)}
+
+  /* MAIN */
+  #main{grid-row:2;display:flex;flex-direction:column;overflow:hidden}
+  #tab-bar{display:flex;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
+  .tab-btn{padding:8px 16px;font-size:11px;letter-spacing:1px;cursor:pointer;background:none;border:none;color:var(--text2);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+  .tab-btn:hover{color:var(--text);background:var(--panel2)} .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab-content{display:none;flex:1;overflow:hidden;flex-direction:column} .tab-content.active{display:flex}
+
+  /* CHAT */
+  #chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .msg{display:flex;gap:10px;max-width:90%;animation:fadeIn .3s ease} .msg.user{align-self:flex-end;flex-direction:row-reverse}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .msg-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  .msg.jarvis .msg-avatar{background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:var(--glow)}
+  .msg.user .msg-avatar{background:var(--panel2);border:1px solid var(--border)}
+  .msg-bubble{padding:10px 14px;border-radius:12px;line-height:1.6}
+  .msg.jarvis .msg-bubble{background:var(--panel2);border:1px solid var(--border);border-radius:4px 12px 12px 12px}
+  .msg.user .msg-bubble{background:linear-gradient(135deg,#0f2a4a,#1a0a3a);border:1px solid var(--accent2);border-radius:12px 4px 12px 12px}
+  .msg-meta{font-size:10px;color:var(--text2);margin-top:4px}
+  .msg-tools{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+  .tool-badge{font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.3)}
+  .msg-bubble pre{background:#020a14;padding:10px;border-radius:6px;overflow-x:auto;margin:6px 0;font-size:12px;border:1px solid #0f3460}
+  .msg-bubble code{font-family:var(--font-mono);color:#7dd3fc}
+  .msg-bubble p{margin:4px 0} .msg-bubble h1,.msg-bubble h2,.msg-bubble h3{color:var(--accent);margin:8px 0 4px}
+  .msg-bubble ul,.msg-bubble ol{padding-left:18px} .msg-bubble li{margin:2px 0}
+  .msg-bubble strong{color:var(--accent)} .msg-bubble em{color:var(--accent3)}
+  .msg-bubble blockquote{border-left:3px solid var(--accent2);padding-left:10px;color:var(--text2)}
+
+  #input-area{padding:12px 16px;background:var(--panel);border-top:1px solid var(--border);flex-shrink:0}
+  #input-row{display:flex;gap:8px;align-items:flex-end}
+  #user-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:20px;font-size:13px;font-family:var(--font-ui);resize:none;max-height:120px;min-height:40px;line-height:1.5;outline:none;transition:border-color .2s}
+  #user-input:focus{border-color:var(--accent);box-shadow:var(--glow)} #user-input::placeholder{color:#3a6080}
+  .btn-send{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+  .btn-send:hover{transform:scale(1.1);box-shadow:var(--glow)} .btn-send:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  #quick-cmds{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .qcmd-btn{font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);cursor:pointer;transition:all .2s}
+  .qcmd-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* DEBATE */
+  #tab-debate{padding:16px;overflow-y:auto}
+  #debate-question-row{display:flex;gap:8px;margin-bottom:16px}
+  #debate-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none}
+  #debate-input:focus{border-color:var(--accent2)}
+  .btn-debate{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s}
+  .btn-debate.full{background:linear-gradient(135deg,var(--accent2),#5a1fe0);color:white}
+  .btn-debate.fast{background:var(--panel2);border:1px solid var(--accent2);color:var(--accent2)}
+  #debate-agents-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .agent-card{padding:10px;background:var(--panel2);border-radius:var(--radius);border:1px solid var(--border);min-height:80px}
+  .agent-card.thinking{border-color:var(--warn);animation:borderPulse 1s infinite}
+  .agent-card.done{border-color:var(--accent3)}
+  @keyframes borderPulse{0%,100%{border-color:var(--warn)}50%{border-color:transparent}}
+  .agent-name{font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:4px}
+  .agent-conf{font-size:10px;color:var(--accent3)} .agent-points{font-size:10px;color:var(--text2);margin-top:4px}
+  #debate-synthesis{padding:14px;background:var(--panel2);border-radius:var(--radius);border-left:4px solid var(--accent3);margin-top:16px;display:none}
+  #debate-synthesis.show{display:block}
+  .synthesis-header{font-size:11px;color:var(--accent3);font-weight:700;margin-bottom:8px;letter-spacing:1px}
+  #synthesis-text{font-size:12px;line-height:1.7}
+  .debate-metrics{display:flex;gap:16px;margin-top:8px} .debate-metric{font-size:11px;color:var(--text2)} .debate-metric span{color:var(--accent);font-weight:700}
+
+  /* RESEARCH */
+  #tab-research{display:flex;flex-direction:column;overflow:hidden}
+  #research-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #research-query-row{display:flex;gap:8px;margin-bottom:8px}
+  #research-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none}
+  .btn-research{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:linear-gradient(135deg,var(--accent),#0099bb);color:white}
+  #research-depth-select{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px}
+  #research-output{flex:1;overflow-y:auto;padding:16px;font-size:12px;line-height:1.7}
+  .research-step{margin-bottom:12px;padding:10px;background:var(--panel2);border-radius:var(--radius);border-left:3px solid var(--accent)}
+  .research-step-type{font-size:10px;color:var(--accent);font-weight:700;letter-spacing:1px;margin-bottom:4px}
+
+  /* CODE */
+  #tab-code{display:flex;flex-direction:column;overflow:hidden}
+  #code-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #code-req-row{display:flex;gap:8px;margin-bottom:8px}
+  #code-requirement{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none}
+  .btn-code-gen{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:linear-gradient(135deg,var(--accent3),#009955);color:#000}
+  #code-lang-select{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px}
+  #code-output-area{flex:1;overflow-y:auto;padding:16px}
+  #code-display{background:#020a14;border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:var(--font-mono);font-size:12px;line-height:1.6;color:#7dd3fc;overflow-x:auto;white-space:pre-wrap}
+  #code-explanation{padding:12px;background:var(--panel2);border-radius:var(--radius);margin-top:10px;font-size:12px;line-height:1.6}
+  #code-tests{padding:12px;background:#030e08;border:1px solid #0f3020;border-radius:var(--radius);margin-top:10px;font-family:var(--font-mono);font-size:12px;color:var(--accent3);white-space:pre-wrap}
+
+  /* SIDEBAR RIGHT */
+  #sidebar-right{grid-row:2;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  .right-section{border-bottom:1px solid var(--border)}
+  .right-section-body{padding:10px 12px;overflow-y:auto;max-height:200px}
+  .auto-event{padding:6px 8px;border-radius:6px;margin-bottom:6px;border-left:3px solid var(--border);font-size:11px}
+  .auto-event.info{border-left-color:var(--accent)} .auto-event.success{border-left-color:var(--accent3)} .auto-event.warning{border-left-color:var(--warn)} .auto-event.error{border-left-color:var(--red)}
+  .auto-event-title{font-weight:600;color:var(--text)} .auto-event-content{color:var(--text2);margin-top:2px;font-size:10px} .auto-event-time{font-size:9px;color:#3a6080}
+  .memory-item{padding:6px 0;border-bottom:1px solid #0d1a27;font-size:11px}
+  .memory-role{font-size:10px;color:var(--accent);font-weight:600} .memory-content{color:var(--text2);margin-top:2px}
+  .tool-log-item{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11px;border-bottom:1px solid #0d1a27}
+  .tool-log-name{color:var(--accent);font-family:var(--font-mono);flex:1} .tool-log-time{font-size:9px;color:var(--text2)}
+
+  /* STATUSBAR */
+  #statusbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#030810;border-top:1px solid var(--border);font-size:10px;color:var(--text2);font-family:var(--font-mono)}
+  #statusbar .sb-left,#statusbar .sb-right{display:flex;gap:16px}
+  #statusbar .sb-item{display:flex;align-items:center;gap:4px} #statusbar .sb-item .label{color:var(--border)}
+
+  /* TOAST */
+  #toast-container{position:fixed;bottom:50px;right:16px;display:flex;flex-direction:column;gap:6px;z-index:1000}
+  .toast{padding:10px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text);box-shadow:0 4px 20px rgba(0,0,0,.5);animation:toastIn .3s ease;max-width:280px}
+  .toast.success{border-left:3px solid var(--accent3)} .toast.error{border-left:3px solid var(--red)} .toast.info{border-left:3px solid var(--accent)}
+  @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+
+  @media(max-width:900px){#app{grid-template-columns:0 1fr 0}#sidebar-left,#sidebar-right{display:none}}
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- ===== 헤더 ===== -->
-        <header class="header">
-            <div class="logo">
-                <div class="logo-arc">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
-                </div>
-                <div>
-                    <div class="logo-text">JARVIS</div>
-                    <div class="logo-sub">Just A Rather Very Intelligent System</div>
-                </div>
-            </div>
+<div id="app">
 
-            <div class="header-center">
-                <div class="status-indicator">
-                    <div class="status-dot" id="statusDot"></div>
-                    <span id="statusText">ONLINE · ALL SYSTEMS OPERATIONAL</span>
-                </div>
-            </div>
+  <!-- HEADER -->
+  <header id="header">
+    <div class="logo">
+      <span class="logo-icon">🤖</span>
+      <div><div class="logo-text">JARVIS</div><div class="logo-iter">ITERATION 4 · ONLINE</div></div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-item"><div class="stat-label">CPU</div><div class="stat-val" id="hdr-cpu">--%</div></div>
+      <div class="stat-item"><div class="stat-label">MEM</div><div class="stat-val" id="hdr-mem">--%</div></div>
+      <div class="stat-item"><div class="stat-label">TURNS</div><div class="stat-val" id="hdr-turns">0</div></div>
+      <div class="stat-item"><div class="stat-label">TOOLS</div><div class="stat-val" id="hdr-tools">0</div></div>
+      <div class="stat-item"><div class="stat-label">UPTIME</div><div class="stat-val" id="hdr-uptime">--</div></div>
+    </div>
+    <div class="status-indicator">
+      <div id="thinking-indicator"><div class="dot-anim"><span></span><span></span><span></span></div> THINKING</div>
+      <div id="status-dot"></div>
+      <span style="font-size:11px;color:var(--text2)">OPERATIONAL</span>
+    </div>
+  </header>
 
-            <div class="header-right">
-                <div class="sys-meter">
-                    <div class="sys-meter-label">CPU</div>
-                    <div class="sys-meter-bar"><div class="sys-meter-fill" id="cpuBar" style="width:0%"></div></div>
-                    <div class="sys-meter-value" id="cpuVal">0%</div>
-                </div>
-                <div class="sys-meter">
-                    <div class="sys-meter-label">MEM</div>
-                    <div class="sys-meter-bar"><div class="sys-meter-fill" id="memBar" style="width:0%"></div></div>
-                    <div class="sys-meter-value" id="memVal">0%</div>
-                </div>
-                <div class="sys-meter">
-                    <div class="sys-meter-label">DISK</div>
-                    <div class="sys-meter-bar"><div class="sys-meter-fill" id="diskBar" style="width:0%"></div></div>
-                    <div class="sys-meter-value" id="diskVal">0%</div>
-                </div>
-                <button class="btn-power" onclick="toggleVoice()" title="Voice Toggle">🎤</button>
-            </div>
-        </header>
+  <!-- SIDEBAR LEFT -->
+  <aside id="sidebar-left">
+    <div class="panel-header"><span class="panel-title">SYSTEM</span><span class="panel-badge" id="sys-status-badge">OK</span></div>
+    <div id="sys-monitor">
+      <div class="gauge-row"><div class="gauge-label"><span>CPU</span><span id="cpu-val">0%</span></div><div class="gauge-bar"><div class="gauge-fill cpu" id="cpu-bar" style="width:0%"></div></div></div>
+      <div class="gauge-row"><div class="gauge-label"><span>MEMORY</span><span id="mem-val">0%</span></div><div class="gauge-bar"><div class="gauge-fill mem" id="mem-bar" style="width:0%"></div></div></div>
+      <div class="gauge-row"><div class="gauge-label"><span>DISK</span><span id="disk-val">0%</span></div><div class="gauge-bar"><div class="gauge-fill disk" id="disk-bar" style="width:0%"></div></div></div>
+    </div>
+    <div class="panel-header"><span class="panel-title">MODULES</span></div>
+    <div id="module-status">
+      <div class="module-item"><div class="module-dot off" id="mod-tooluse"></div><span class="module-name">Tool Use API</span><span class="module-info" id="mod-tooluse-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-autoloop"></div><span class="module-name">자율 루프</span><span class="module-info" id="mod-autoloop-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-debate"></div><span class="module-name">토론 엔진</span><span class="module-info" id="mod-debate-info">5 agents</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-research"></div><span class="module-name">딥 리서치</span><span class="module-info" id="mod-research-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-code"></div><span class="module-name">코드 AI</span><span class="module-info" id="mod-code-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-vision"></div><span class="module-name">비전 시스템</span><span class="module-info" id="mod-vision-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-selfmod"></div><span class="module-name">자기 수정</span><span class="module-info" id="mod-selfmod-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-predict"></div><span class="module-name">예측 엔진</span><span class="module-info" id="mod-predict-info">-</span></div>
+    </div>
+    <div class="panel-header"><span class="panel-title">예측</span></div>
+    <div id="prediction-panel"><div id="prediction-list"><div style="color:var(--text2);font-size:11px">로딩 중...</div></div></div>
+  </aside>
 
-        <!-- ===== 좌측 패널 ===== -->
-        <aside class="panel-left">
-            <!-- 탭 -->
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab(this, 'tab-agents')">AGENTS</div>
-                <div class="tab" onclick="switchTab(this, 'tab-tasks')">TASKS</div>
-                <div class="tab" onclick="switchTab(this, 'tab-memory')">MEMORY</div>
-            </div>
-
-            <!-- 에이전트 탭 -->
-            <div class="tab-content active" id="tab-agents" style="overflow-y:auto">
-                <div class="panel-title">ACTIVE AGENTS</div>
-                <div class="agent-item">
-                    <div class="agent-dot"></div>
-                    <div class="agent-name">ResearchAgent</div>
-                    <div class="agent-status">READY</div>
-                </div>
-                <div class="agent-item">
-                    <div class="agent-dot"></div>
-                    <div class="agent-name">CodeAgent</div>
-                    <div class="agent-status">READY</div>
-                </div>
-                <div class="agent-item">
-                    <div class="agent-dot"></div>
-                    <div class="agent-name">SystemAgent</div>
-                    <div class="agent-status">READY</div>
-                </div>
-                <div class="agent-item">
-                    <div class="agent-dot"></div>
-                    <div class="agent-name">PlannerAgent</div>
-                    <div class="agent-status">READY</div>
-                </div>
-
-                <div class="panel-title" style="margin-top:10px">QUICK ACTIONS</div>
-                <div style="padding:10px">
-                    <button class="quick-cmd" style="display:block;width:100%;margin-bottom:6px;text-align:left" onclick="quickAction('/system')">📊 시스템 상태</button>
-                    <button class="quick-cmd" style="display:block;width:100%;margin-bottom:6px;text-align:left" onclick="quickAction('최신 AI 트렌드 알려줘')">🔬 AI 트렌드</button>
-                    <button class="quick-cmd" style="display:block;width:100%;margin-bottom:6px;text-align:left" onclick="quickAction('GitHub 최신 AI 프로젝트 검색해줘')">⭐ GitHub 트렌드</button>
-                    <button class="quick-cmd" style="display:block;width:100%;margin-bottom:6px;text-align:left" onclick="quickAction('최신 arxiv AI 논문 알려줘')">📄 최신 논문</button>
-                </div>
-            </div>
-
-            <!-- 태스크 탭 -->
-            <div class="tab-content" id="tab-tasks" style="overflow-y:auto">
-                <div class="panel-title">RECENT TASKS</div>
-                <div id="taskList"></div>
-            </div>
-
-            <!-- 메모리 탭 -->
-            <div class="tab-content" id="tab-memory" style="overflow-y:auto">
-                <div class="panel-title">MEMORY STATS</div>
-                <div id="memoryStats" style="padding:10px;font-size:10px;color:var(--text-secondary)">로딩 중...</div>
-            </div>
-        </aside>
-
-        <!-- ===== 채팅 영역 ===== -->
-        <main class="chat-area">
-            <!-- 메시지 목록 -->
-            <div class="chat-messages" id="chatMessages">
-                <div class="welcome-msg">
-                    <div class="arc-reactor">⚡</div>
-                    <h2>JARVIS ONLINE</h2>
-                    <p>안녕하세요, 사용자님.<br>저는 JARVIS입니다. 무엇을 도와드릴까요?<br><br>
-                    💬 자연어로 대화하거나<br>
-                    ⚡ /search, /code, /system 등 명령어를 사용하세요</p>
-                </div>
-            </div>
-
-            <!-- 사고 중 표시 -->
-            <div class="thinking-indicator" id="thinkingIndicator">
-                <span>JARVIS processing</span>
-                <div class="thinking-dots">
-                    <span></span><span></span><span></span>
-                </div>
-            </div>
-
-            <!-- 입력 영역 -->
-            <div class="chat-input-area">
-                <div class="quick-cmds">
-                    <span class="quick-cmd" onclick="insertCmd('/search ')">🔍 검색</span>
-                    <span class="quick-cmd" onclick="insertCmd('/github ')">⭐ GitHub</span>
-                    <span class="quick-cmd" onclick="insertCmd('/arxiv ')">📄 논문</span>
-                    <span class="quick-cmd" onclick="insertCmd('/system')">💻 시스템</span>
-                    <span class="quick-cmd" onclick="insertCmd('/code ')">⚡ 코드</span>
-                    <span class="quick-cmd" onclick="insertCmd('/trends')">📈 트렌드</span>
-                    <span class="quick-cmd" onclick="insertCmd('/memory')">🧠 메모리</span>
-                </div>
-                <div class="input-row">
-                    <textarea
-                        class="chat-input"
-                        id="chatInput"
-                        placeholder="JARVIS에게 말씀하세요... (Enter: 전송, Shift+Enter: 줄바꿈)"
-                        rows="1"
-                    ></textarea>
-                    <button class="btn-send" id="sendBtn" onclick="sendMessage()">SEND</button>
-                </div>
-            </div>
-        </main>
-
-        <!-- ===== 우측 패널 ===== -->
-        <aside class="panel-right">
-            <!-- 시스템 모니터 -->
-            <div class="panel-title">SYSTEM MONITOR</div>
-            <div class="monitor-item">
-                <div class="monitor-label">CPU USAGE</div>
-                <div class="monitor-bar"><div class="monitor-fill cpu" id="cpuMonitor" style="width:0%"></div></div>
-                <div class="monitor-value" id="cpuMonVal">0.0%</div>
-            </div>
-            <div class="monitor-item">
-                <div class="monitor-label">MEMORY USAGE</div>
-                <div class="monitor-bar"><div class="monitor-fill mem" id="memMonitor" style="width:0%"></div></div>
-                <div class="monitor-value" id="memMonVal">0.0%</div>
-            </div>
-            <div class="monitor-item">
-                <div class="monitor-label">DISK USAGE</div>
-                <div class="monitor-bar"><div class="monitor-fill disk" id="diskMonitor" style="width:0%"></div></div>
-                <div class="monitor-value" id="diskMonVal">0.0%</div>
-            </div>
-
-            <!-- 코드 실행 패널 -->
-            <div class="tabs" style="margin-top:8px">
-                <div class="tab active" onclick="switchRightTab(this, 'rt-code')">CODE</div>
-                <div class="tab" onclick="switchRightTab(this, 'rt-search')">SEARCH</div>
-                <div class="tab" onclick="switchRightTab(this, 'rt-info')">INFO</div>
-            </div>
-
-            <!-- 코드 탭 -->
-            <div class="tab-content active" id="rt-code" style="display:flex;flex-direction:column;flex:1">
-                <textarea class="code-editor" id="codeEditor" placeholder="# Python 코드를 입력하세요
-print('Hello, JARVIS!')
-import math
-print(math.pi)"></textarea>
-                <button class="btn-run" onclick="runCode()">▶ RUN PYTHON</button>
-                <div class="code-result" id="codeResult">// 코드 실행 결과가 여기 표시됩니다</div>
-            </div>
-
-            <!-- 검색 탭 -->
-            <div class="tab-content" id="rt-search" style="flex:1;display:flex;flex-direction:column">
-                <input type="text" class="search-input" id="searchInput"
-                    placeholder="검색어 입력..."
-                    onkeypress="if(event.key==='Enter') runSearch()">
-                <div style="display:flex;gap:4px;padding:4px">
-                    <button class="quick-cmd" onclick="searchType='web';runSearch()">웹</button>
-                    <button class="quick-cmd" onclick="searchType='github';runSearch()">GitHub</button>
-                    <button class="quick-cmd" onclick="searchType='arxiv';runSearch()">논문</button>
-                    <button class="quick-cmd" onclick="searchType='news';runSearch()">뉴스</button>
-                </div>
-                <div id="searchResults" style="flex:1;overflow-y:auto"></div>
-            </div>
-
-            <!-- 정보 탭 -->
-            <div class="tab-content" id="rt-info" style="flex:1;overflow-y:auto">
-                <div style="padding:10px;font-size:10px;color:var(--text-secondary);line-height:1.8">
-                    <div style="color:var(--accent-blue);margin-bottom:8px">■ CAPABILITIES</div>
-                    <div>• 다중 LLM 통합 (Claude, GPT)</div>
-                    <div>• 실시간 웹 검색</div>
-                    <div>• GitHub 트렌드 분석</div>
-                    <div>• ArXiv 논문 검색</div>
-                    <div>• Python 코드 실행</div>
-                    <div>• 시스템 모니터링</div>
-                    <div>• 장기 기억 (벡터 DB)</div>
-                    <div>• 멀티 에이전트</div>
-                    <div>• 음성 인터페이스</div>
-                    <div style="color:var(--accent-blue);margin:8px 0">■ COMMANDS</div>
-                    <div>/search [query] - 웹 검색</div>
-                    <div>/github [query] - GitHub 검색</div>
-                    <div>/arxiv [query] - 논문 검색</div>
-                    <div>/system - 시스템 정보</div>
-                    <div>/code [code] - 코드 실행</div>
-                    <div>/trends - AI 트렌드</div>
-                    <div>/memory - 메모리 상태</div>
-                    <div>/status - JARVIS 상태</div>
-                    <div style="color:var(--accent-blue);margin:8px 0">■ VERSION</div>
-                    <div>JARVIS v1.0.0</div>
-                    <div>Built: 2026-03-19</div>
-                    <div>Model: claude-sonnet-4-6</div>
-                </div>
-            </div>
-        </aside>
+  <!-- MAIN -->
+  <main id="main">
+    <div id="tab-bar">
+      <button class="tab-btn active" data-tab="chat">💬 CHAT</button>
+      <button class="tab-btn" data-tab="debate">⚔️ DEBATE</button>
+      <button class="tab-btn" data-tab="research">🔬 RESEARCH</button>
+      <button class="tab-btn" data-tab="code">💻 CODE AI</button>
     </div>
 
-    <!-- 토스트 -->
-    <div class="toast" id="toast"></div>
-
-    <script>
-    // ===== JARVIS 클라이언트 코드 =====
-
-    const socket = io('/jarvis', { transports: ['websocket', 'polling'] });
-    let isThinking = false;
-    let searchType = 'web';
-    let voiceEnabled = false;
-
-    // ===== WebSocket 이벤트 =====
-
-    socket.on('connect', () => {
-        showToast('JARVIS 연결됨');
-        loadStatus();
-    });
-
-    socket.on('disconnect', () => {
-        document.getElementById('statusDot').style.background = '#ff3333';
-        document.getElementById('statusText').textContent = 'OFFLINE';
-        showToast('연결 끊김', 'error');
-    });
-
-    socket.on('jarvis_ready', (data) => {
-        addMessage('jarvis', data.message);
-        updateStatus();
-    });
-
-    socket.on('response', (data) => {
-        addMessage('jarvis', data.message, {
-            tools: data.tools_used,
-            duration: data.duration,
-        });
-    });
-
-    socket.on('thinking', (data) => {
-        setThinking(data.status);
-    });
-
-    socket.on('error', (data) => {
-        addMessage('jarvis', '⚠️ 오류: ' + data.message);
-        setThinking(false);
-    });
-
-    socket.on('system_update', (data) => {
-        updateSystemMeters(data.cpu, data.memory, data.disk);
-    });
-
-    // ===== 메시지 전송 =====
-
-    function sendMessage() {
-        const input = document.getElementById('chatInput');
-        const msg = input.value.trim();
-        if (!msg || isThinking) return;
-
-        addMessage('user', msg);
-        input.value = '';
-        input.style.height = 'auto';
-
-        setThinking(true);
-
-        // 명령어 처리
-        if (msg.startsWith('/')) {
-            fetch('/jarvis/api/command', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ command: msg }),
-            })
-            .then(r => r.json())
-            .then(data => {
-                const response = formatCommandResult(data);
-                addMessage('jarvis', response);
-                setThinking(false);
-                if (msg === '/memory' || msg === '/status') updateStatus();
-            })
-            .catch(e => {
-                addMessage('jarvis', '⚠️ 명령 오류: ' + e.message);
-                setThinking(false);
-            });
-        } else {
-            // 일반 채팅 (SSE 스트리밍)
-            streamChat(msg);
-        }
-    }
-
-    function streamChat(msg) {
-        const msgEl = addMessage('jarvis', '', {streaming: true});
-        const contentEl = msgEl.querySelector('.message-content');
-        let fullText = '';
-
-        fetch('/jarvis/api/stream', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: msg }),
-        })
-        .then(response => {
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-
-            function read() {
-                reader.read().then(({ done, value }) => {
-                    if (done) {
-                        setThinking(false);
-                        contentEl.innerHTML = marked.parse(fullText);
-                        scrollToBottom();
-                        updateTaskList();
-                        return;
-                    }
-
-                    const text = decoder.decode(value);
-                    const lines = text.split('\n');
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            try {
-                                const data = JSON.parse(line.slice(6));
-                                if (data.type === 'chunk') {
-                                    fullText += data.content;
-                                    contentEl.innerHTML = marked.parse(fullText) + '<span class="cursor">▋</span>';
-                                    scrollToBottom();
-                                } else if (data.type === 'done') {
-                                    fullText = data.full || fullText;
-                                }
-                            } catch(e) {}
-                        }
-                    }
-                    read();
-                });
-            }
-            read();
-        })
-        .catch(e => {
-            addMessage('jarvis', '⚠️ 스트리밍 오류: ' + e.message);
-            setThinking(false);
-        });
-    }
-
-    function formatCommandResult(data) {
-        if (data.error) return `⚠️ 오류: ${data.error}`;
-
-        if (data.type === 'system_info' || data.info) {
-            const info = data.info || data;
-            return formatSystemInfo(info);
-        } else if (data.type === 'search' || data.results) {
-            return formatSearchResults(data.results || []);
-        } else if (data.type === 'memory') {
-            const s = data.stats;
-            return `**📊 메모리 통계**\n\n- 대화: ${s.conversations}개\n- 지식: ${s.knowledge_base}개\n- 태스크: ${s.tasks}개\n- 벡터 임베딩: ${s.vector_embeddings}개\n- 세션 컨텍스트: ${s.session_context_size}개`;
-        } else if (data.type === 'code_execution') {
-            const r = data.result;
-            let res = r.success ? '✅ 실행 성공' : '❌ 실행 실패';
-            if (r.output) res += `\n\`\`\`\n${r.output}\n\`\`\``;
-            if (r.error) res += `\n\`\`\`\n${r.error}\n\`\`\``;
-            return res;
-        } else if (data.status) {
-            return formatStatus(data);
-        }
-
-        return JSON.stringify(data, null, 2).slice(0, 2000);
-    }
-
-    function formatSystemInfo(info) {
-        if (!info.cpu) return JSON.stringify(info, null, 2).slice(0, 1000);
-        return `**💻 시스템 정보**
-
-| 항목 | 값 |
-|------|-----|
-| OS | ${info.platform?.os || 'N/A'} |
-| CPU 코어 | ${info.cpu?.logical_cores || 0}개 |
-| CPU 사용률 | ${info.cpu?.usage_percent || 0}% |
-| 메모리 | ${info.memory?.available_gb || 0}GB / ${info.memory?.total_gb || 0}GB |
-| 메모리 사용률 | ${info.memory?.used_percent || 0}% |
-| 디스크 여유 | ${info.disk?.free_gb || 0}GB |
-| 업타임 | ${info.uptime_hours || 0}시간 |`;
-    }
-
-    function formatSearchResults(results) {
-        if (!results || results.length === 0) return '검색 결과 없음';
-        let text = `**🔍 검색 결과** (${results.length}개)\n\n`;
-        for (const r of results.slice(0, 5)) {
-            if (r.error) continue;
-            text += `**${r.title || r.name || ''}**\n`;
-            text += `${(r.snippet || r.description || r.abstract || '').slice(0, 200)}\n`;
-            if (r.url || r.html_url) text += `🔗 ${r.url || r.html_url}\n`;
-            text += '\n';
-        }
-        return text;
-    }
-
-    function formatStatus(data) {
-        return `**🟢 JARVIS STATUS**
-
-- 업타임: ${data.uptime_human}
-- 제공자: ${data.providers?.join(', ') || 'N/A'}
-- 에이전트: ${data.agents?.length || 0}개
-- 대화 횟수: ${data.conversation_turns}회
-- CPU: ${data.system?.cpu?.toFixed(1) || 0}%
-- 메모리: ${data.system?.memory_percent?.toFixed(1) || 0}%`;
-    }
-
-    // ===== UI 함수 =====
-
-    function addMessage(role, content, opts = {}) {
-        const container = document.getElementById('chatMessages');
-
-        // 웰컴 메시지 제거
-        const welcome = container.querySelector('.welcome-msg');
-        if (welcome) welcome.remove();
-
-        const div = document.createElement('div');
-        div.className = `message ${role}`;
-
-        const avatar = role === 'user' ? '👤' : '⚡';
-        const tools = opts.tools && opts.tools.length > 0
-            ? opts.tools.map(t => `<span class="message-tool-badge">${t}</span>`).join(' ')
-            : '';
-        const duration = opts.duration ? `<span>${opts.duration}s</span>` : '';
-
-        div.innerHTML = `
-            <div class="message-avatar">${avatar}</div>
-            <div>
-                <div class="message-content">${opts.streaming ? '' : (role === 'user' ? escapeHtml(content) : marked.parse(content))}</div>
-                ${tools || duration ? `<div class="message-meta">${tools}${duration}</div>` : ''}
-            </div>
-        `;
-
-        container.appendChild(div);
-        scrollToBottom();
-        return div;
-    }
-
-    function setThinking(status) {
-        isThinking = status;
-        document.getElementById('thinkingIndicator').className = `thinking-indicator ${status ? 'active' : ''}`;
-        document.getElementById('sendBtn').disabled = status;
-    }
-
-    function scrollToBottom() {
-        const c = document.getElementById('chatMessages');
-        c.scrollTop = c.scrollHeight;
-    }
-
-    function escapeHtml(text) {
-        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    function showToast(msg, type = 'info') {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.style.borderColor = type === 'error' ? 'var(--accent-red)' : 'var(--accent-blue)';
-        toast.style.color = type === 'error' ? 'var(--accent-red)' : 'var(--accent-blue)';
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    function updateSystemMeters(cpu, mem, disk) {
-        // 헤더 미터
-        document.getElementById('cpuBar').style.width = cpu + '%';
-        document.getElementById('cpuVal').textContent = cpu.toFixed(1) + '%';
-        document.getElementById('memBar').style.width = mem + '%';
-        document.getElementById('memVal').textContent = mem.toFixed(1) + '%';
-        document.getElementById('diskBar').style.width = disk + '%';
-        document.getElementById('diskVal').textContent = disk.toFixed(1) + '%';
-
-        // 우측 모니터
-        document.getElementById('cpuMonitor').style.width = cpu + '%';
-        document.getElementById('cpuMonVal').textContent = cpu.toFixed(1) + '%';
-        document.getElementById('memMonitor').style.width = mem + '%';
-        document.getElementById('memMonVal').textContent = mem.toFixed(1) + '%';
-        document.getElementById('diskMonitor').style.width = disk + '%';
-        document.getElementById('diskMonVal').textContent = disk.toFixed(1) + '%';
-    }
-
-    // ===== 탭 전환 =====
-
-    function switchTab(tabEl, contentId) {
-        tabEl.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tabEl.classList.add('active');
-        const parent = document.getElementById('tab-agents').parentElement;
-        parent.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.getElementById(contentId).classList.add('active');
-    }
-
-    function switchRightTab(tabEl, contentId) {
-        tabEl.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tabEl.classList.add('active');
-        ['rt-code', 'rt-search', 'rt-info'].forEach(id => {
-            document.getElementById(id).classList.remove('active');
-        });
-        document.getElementById(contentId).classList.add('active');
-    }
-
-    // ===== 코드 실행 =====
-
-    function runCode() {
-        const code = document.getElementById('codeEditor').value;
-        const resultEl = document.getElementById('codeResult');
-        resultEl.textContent = '실행 중...';
-
-        fetch('/jarvis/api/execute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, lang: 'python' }),
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                resultEl.style.color = 'var(--accent-green)';
-                resultEl.textContent = data.output || '(출력 없음)';
-                if (data.return_value) resultEl.textContent += '\n=> ' + data.return_value;
-            } else {
-                resultEl.style.color = 'var(--accent-red)';
-                resultEl.textContent = data.error || '실행 실패';
-            }
-            resultEl.textContent += `\n[실행 시간: ${data.duration || 0}s]`;
-        })
-        .catch(e => {
-            resultEl.style.color = 'var(--accent-red)';
-            resultEl.textContent = '오류: ' + e.message;
-        });
-    }
-
-    // ===== 검색 =====
-
-    function runSearch() {
-        const query = document.getElementById('searchInput').value.trim();
-        if (!query) return;
-
-        const resultsEl = document.getElementById('searchResults');
-        resultsEl.innerHTML = '<div style="padding:10px;color:var(--text-secondary);font-size:10px">검색 중...</div>';
-
-        fetch('/jarvis/api/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, type: searchType }),
-        })
-        .then(r => r.json())
-        .then(data => {
-            const results = data.results || [];
-            if (results.length === 0) {
-                resultsEl.innerHTML = '<div style="padding:10px;color:var(--text-secondary);font-size:10px">결과 없음</div>';
-                return;
-            }
-
-            resultsEl.innerHTML = results.slice(0, 10).map(r => {
-                if (r.error) return `<div class="search-result-item"><div class="search-result-title">오류</div><div class="search-result-snippet">${r.error}</div></div>`;
-                const title = r.title || r.name || r.full_name || '';
-                const snippet = r.snippet || r.description || r.abstract || r.body || '';
-                const url = r.url || r.html_url || r.href || '';
-                const stars = r.stars ? ` ⭐${r.stars}` : '';
-                return `<div class="search-result-item" onclick="window.open('${url}', '_blank')">
-                    <div class="search-result-title">${escapeHtml(title)}${stars}</div>
-                    <div class="search-result-snippet">${escapeHtml(snippet.slice(0, 150))}</div>
-                </div>`;
-            }).join('');
-        })
-        .catch(e => {
-            resultsEl.innerHTML = `<div style="padding:10px;color:var(--accent-red);font-size:10px">오류: ${e.message}</div>`;
-        });
-    }
-
-    // ===== 상태 업데이트 =====
-
-    function loadStatus() {
-        fetch('/jarvis/api/status')
-        .then(r => r.json())
-        .then(data => {
-            if (data.system) {
-                updateSystemMeters(
-                    data.system.cpu || 0,
-                    data.system.memory_percent || 0,
-                    data.system.disk_percent || 0,
-                );
-            }
-        })
-        .catch(() => {});
-    }
-
-    function updateStatus() {
-        updateTaskList();
-        updateMemoryStats();
-    }
-
-    function updateTaskList() {
-        fetch('/jarvis/api/memory')
-        .then(r => r.json())
-        .then(data => {
-            const tasks = data.recent_tasks || [];
-            const el = document.getElementById('taskList');
-            if (tasks.length === 0) {
-                el.innerHTML = '<div style="padding:10px;color:var(--text-secondary);font-size:10px">태스크 없음</div>';
-                return;
-            }
-            el.innerHTML = tasks.slice(0, 8).map(t => `
-                <div class="task-item">
-                    <span class="task-type ${t.task_type}">${t.task_type}</span>
-                    <span style="font-size:9px;color:var(--accent-${t.status==='success'?'green':'red'})">${t.status}</span>
-                    <div class="task-desc">${escapeHtml((t.description || '').slice(0, 60))}</div>
-                </div>
-            `).join('');
-        })
-        .catch(() => {});
-    }
-
-    function updateMemoryStats() {
-        fetch('/jarvis/api/memory')
-        .then(r => r.json())
-        .then(data => {
-            const s = data.stats || {};
-            document.getElementById('memoryStats').innerHTML = `
-                <div>대화 기록: <span style="color:var(--accent-blue)">${s.conversations || 0}개</span></div>
-                <div>지식 베이스: <span style="color:var(--accent-blue)">${s.knowledge_base || 0}개</span></div>
-                <div>태스크 이력: <span style="color:var(--accent-blue)">${s.tasks || 0}개</span></div>
-                <div>벡터 임베딩: <span style="color:var(--accent-blue)">${s.vector_embeddings || 0}개</span></div>
-                <div>세션 ID: <span style="color:var(--text-secondary);font-size:9px">${(s.session_id || '').slice(0, 20)}</span></div>
-            `;
-        })
-        .catch(() => {});
-    }
-
-    // ===== 음성 =====
-
-    function toggleVoice() {
-        voiceEnabled = !voiceEnabled;
-        showToast(voiceEnabled ? '음성 모드 활성화' : '음성 모드 비활성화');
-    }
-
-    // ===== 편의 기능 =====
-
-    function insertCmd(cmd) {
-        const input = document.getElementById('chatInput');
-        input.value = cmd;
-        input.focus();
-    }
-
-    function quickAction(msg) {
-        document.getElementById('chatInput').value = msg;
-        sendMessage();
-    }
-
-    // ===== 키보드 입력 =====
-
-    document.getElementById('chatInput').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-        // 자동 높이 조절
-        setTimeout(() => {
-            const el = e.target;
-            el.style.height = 'auto';
-            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-        }, 0);
-    });
-
-    document.getElementById('searchInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') runSearch();
-    });
-
-    // ===== 초기화 =====
-    window.addEventListener('load', () => {
-        loadStatus();
-        setTimeout(updateStatus, 2000);
-    });
-
-    // ==================== ITERATION 2: 오케스트레이터 ====================
-
-    async function runGoal() {
-        const goalInput = document.getElementById('goalInput');
-        const goal = goalInput ? goalInput.value.trim() : '';
-        if (!goal) return;
-        showToast('🎯 목표 실행 시작: ' + goal.substring(0, 40));
-
-        try {
-            const resp = await fetch('/jarvis/api/goal', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({goal, background: true}),
-            });
-            const data = await resp.json();
-            if (data.task_id) {
-                showToast('📋 백그라운드 태스크 시작: ' + data.task_id);
-                pollTask(data.task_id);
-            }
-        } catch(e) {
-            showToast('❌ 오류: ' + e.message);
-        }
-    }
-
-    async function pollTask(taskId) {
-        const interval = setInterval(async () => {
-            try {
-                const resp = await fetch(`/jarvis/api/tasks/${taskId}`);
-                const task = await resp.json();
-                if (task.status === 'done' || task.status === 'failed') {
-                    clearInterval(interval);
-                    if (task.status === 'done') {
-                        addMessage('JARVIS', `🎯 **목표 달성 완료**\n\n${task.final_result}`, 'assistant');
-                        showToast('✅ 목표 달성!');
-                    } else {
-                        showToast('❌ 목표 실행 실패');
-                    }
-                }
-            } catch(e) { clearInterval(interval); }
-        }, 3000);
-    }
-
-    // ==================== ITERATION 2: 스킬 ====================
-
-    async function loadSkills() {
-        try {
-            const resp = await fetch('/jarvis/api/skills');
-            const data = await resp.json();
-            const container = document.getElementById('skillsList');
-            if (!container) return;
-            container.innerHTML = '';
-            (data.skills || []).forEach(skill => {
-                const card = document.createElement('div');
-                card.style.cssText = 'background:#0a1e2e;border:1px solid #0d3045;padding:8px;margin:4px 0;border-radius:4px;cursor:pointer;';
-                card.innerHTML = `<span style="color:#00d4ff;font-weight:bold">${skill.name}</span> <span style="color:#7ac0d8;font-size:11px">[${skill.category}]</span><br><small style="color:#aaa">${skill.description}</small>`;
-                card.onclick = () => { document.getElementById('chatInput').value = `스킬 실행: ${skill.name}`; };
-                container.appendChild(card);
-            });
-        } catch(e) {}
-    }
-
-    // ==================== ITERATION 2: 화면 분석 ====================
-
-    async function analyzeScreen() {
-        showToast('📷 화면 캡처 중...');
-        try {
-            const resp = await fetch('/jarvis/api/vision/screen', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({question: '이 화면을 분석하고 무엇이 있는지 설명해주세요.'}),
-            });
-            const data = await resp.json();
-            if (data.success) {
-                addMessage('JARVIS', `📷 **화면 분석 결과**\n\n${data.analysis}`, 'assistant');
-            } else {
-                showToast('⚠ ' + (data.error || '화면 분석 실패'));
-            }
-        } catch(e) {
-            showToast('❌ Vision 오류: ' + e.message);
-        }
-    }
-
-    // ==================== ITERATION 2: 오케스트레이터 WebSocket ====================
-
-    socket.on('orchestrator_update', (data) => {
-        const evtMap = {
-            'planning': '📋 계획 수립 중...',
-            'subtask_start': `▶ ${data.data?.name || ''} 실행 중...`,
-            'subtask_done': `✅ ${data.data?.name || ''} 완료`,
-            'integrating': '🔗 결과 통합 중...',
-            'done': '🎯 목표 달성!',
-            'error': `❌ 오류: ${data.data?.error || ''}`,
-        };
-        const msg = evtMap[data.event];
-        if (msg) showToast(msg);
-    });
-
-    // ==================== ITERATION 2: 빠른 액션 버튼 업데이트 ====================
-
-    // Iteration 2 명령어 추가
-    const iter2Commands = [
-        ['/goal 오늘 AI 최신 논문 5개 요약하기', '🎯 목표 실행'],
-        ['/skills', '🔧 스킬 목록'],
-        ['/tools', '⚙ 도구 목록'],
-        ['/screen 현재 화면 분석', '📷 화면 분석'],
-        ['/reason 인공지능이 인간을 뛰어넘을 시기는?', '🧠 심층 추론'],
-    ];
-
-    </script>
+    <!-- CHAT TAB -->
+    <div class="tab-content active" id="tab-chat">
+      <div id="chat-messages">
+        <div class="msg jarvis">
+          <div class="msg-avatar">🤖</div>
+          <div><div class="msg-bubble"><strong>JARVIS Iteration 4</strong> 온라인.<br>멀티 에이전트 토론 · 문서 처리 · 선제적 예측 시스템 활성화.</div><div class="msg-meta">JARVIS · 지금</div></div>
+        </div>
+      </div>
+      <div id="input-area">
+        <div id="quick-cmds">
+          <button class="qcmd-btn" data-cmd="/debate ">⚔️ 토론</button>
+          <button class="qcmd-btn" data-cmd="/research ">🔬 연구</button>
+          <button class="qcmd-btn" data-cmd="/code_gen ">💻 코드</button>
+          <button class="qcmd-btn" data-cmd="/doc ">📄 문서</button>
+          <button class="qcmd-btn" data-cmd="/factcheck ">✅ 팩트체크</button>
+          <button class="qcmd-btn" data-cmd="/autoloop start">🔄 자율루프</button>
+          <button class="qcmd-btn" data-cmd="/predict">🔮 예측</button>
+          <button class="qcmd-btn" data-cmd="/status">📊 상태</button>
+        </div>
+        <div id="input-row">
+          <textarea id="user-input" placeholder="메시지 입력... (Enter=전송, Shift+Enter=줄바꿈)" rows="1"></textarea>
+          <button class="btn-send" id="send-btn">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEBATE TAB -->
+    <div class="tab-content" id="tab-debate">
+      <div id="tab-debate" style="padding:16px;overflow-y:auto;flex:1">
+        <div id="debate-question-row">
+          <input type="text" id="debate-input" placeholder="토론 질문을 입력하세요..." />
+          <button class="btn-debate full" id="btn-debate-full">⚔️ 전체 토론</button>
+          <button class="btn-debate fast" id="btn-debate-fast">⚡ 빠른 토론</button>
+        </div>
+        <div id="debate-agents-grid">
+          <div class="agent-card" id="agent-optimist"><div class="agent-name">낙관론자</div><div class="agent-conf">대기 중...</div></div>
+          <div class="agent-card" id="agent-critic"><div class="agent-name">비판론자</div><div class="agent-conf">대기 중...</div></div>
+          <div class="agent-card" id="agent-pragmatist"><div class="agent-name">현실론자</div><div class="agent-conf">대기 중...</div></div>
+          <div class="agent-card" id="agent-expert"><div class="agent-name">도메인 전문가</div><div class="agent-conf">대기 중...</div></div>
+          <div class="agent-card" id="agent-devils_advocate"><div class="agent-name">악마의 변호인</div><div class="agent-conf">대기 중...</div></div>
+          <div class="agent-card" id="agent-synthesizer"><div class="agent-name">합성 엔진</div><div class="agent-conf">대기 중...</div></div>
+        </div>
+        <div id="debate-synthesis">
+          <div class="synthesis-header">SYNTHESIS COMPLETE</div>
+          <div id="synthesis-text"></div>
+          <div class="debate-metrics">
+            <div class="debate-metric">합의도: <span id="debate-consensus">-</span></div>
+            <div class="debate-metric">신뢰도: <span id="debate-confidence">-</span></div>
+            <div class="debate-metric">소요: <span id="debate-duration">-</span>s</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESEARCH TAB -->
+    <div class="tab-content" id="tab-research">
+      <div id="research-input-area">
+        <div id="research-query-row">
+          <input type="text" id="research-input" placeholder="연구 주제를 입력하세요..." />
+          <select id="research-depth-select">
+            <option value="2">깊이 2 (표준)</option>
+            <option value="3">깊이 3 (심층)</option>
+            <option value="4">깊이 4 (최심층)</option>
+          </select>
+          <button class="btn-research" id="btn-research">🔬 연구 시작</button>
+        </div>
+      </div>
+      <div id="research-output"><div style="color:var(--text2);text-align:center;margin-top:40px">연구 주제를 입력하고 시작하세요.</div></div>
+    </div>
+
+    <!-- CODE TAB -->
+    <div class="tab-content" id="tab-code">
+      <div id="code-input-area">
+        <div id="code-req-row">
+          <input type="text" id="code-requirement" placeholder="구현할 내용을 설명하세요..." />
+          <select id="code-lang-select">
+            <option value="python">Python</option>
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+            <option value="sql">SQL</option>
+            <option value="shell">Shell</option>
+            <option value="rust">Rust</option>
+          </select>
+          <button class="btn-code-gen" id="btn-code-gen">💻 코드 생성</button>
+        </div>
+      </div>
+      <div id="code-output-area">
+        <pre id="code-display">// 코드가 여기에 생성됩니다</pre>
+        <div id="code-explanation" style="display:none"></div>
+        <pre id="code-tests" style="display:none"></pre>
+      </div>
+    </div>
+  </main>
+
+  <!-- SIDEBAR RIGHT -->
+  <aside id="sidebar-right">
+    <div class="right-section">
+      <div class="panel-header">
+        <span class="panel-title">자율 이벤트</span>
+        <button onclick="triggerAutoloop('knowledge_update')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:10px">▶ 실행</button>
+      </div>
+      <div class="right-section-body" id="auto-events-list"><div style="color:var(--text2);font-size:11px">이벤트 대기 중...</div></div>
+    </div>
+    <div class="right-section">
+      <div class="panel-header">
+        <span class="panel-title">도구 로그</span>
+        <span class="panel-badge" id="tool-count-badge">0</span>
+      </div>
+      <div class="right-section-body" id="tool-log-list"><div style="color:var(--text2);font-size:11px">도구 사용 대기...</div></div>
+    </div>
+    <div class="right-section" style="flex:1">
+      <div class="panel-header">
+        <span class="panel-title">메모리</span>
+        <button onclick="loadMemory()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:10px">↻</button>
+      </div>
+      <div class="right-section-body" id="memory-list" style="max-height:none"><div style="color:var(--text2);font-size:11px">로딩 중...</div></div>
+    </div>
+  </aside>
+
+  <!-- STATUSBAR -->
+  <footer id="statusbar">
+    <div class="sb-left">
+      <div class="sb-item"><span class="label">LLM</span><span id="sb-llm">-</span></div>
+      <div class="sb-item"><span class="label">AGENTS</span><span id="sb-agents">0</span></div>
+      <div class="sb-item"><span class="label">SKILLS</span><span id="sb-skills">0</span></div>
+    </div>
+    <div class="sb-right">
+      <div class="sb-item"><span class="label">DEBATES</span><span id="sb-debates">0</span></div>
+      <div class="sb-item"><span class="label">PATTERNS</span><span id="sb-patterns">0</span></div>
+      <div class="sb-item"><span id="sb-time">--:--:--</span></div>
+    </div>
+  </footer>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+const state={socket:null,thinking:false,toolCallCount:0,conversationTurns:0,streamBuffer:'',streamMsgEl:null};
+const agentMap={'낙관론자':'optimist','비판론자':'critic','현실론자':'pragmatist','도메인 전문가':'expert','악마의 변호인':'devils_advocate'};
+
+function initSocket(){
+  state.socket=io('/jarvis',{transports:['websocket','polling']});
+  const s=state.socket;
+  s.on('connect',()=>showToast('JARVIS 연결됨','success'));
+  s.on('disconnect',()=>showToast('연결 끊김','error'));
+  s.on('jarvis_ready',d=>{addMessage('jarvis',d.message||'JARVIS 준비 완료');loadStatus();loadPredictions();loadMemory();});
+  s.on('thinking',d=>setThinking(d.status));
+  s.on('response',d=>{
+    addMessage('jarvis',d.message,d.tools_used||[],d.duration);
+    state.conversationTurns++;el('hdr-turns').textContent=state.conversationTurns;
+    (d.tools_used||[]).forEach(t=>addToolLog(t));
+    if(d.tools_used?.length){state.toolCallCount+=d.tools_used.length;el('hdr-tools').textContent=state.toolCallCount;}
+    loadPredictions();
+  });
+  s.on('stream_start',()=>{});
+  s.on('stream_chunk',d=>appendStreamChunk(d.content));
+  s.on('stream_end',()=>finalizeStream());
+  s.on('system_update',d=>updateSystemGauges(d));
+  s.on('autonomous_event',d=>addAutoEvent(d));
+  s.on('prediction_event',()=>loadPredictions());
+  s.on('debate_progress',d=>handleDebateProgress(d));
+  s.on('research_progress',d=>handleResearchProgress(d));
+  s.on('code_result',d=>{
+    el('code-display').textContent=d.code||'';
+    if(d.explanation){el('code-explanation').style.display='block';el('code-explanation').innerHTML=renderMd(d.explanation);}
+    if(d.tests){el('code-tests').style.display='block';el('code-tests').textContent=d.tests;}
+    setThinking(false);switchTab('code');
+  });
+  s.on('error',d=>{showToast(d.message||'오류','error');setThinking(false);});
+}
+
+function el(id){return document.getElementById(id);}
+function renderMd(t){try{return marked.parse(t||'');}catch(e){return(t||'').replace(/\n/g,'<br>');}}
+
+function sendMessage(){
+  const inp=el('user-input');const text=inp.value.trim();
+  if(!text||state.thinking)return;
+  addMessage('user',text);inp.value='';inp.style.height='auto';setThinking(true);
+  state.socket.emit('stream_chat',{message:text});
+}
+
+function appendStreamChunk(chunk){
+  if(!state.streamMsgEl){
+    state.streamBuffer='';
+    const msgs=el('chat-messages');
+    const d=document.createElement('div');d.className='msg jarvis';
+    d.innerHTML='<div class="msg-avatar">🤖</div><div><div class="msg-bubble" id="streaming-bubble"></div><div class="msg-meta">JARVIS · 스트리밍...</div></div>';
+    msgs.appendChild(d);state.streamMsgEl=el('streaming-bubble');msgs.scrollTop=msgs.scrollHeight;
+  }
+  state.streamBuffer+=chunk;state.streamMsgEl.innerHTML=renderMd(state.streamBuffer);
+  el('chat-messages').scrollTop=el('chat-messages').scrollHeight;
+}
+
+function finalizeStream(){
+  if(state.streamMsgEl){
+    state.streamMsgEl.id='';state.streamMsgEl.closest('.msg').querySelector('.msg-meta').textContent='JARVIS · '+new Date().toLocaleTimeString();
+    state.streamMsgEl=null;state.streamBuffer='';state.conversationTurns++;el('hdr-turns').textContent=state.conversationTurns;
+  }
+  setThinking(false);loadPredictions();
+}
+
+function addMessage(role,content,toolsUsed=[],dur=null){
+  const msgs=el('chat-messages');const d=document.createElement('div');d.className='msg '+role;
+  const av=role==='jarvis'?'🤖':'👤';const t=new Date().toLocaleTimeString();
+  const tools=toolsUsed.length?'<div class="msg-tools">'+toolsUsed.map(t=>`<span class="tool-badge">${t}</span>`).join('')+'</div>':'';
+  const ds=dur?` · ${dur}s`:'';
+  d.innerHTML=`<div class="msg-avatar">${av}</div><div><div class="msg-bubble">${renderMd(content)}</div>${tools}<div class="msg-meta">${role==='jarvis'?'JARVIS':'사용자'} · ${t}${ds}</div></div>`;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+}
+
+function handleDebateProgress(e){
+  if(e.type==='agent_thinking'){
+    const id=agentMap[e.agent]||'synthesizer';const c=el('agent-'+id);
+    if(c){c.classList.add('thinking');c.querySelector('.agent-conf').textContent='분석 중...';}
+  }else if(e.type==='agent_done'){
+    const id=agentMap[e.agent]||'synthesizer';const c=el('agent-'+id);
+    if(c){c.classList.remove('thinking');c.classList.add('done');c.querySelector('.agent-conf').textContent=`신뢰도: ${Math.round(e.confidence*100)}%`;
+      if(e.key_points?.length){const p=document.createElement('div');p.className='agent-points';p.textContent=e.key_points.slice(0,2).join(' · ');c.appendChild(p);}}
+  }else if(e.type==='synthesizing'){
+    const c=el('agent-synthesizer');if(c){c.classList.add('thinking');c.querySelector('.agent-conf').textContent='합성 중...';}
+  }else if(e.type==='done'){
+    const c=el('agent-synthesizer');if(c){c.classList.remove('thinking');c.classList.add('done');c.querySelector('.agent-conf').textContent='완료';}
+    el('synthesis-text').innerHTML=renderMd(e.synthesis||'');
+    el('debate-consensus').textContent=Math.round((e.consensus_level||0)*100)+'%';
+    el('debate-confidence').textContent=Math.round((e.confidence||0)*100)+'%';
+    el('debate-duration').textContent='-';
+    el('debate-synthesis').classList.add('show');setThinking(false);
+    el('sb-debates').textContent=(parseInt(el('sb-debates').textContent||'0')+1).toString();
+  }
+}
+
+function handleResearchProgress(e){
+  const out=el('research-output');
+  if(e.type==='search'||e.type==='scrape'||e.type==='next_queries'){
+    const d=document.createElement('div');d.className='research-step';
+    const icons={search:'🔍 검색',scrape:'📄 스크랩',next_queries:'🧠 후속 쿼리'};
+    d.innerHTML=`<div class="research-step-type">${icons[e.type]||e.type}</div><div>${e.query||e.url||''}</div>`;
+    out.appendChild(d);
+  }else if(e.type==='done'){
+    const rpt=e.report||{};const d=document.createElement('div');
+    d.innerHTML=`<div style="padding:14px;background:var(--panel2);border-radius:8px;border-left:4px solid var(--accent3)">
+      <h3 style="color:var(--accent3);margin-bottom:8px">📊 연구 완료</h3>
+      ${renderMd(rpt.executive_summary||rpt.summary||'')}
+      ${rpt.key_findings?'<h4 style="margin:10px 0 4px;color:var(--accent)">핵심 발견</h4><ul>'+rpt.key_findings.map(f=>`<li>${f}</li>`).join('')+'</ul>':''}
+    </div>`;
+    out.appendChild(d);setThinking(false);
+  }
+  out.scrollTop=out.scrollHeight;
+}
+
+function startDebate(fast){
+  const q=el('debate-input').value.trim();if(!q){showToast('질문을 입력하세요','error');return;}
+  ['optimist','critic','pragmatist','expert','devils_advocate','synthesizer'].forEach(id=>{
+    const c=el('agent-'+id);if(c){c.className='agent-card';c.querySelector('.agent-conf').textContent='대기 중...';const p=c.querySelector('.agent-points');if(p)p.remove();}
+  });
+  el('debate-synthesis').classList.remove('show');setThinking(true);
+  state.socket.emit('debate',{question:q,fast_mode:fast});switchTab('debate');
+}
+
+function startResearch(){
+  const t=el('research-input').value.trim();if(!t){showToast('주제를 입력하세요','error');return;}
+  el('research-output').innerHTML='';setThinking(true);switchTab('research');
+  state.socket.emit('deep_research',{topic:t,depth:parseInt(el('research-depth-select').value)});
+}
+
+function generateCode(){
+  const r=el('code-requirement').value.trim();if(!r){showToast('요구사항을 입력하세요','error');return;}
+  setThinking(true);el('code-display').textContent='생성 중...';
+  el('code-explanation').style.display='none';el('code-tests').style.display='none';
+  state.socket.emit('code_generate',{requirement:r,language:el('code-lang-select').value});
+}
+
+function loadStatus(){
+  fetch('/jarvis/api/status').then(r=>r.json()).then(d=>{
+    el('hdr-cpu').textContent=(d.system?.cpu||0).toFixed(1)+'%';
+    el('hdr-mem').textContent=(d.system?.memory_percent||0).toFixed(1)+'%';
+    el('hdr-uptime').textContent=d.uptime_human||'-';
+    el('hdr-tools').textContent=d.tools?.count||0;
+    el('sb-llm').textContent=(d.providers||[]).slice(0,2).join(',')||'-';
+    el('sb-agents').textContent=d.agents?.length||0;
+    el('sb-skills').textContent=d.skills?.total||0;
+    el('sb-debates').textContent=d.debate_engine?.debates||0;
+    el('sb-patterns').textContent=d.prediction_engine?.stats?.total_interactions||0;
+    const adv=d.advanced_systems||{};
+    setMod('mod-tooluse',adv.tool_use_api,adv.tool_use_api?'ON':'OFF');
+    setMod('mod-autoloop',d.autonomous_loop?.is_running,d.autonomous_loop?.is_running?'ACTIVE':'IDLE');
+    setMod('mod-debate',d.debate_engine?.available,`${d.debate_engine?.debates||0} debates`);
+    setMod('mod-research',d.deep_researcher?.available,d.deep_researcher?.available?'READY':'OFF');
+    setMod('mod-code',d.code_intelligence?.available,d.code_intelligence?.available?'READY':'OFF');
+    setMod('mod-vision',d.vision?.available,d.vision?.available?'READY':'OFF');
+    setMod('mod-selfmod',d.self_modifier?.available,d.self_modifier?.available?'READY':'OFF');
+    setMod('mod-predict',d.prediction_engine?.available,`${d.prediction_engine?.stats?.total_interactions||0} 학습`);
+  }).catch(()=>{});
+}
+
+function setMod(id,on,info){const d=el(id);if(d)d.className='module-dot '+(on?'on':'off');const e=el(id+'-info');if(e)e.textContent=info||'-';}
+
+function updateSystemGauges(d){
+  const cpu=d.cpu||0,mem=d.memory||0,disk=d.disk||0;
+  el('cpu-val').textContent=cpu.toFixed(1)+'%';el('mem-val').textContent=mem.toFixed(1)+'%';el('disk-val').textContent=disk.toFixed(1)+'%';
+  el('cpu-bar').style.width=cpu+'%';el('mem-bar').style.width=mem+'%';el('disk-bar').style.width=disk+'%';
+  el('hdr-cpu').textContent=cpu.toFixed(1)+'%';el('hdr-mem').textContent=mem.toFixed(1)+'%';
+}
+
+function loadPredictions(){
+  fetch('/jarvis/api/predict').then(r=>r.json()).then(d=>{
+    const list=el('prediction-list');
+    if(!d.predictions?.length){list.innerHTML='<div style="color:var(--text2);font-size:11px">예측 없음</div>';return;}
+    list.innerHTML=d.predictions.slice(0,3).map(p=>`<div class="prediction-item"><div class="prediction-topic">${p.topic}</div><div class="prediction-action">${p.action}</div><div class="prediction-conf">${Math.round(p.confidence*100)}%</div></div>`).join('');
+  }).catch(()=>{});
+}
+
+function loadMemory(){
+  fetch('/jarvis/api/memory').then(r=>r.json()).then(d=>{
+    const list=el('memory-list');const h=d.recent_history||[];
+    if(!h.length){list.innerHTML='<div style="color:var(--text2);font-size:11px">메모리 없음</div>';return;}
+    list.innerHTML=h.slice(-8).reverse().map(m=>`<div class="memory-item"><div class="memory-role">${m.role==='user'?'👤 사용자':'🤖 JARVIS'}</div><div class="memory-content">${(m.content||'').slice(0,80)}...</div></div>`).join('');
+  }).catch(()=>{});
+}
+
+function addAutoEvent(e){
+  const list=el('auto-events-list');if(list.querySelector('div[style]'))list.innerHTML='';
+  const d=document.createElement('div');d.className='auto-event '+(e.type||'info');
+  d.innerHTML=`<div class="auto-event-title">${e.title||e.type}</div><div class="auto-event-content">${(e.content||'').slice(0,80)}</div><div class="auto-event-time">${new Date().toLocaleTimeString()}</div>`;
+  list.insertBefore(d,list.firstChild);if(list.children.length>20)list.removeChild(list.lastChild);
+}
+
+function triggerAutoloop(task){
+  fetch('/jarvis/api/autoloop/trigger',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task})})
+    .then(r=>r.json()).then(()=>showToast(task+' 실행됨','info')).catch(()=>showToast('실행 실패','error'));
+}
+
+function addToolLog(name){
+  const list=el('tool-log-list');if(list.querySelector('div[style]'))list.innerHTML='';
+  const d=document.createElement('div');d.className='tool-log-item';
+  d.innerHTML=`<span>🔧</span><span class="tool-log-name">${name}</span><span class="tool-log-time">${new Date().toLocaleTimeString()}</span>`;
+  list.insertBefore(d,list.firstChild);el('tool-count-badge').textContent=list.children.length;
+}
+
+function setThinking(on){state.thinking=on;el('thinking-indicator').classList.toggle('active',on);el('send-btn').disabled=on;}
+
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+t));
+}
+
+function showToast(msg,type='info'){
+  const c=el('toast-container');const d=document.createElement('div');d.className='toast '+type;d.textContent=msg;c.appendChild(d);
+  setTimeout(()=>{d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(()=>d.remove(),300);},3000);
+}
+
+function bindEvents(){
+  el('send-btn').addEventListener('click',sendMessage);
+  el('user-input').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+    setTimeout(()=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';},0);
+  });
+  document.querySelectorAll('.qcmd-btn').forEach(b=>b.addEventListener('click',()=>{el('user-input').value=b.dataset.cmd;el('user-input').focus();}));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+  el('btn-debate-full').addEventListener('click',()=>startDebate(false));
+  el('btn-debate-fast').addEventListener('click',()=>startDebate(true));
+  el('debate-input').addEventListener('keydown',e=>{if(e.key==='Enter')startDebate(false);});
+  el('btn-research').addEventListener('click',startResearch);
+  el('research-input').addEventListener('keydown',e=>{if(e.key==='Enter')startResearch();});
+  el('btn-code-gen').addEventListener('click',generateCode);
+  el('code-requirement').addEventListener('keydown',e=>{if(e.key==='Enter')generateCode();});
+}
+
+function init(){
+  bindEvents();initSocket();
+  setInterval(()=>el('sb-time').textContent=new Date().toLocaleTimeString('ko-KR'),1000);
+  setInterval(loadStatus,10000);setInterval(loadPredictions,30000);
+  loadStatus();
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
 </body>
 </html>

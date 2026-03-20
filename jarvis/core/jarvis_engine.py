@@ -1,7 +1,8 @@
 """
-JARVIS 핵심 엔진 — Iteration 2
+JARVIS 핵심 엔진 — Iteration 4
 모든 모듈을 통합하는 중앙 오케스트레이터
 실제 Claude Tool Use API + 고급 추론 + 오케스트레이터 + 스킬 라이브러리
++ 멀티 에이전트 토론 + 문서 처리 + 선제적 예측 엔진
 """
 
 import re
@@ -37,6 +38,10 @@ class JarvisEngine:
         self_modifier=None,
         deep_researcher=None,
         code_intelligence=None,
+        # Iteration 4
+        debate_engine=None,
+        document_processor=None,
+        prediction_engine=None,
     ):
         self.llm = llm_manager
         self.memory = memory_manager
@@ -53,6 +58,10 @@ class JarvisEngine:
         self.self_modifier = self_modifier
         self.deep_researcher = deep_researcher
         self.code_intelligence = code_intelligence
+        # Iteration 4
+        self.debate_engine = debate_engine
+        self.document_processor = document_processor
+        self.prediction_engine = prediction_engine
 
         self.conversation_history = []
         self.is_thinking = False
@@ -141,6 +150,13 @@ class JarvisEngine:
 
             duration = time.time() - start_time
             self.memory.log_task("chat", user_input[:200], response[:500], "success", duration)
+
+            # ── Iteration 4: 패턴 학습 ──
+            if self.prediction_engine:
+                try:
+                    self.prediction_engine.record_interaction(user_input, response[:200])
+                except Exception:
+                    pass
 
             self.is_thinking = False
             return {
@@ -672,8 +688,111 @@ class JarvisEngine:
                 return {"type": "selfmod_suggestion", "result": result}
             return {"error": "SelfModifier not available"}
 
+        # ── Iteration 4 명령어 ──
+
+        elif cmd.startswith("/debate "):
+            question = command[8:]
+            if self.debate_engine:
+                result = self.debate_engine.debate(question, fast_mode=False)
+                return {
+                    "type": "debate",
+                    "markdown": self.debate_engine.format_debate_markdown(result),
+                    "consensus_level": result.consensus_level,
+                    "confidence": result.confidence,
+                    "synthesis": result.synthesis,
+                    "dissenting_views": result.dissenting_views,
+                    "recommended_action": result.recommended_action,
+                    "duration": result.duration,
+                }
+            return {"error": "DebateEngine not available"}
+
+        elif cmd.startswith("/fast_debate "):
+            question = command[13:]
+            if self.debate_engine:
+                result = self.debate_engine.debate(question, fast_mode=True)
+                return {
+                    "type": "debate",
+                    "markdown": self.debate_engine.format_debate_markdown(result),
+                    "consensus_level": result.consensus_level,
+                    "confidence": result.confidence,
+                }
+            return {"error": "DebateEngine not available"}
+
+        elif cmd.startswith("/factcheck "):
+            claim = command[11:]
+            if self.debate_engine:
+                result = self.debate_engine.quick_fact_check(claim)
+                return {"type": "factcheck", "result": result}
+            return {"error": "DebateEngine not available"}
+
+        elif cmd == "/debate_history":
+            if self.debate_engine:
+                return {"type": "debate_history", "history": self.debate_engine.get_history()}
+            return {"error": "DebateEngine not available"}
+
+        elif cmd.startswith("/doc "):
+            file_path = command[5:]
+            if self.document_processor:
+                try:
+                    result = self.document_processor.process(file_path)
+                    return {
+                        "type": "document",
+                        "markdown": self.document_processor.format_markdown(result),
+                        "title": result.title,
+                        "summary": result.summary,
+                        "key_facts": result.key_facts,
+                        "word_count": result.word_count,
+                        "tables": len(result.tables),
+                    }
+                except FileNotFoundError as e:
+                    return {"error": str(e)}
+            return {"error": "DocumentProcessor not available"}
+
+        elif cmd.startswith("/doc_ask "):
+            # /doc_ask [file_path] | [question]
+            rest = command[9:]
+            if "|" in rest:
+                file_path, question = rest.split("|", 1)
+                file_path = file_path.strip()
+                question = question.strip()
+                if self.document_processor:
+                    try:
+                        doc_result = self.document_processor.process(file_path)
+                        answer = self.document_processor.ask(doc_result, question)
+                        return {"type": "doc_qa", "question": question, "answer": answer}
+                    except FileNotFoundError as e:
+                        return {"error": str(e)}
+            return {"error": "Usage: /doc_ask [file_path] | [question]"}
+
+        elif cmd == "/predict":
+            if self.prediction_engine:
+                preds = self.prediction_engine.predict_next()
+                suggestions = self.prediction_engine.get_proactive_suggestions()
+                return {
+                    "type": "prediction",
+                    "predictions": [
+                        {"intent": p.intent, "topic": p.topic, "action": p.suggested_action,
+                         "confidence": p.confidence, "reason": p.reason}
+                        for p in preds
+                    ],
+                    "suggestions": suggestions,
+                    "stats": self.prediction_engine.get_stats(),
+                }
+            return {"error": "PredictionEngine not available"}
+
+        elif cmd.startswith("/predict "):
+            current = command[9:]
+            if self.prediction_engine:
+                preds = self.prediction_engine.predict_next(current)
+                markdown = self.prediction_engine.format_predictions_markdown(preds)
+                return {"type": "prediction", "markdown": markdown, "predictions": [
+                    {"topic": p.topic, "confidence": p.confidence, "action": p.suggested_action}
+                    for p in preds
+                ]}
+            return {"error": "PredictionEngine not available"}
+
         else:
-            return {"error": f"Unknown command: {command}. Try /status, /system, /research, /code_gen, /debug, /autoloop, /selfmod, /events"}
+            return {"error": f"Unknown command: {command}. Try /status, /system, /research, /code_gen, /debug, /autoloop, /selfmod, /events, /debate, /doc, /predict"}
 
     # ==================== 상태 정보 ====================
 
@@ -721,6 +840,13 @@ class JarvisEngine:
             "self_modifier": self.self_modifier.get_status() if self.self_modifier else {"available": False},
             "deep_researcher": {"available": self.deep_researcher is not None},
             "code_intelligence": {"available": self.code_intelligence is not None},
+            # Iteration 4
+            "debate_engine": {"available": self.debate_engine is not None,
+                               "debates": len(self.debate_engine._history) if self.debate_engine else 0},
+            "document_processor": {"available": self.document_processor is not None,
+                                    "stats": self.document_processor.get_stats() if self.document_processor else {}},
+            "prediction_engine": {"available": self.prediction_engine is not None,
+                                   "stats": self.prediction_engine.get_stats() if self.prediction_engine else {}},
             "timestamp": datetime.now().isoformat(),
         }
         return status
@@ -733,7 +859,7 @@ class JarvisEngine:
         return f"{h}시간 {m}분 {s}초"
 
     def greet(self) -> str:
-        """시작 인사 — Iteration 3"""
+        """시작 인사 — Iteration 4"""
         sys_info = self.computer.get_system_info()
         cpu = sys_info.get("cpu", {}).get("usage_percent", 0)
         mem = sys_info.get("memory", {}).get("used_percent", 0)
@@ -741,8 +867,9 @@ class JarvisEngine:
         tool_count = len(self.tool_executor.get_tools()) if self.tool_executor else 0
         skill_count = len(self.skills._registry) if self.skills else 0
         auto_active = self.autonomous_loop and self.autonomous_loop.is_running
+        pred_interactions = self.prediction_engine.get_stats().get("total_interactions", 0) if self.prediction_engine else 0
 
-        return f"""안녕하세요, 사용자님. **JARVIS Iteration 3** 가 온라인입니다.
+        return f"""안녕하세요, 사용자님. **JARVIS Iteration 4** 가 온라인입니다.
 
 JARVIS — Just A Rather Very Intelligent System
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -754,19 +881,25 @@ JARVIS — Just A Rather Very Intelligent System
   에이전트: {len(self.agents.agents) if hasattr(self.agents, 'agents') else 0}개
 
 활성 시스템:
-  {'자율 루프: 활성화 (백그라운드 학습 중)' if auto_active else '자율 루프: 대기 (/autoloop start)'}
-  {'자기 수정: 준비' if self.self_modifier else ''}
+  {'자율 루프: 활성화' if auto_active else '자율 루프: 대기 (/autoloop start)'}
+  {'멀티 에이전트 토론: 준비 (5 에이전트)' if self.debate_engine else ''}
+  {'문서 처리기: 준비 (PDF/DOCX/XLSX)' if self.document_processor else ''}
+  {'예측 엔진: 준비 (학습 {pred_interactions}건)' if self.prediction_engine else ''}
   {'딥 리서치: 준비' if self.deep_researcher else ''}
   {'코드 인텔리전스: 준비' if self.code_intelligence else ''}
+  {'자기 수정: 준비' if self.self_modifier else ''}
   {'Tool Use API: 활성화' if self._anthropic_client and self.tool_executor else 'Tool Use: 폴백 모드'}
 
-Iteration 3 명령어:
+Iteration 4 신규 명령어:
+  `/debate [질문]`        — 5개 에이전트 멀티 토론
+  `/fast_debate [질문]`   — 빠른 3개 에이전트 토론
+  `/factcheck [주장]`     — 사실 검증
+  `/doc [파일경로]`       — 문서 분석 (PDF/DOCX/XLSX)
+  `/doc_ask [파일] | [질문]` — 문서에 질문
+  `/predict`              — 다음 요청 예측
   `/research [주제]`      — 딥 멀티홉 연구
   `/code_gen [요구사항]`  — 코드 자동 생성
-  `/debug [코드]`         — 버그 자동 감지
-  `/autoloop start`       — 자율 루프 시작
-  `/events`               — 자율 이벤트 로그
-  `/selfmod`              — 자기 코드 분석
   `/goal [복잡한목표]`    — 오케스트레이터 실행
+  `/autoloop start`       — 자율 루프 시작
 
 어떻게 도와드릴까요, 사용자님?"""
