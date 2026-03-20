@@ -62,6 +62,10 @@ from jarvis.core.meta_learner import MetaLearner
 from jarvis.core.executive import ExecutiveController
 from jarvis.intelligence.live_monitor import LiveMonitor
 from jarvis.core.memory_palace import MemoryPalace
+# Iteration 7
+from jarvis.intelligence.causal_engine import CausalEngine
+from jarvis.tools.web_agent import WebAgent
+from jarvis.core.recursive_improver import RecursiveImprover
 
 # ==================== 앱 초기화 ====================
 
@@ -297,7 +301,27 @@ def create_jarvis() -> JarvisEngine:
     final_jarvis.executive = executive
     logger.info("ExecutiveController online — all systems under command")
 
-    logger.info("JARVIS Iteration 6 — Full Autonomy Achieved 🧠⚡")
+    # ── Iteration 7 신규 모듈 ──
+    causal_engine = CausalEngine(llm_manager=llm)
+    final_jarvis.causal_engine = causal_engine
+    logger.info(f"CausalEngine initialized: {len(causal_engine.nodes)} nodes, {len(causal_engine.edges)} edges")
+
+    web_agent = WebAgent(llm_manager=llm)
+    final_jarvis.web_agent = web_agent
+    logger.info(f"WebAgent initialized — mode: {web_agent._mode}")
+
+    def improver_cb(event):
+        socketio.emit("improvement_event", event, namespace="/jarvis")
+
+    recursive_improver = RecursiveImprover(
+        jarvis_engine=final_jarvis,
+        llm_manager=llm,
+        event_callback=improver_cb,
+    )
+    final_jarvis.recursive_improver = recursive_improver
+    logger.info("RecursiveImprover initialized")
+
+    logger.info("JARVIS Iteration 7 — Recursive Self-Improvement + Causal Reasoning + Web Agent 🧠⚡🔄")
     return final_jarvis
 
 
@@ -1874,17 +1898,215 @@ def api_palace_context():
         return jsonify({"error": str(e)}), 500
 
 
+# ==================== Iteration 7: Causal Reasoning API ====================
+
+@app.route("/jarvis/api/causal/extract", methods=["POST"])
+def api_causal_extract():
+    """텍스트에서 인과관계 추출"""
+    try:
+        data = request.get_json()
+        text = data.get("text", "")
+        domain = data.get("domain", "")
+        j = get_jarvis()
+        ce = getattr(j, "causal_engine", None)
+        if not ce:
+            return jsonify({"error": "CausalEngine not available"}), 503
+        relations = ce.extract_causal_relations(text, domain=domain)
+        return jsonify({"relations": relations, "graph_stats": ce.get_status()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/causal/counterfactual", methods=["POST"])
+def api_causal_counterfactual():
+    """반사실적 추론: '만약 X가 달랐다면?'"""
+    try:
+        data = request.get_json()
+        antecedent = data.get("antecedent", "")
+        consequent = data.get("consequent", "")
+        j = get_jarvis()
+        ce = getattr(j, "causal_engine", None)
+        if not ce:
+            return jsonify({"error": "CausalEngine not available"}), 503
+        result = ce.counterfactual(antecedent, consequent)
+        return jsonify({
+            "antecedent": result.antecedent,
+            "consequent": result.consequent,
+            "answer": result.answer,
+            "confidence": result.confidence,
+            "reasoning_chain": result.reasoning_chain,
+            "counterfactual_world": result.counterfactual_world,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/causal/intervene", methods=["POST"])
+def api_causal_intervene():
+    """개입 계획: 목표 달성을 위한 do-calculus"""
+    try:
+        data = request.get_json()
+        goal = data.get("goal", "")
+        j = get_jarvis()
+        ce = getattr(j, "causal_engine", None)
+        if not ce:
+            return jsonify({"error": "CausalEngine not available"}), 503
+        plan = ce.plan_intervention(goal)
+        return jsonify({
+            "goal": plan.goal,
+            "target_variable": plan.target_variable,
+            "interventions": plan.required_interventions,
+            "expected_outcome": plan.expected_outcome,
+            "side_effects": plan.side_effects,
+            "feasibility": plan.feasibility,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/causal/path", methods=["GET"])
+def api_causal_path():
+    """인과 경로 탐색"""
+    try:
+        from_node = request.args.get("from", "")
+        to_node = request.args.get("to", "")
+        j = get_jarvis()
+        ce = getattr(j, "causal_engine", None)
+        if not ce:
+            return jsonify({"error": "CausalEngine not available"}), 503
+        paths = ce.find_causal_path(from_node, to_node)
+        root_causes = ce.get_root_causes(to_node) if to_node else []
+        return jsonify({"paths": paths, "root_causes": root_causes, "status": ce.get_status()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/causal/status")
+def api_causal_status():
+    try:
+        j = get_jarvis()
+        ce = getattr(j, "causal_engine", None)
+        return jsonify(ce.get_status() if ce else {"available": False})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 7: Web Agent API ====================
+
+@app.route("/jarvis/api/webagent/run", methods=["POST"])
+def api_webagent_run():
+    """자율 웹 탐색 태스크 실행"""
+    try:
+        data = request.get_json()
+        goal = data.get("goal", "")
+        start_url = data.get("url", "https://www.google.com")
+        j = get_jarvis()
+        wa = getattr(j, "web_agent", None)
+        if not wa:
+            return jsonify({"error": "WebAgent not available"}), 503
+        task = wa.run(goal, start_url)
+        return jsonify({
+            "task_id": task.id,
+            "goal": task.goal,
+            "success": task.success,
+            "result": task.result,
+            "actions_taken": len(task.actions_taken),
+            "duration": round(task.duration, 2),
+            "error": task.error,
+            "mode": wa._mode,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/webagent/status")
+def api_webagent_status():
+    try:
+        j = get_jarvis()
+        wa = getattr(j, "web_agent", None)
+        return jsonify(wa.get_status() if wa else {"available": False})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 7: Recursive Improver API ====================
+
+@app.route("/jarvis/api/improve/run", methods=["POST"])
+def api_improve_run():
+    """즉시 개선 사이클 실행"""
+    try:
+        j = get_jarvis()
+        ri = getattr(j, "recursive_improver", None)
+        if not ri:
+            return jsonify({"error": "RecursiveImprover not available"}), 503
+
+        def run_in_thread():
+            try:
+                ri.run_cycle()
+            except Exception as ex:
+                logger.error(f"Improvement cycle error: {ex}")
+
+        t = threading.Thread(target=run_in_thread, daemon=True)
+        t.start()
+        return jsonify({"success": True, "message": "개선 사이클 시작됨", "cycle": ri.cycle_count + 1})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/improve/start", methods=["POST"])
+def api_improve_start():
+    """자동 개선 루프 시작"""
+    try:
+        j = get_jarvis()
+        ri = getattr(j, "recursive_improver", None)
+        if not ri:
+            return jsonify({"error": "RecursiveImprover not available"}), 503
+        ri.start()
+        return jsonify({"success": True, "message": "자동 개선 루프 시작"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/improve/stop", methods=["POST"])
+def api_improve_stop():
+    """자동 개선 루프 중지"""
+    try:
+        j = get_jarvis()
+        ri = getattr(j, "recursive_improver", None)
+        if not ri:
+            return jsonify({"error": "RecursiveImprover not available"}), 503
+        ri.stop()
+        return jsonify({"success": True, "message": "자동 개선 루프 중지"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/improve/status")
+def api_improve_status():
+    try:
+        j = get_jarvis()
+        ri = getattr(j, "recursive_improver", None)
+        return jsonify(ri.get_status() if ri else {"available": False})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== 통합 상태 API ====================
+
 @app.route("/jarvis/api/superintelligence/status")
 def api_superintelligence_status():
-    """초지능 시스템 전체 상태"""
+    """초지능 시스템 전체 상태 (Iteration 7)"""
     try:
         j = get_jarvis()
         live_monitor = getattr(j, "live_monitor", None)
         memory_palace = getattr(j, "memory_palace", None)
         executive = getattr(j, "executive", None)
+        causal_engine = getattr(j, "causal_engine", None)
+        web_agent = getattr(j, "web_agent", None)
+        recursive_improver = getattr(j, "recursive_improver", None)
         return jsonify({
-            "iteration": 6,
-            "codename": "Full Autonomy",
+            "iteration": 7,
+            "codename": "Recursive Self-Improvement",
             "systems": {
                 "tree_of_thoughts": j.tot is not None,
                 "goal_hierarchy": j.goals is not None,
@@ -1901,10 +2123,13 @@ def api_superintelligence_status():
                 "tool_executor": j.tool_executor is not None,
                 "vision_system": j.vision is not None,
                 "skill_library": j.skills is not None,
-                # Iteration 6
                 "executive_controller": executive is not None,
                 "live_monitor": live_monitor is not None,
                 "memory_palace": memory_palace is not None,
+                # Iteration 7
+                "causal_engine": causal_engine is not None,
+                "web_agent": web_agent is not None,
+                "recursive_improver": recursive_improver is not None,
             },
             "stats": {
                 "kg_nodes": j.kg.get_stats()["total_nodes"] if j.kg else 0,
@@ -1913,10 +2138,28 @@ def api_superintelligence_status():
                 "consciousness_evals": j.consciousness.get_cognitive_status()["stats"]["total_evaluations"] if j.consciousness else 0,
                 "tot_runs": j.tot.get_stats()["total_runs"] if j.tot else 0,
                 "meta_strategies": len(j.meta_learner.get_status().get("strategies", {})) if j.meta_learner else 0,
-                "live_feed_items": live_monitor.get_stats()["total_items"] if live_monitor else 0,
+                "live_feed_items": live_monitor.get_status()["feed_items"] if live_monitor else 0,
                 "palace_memories": memory_palace.get_stats()["total_memories"] if memory_palace else 0,
                 "executive_executions": executive.get_stats().get("total_executions", 0) if executive else 0,
+                # Iteration 7
+                "causal_nodes": causal_engine.get_status()["nodes"] if causal_engine else 0,
+                "web_tasks": web_agent.get_status()["tasks_total"] if web_agent else 0,
+                "improvement_cycles": recursive_improver.get_status()["total_cycles"] if recursive_improver else 0,
+                "quality_delta": recursive_improver.get_status()["total_quality_delta"] if recursive_improver else 0.0,
             },
+            # For UI header stats
+            "memory_palace": {"available": memory_palace is not None, "total_memories": memory_palace.get_stats()["total_memories"] if memory_palace else 0},
+            "knowledge_graph": {"available": j.kg is not None, "nodes": j.kg.get_stats()["total_nodes"] if j.kg else 0},
+            "live_monitor": {"available": live_monitor is not None, "is_running": live_monitor.is_running if live_monitor else False, "feed_items": live_monitor.get_status()["feed_items"] if live_monitor else 0},
+            "tree_of_thoughts": {"available": j.tot is not None},
+            "agent_swarm": {"available": j.swarm is not None, "agent_count": 6},
+            "consciousness_loop": {"available": j.consciousness is not None},
+            "goal_hierarchy": {"available": j.goals is not None, "active_goals": j.goals.get_stats().get("active_goals", 0) if j.goals else 0},
+            "meta_learner": {"available": j.meta_learner is not None, "strategies": len(j.meta_learner.get_status().get("strategies", {})) if j.meta_learner else 0},
+            "executive_controller": {"available": executive is not None},
+            "causal_engine": causal_engine.get_status() if causal_engine else {"available": False},
+            "web_agent": web_agent.get_status() if web_agent else {"available": False},
+            "recursive_improver": recursive_improver.get_status() if recursive_improver else {"available": False},
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -2180,7 +2423,7 @@ def system_monitor_thread():
 
 if __name__ == "__main__":
     # JARVIS 사전 초기화
-    logger.info("Starting JARVIS Iteration 4 system...")
+    logger.info("Starting JARVIS Iteration 7 system...")
     j = get_jarvis()
 
     # 자율 루프 자동 시작

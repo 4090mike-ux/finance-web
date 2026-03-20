@@ -155,6 +155,56 @@
   #statusbar .sb-left,#statusbar .sb-right{display:flex;gap:16px}
   #statusbar .sb-item{display:flex;align-items:center;gap:4px} #statusbar .sb-item .label{color:var(--border)}
 
+  /* CAUSAL TAB */
+  #tab-causal{display:flex;flex-direction:column;overflow:hidden}
+  #causal-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #causal-mode-row{display:flex;gap:6px;margin-bottom:8px}
+  .causal-mode-btn{padding:6px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:11px;background:var(--panel2);color:var(--text2);transition:all .2s}
+  .causal-mode-btn.active{border-color:var(--warn);color:var(--warn)}
+  #causal-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none}
+  #causal-input2{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none;display:none}
+  .btn-causal{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:linear-gradient(135deg,var(--warn),#cc4400);color:white}
+  #causal-output{flex:1;overflow-y:auto;padding:16px;font-size:12px;line-height:1.7}
+  .causal-node{display:inline-block;padding:4px 10px;border-radius:12px;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.4);color:var(--warn);margin:3px;font-size:11px}
+  .causal-edge{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--panel2);border-radius:6px;margin-bottom:4px}
+  .causal-strength{font-size:10px;color:var(--accent3)}
+  .causal-arrow{color:var(--warn);font-size:12px}
+  .counterfactual-result{padding:14px;background:rgba(255,107,53,.05);border:1px solid var(--warn);border-radius:var(--radius);margin-top:12px}
+
+  /* WEB AGENT TAB */
+  #tab-webagent{display:flex;flex-direction:column;overflow:hidden}
+  #wa-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #wa-goal-row{display:flex;gap:8px;margin-bottom:6px}
+  #wa-goal{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none}
+  #wa-url{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;outline:none}
+  .btn-wa{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:linear-gradient(135deg,#00d4ff,#0099bb);color:#000}
+  #wa-output{flex:1;overflow-y:auto;padding:16px}
+  .wa-task-card{padding:12px;background:var(--panel2);border-radius:var(--radius);margin-bottom:10px;border-left:3px solid var(--accent)}
+  .wa-task-card.success{border-left-color:var(--accent3)} .wa-task-card.failed{border-left-color:var(--red)}
+  .wa-task-goal{font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px}
+  .wa-task-result{font-size:11px;color:var(--text2);line-height:1.6}
+  .wa-task-meta{display:flex;gap:12px;font-size:10px;color:var(--text2);margin-top:6px}
+  .wa-mode-badge{font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(0,212,255,.15);color:var(--accent)}
+
+  /* IMPROVE TAB */
+  #tab-improve{display:flex;flex-direction:column;overflow:hidden}
+  #improve-controls{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0}
+  .btn-improve{padding:8px 14px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s}
+  .btn-improve.primary{background:linear-gradient(135deg,var(--accent3),#009955);color:#000}
+  .btn-improve.secondary{background:var(--panel2);border:1px solid var(--accent3);color:var(--accent3)}
+  .btn-improve.danger{background:var(--panel2);border:1px solid var(--red);color:var(--red)}
+  #improve-status-bar{display:flex;gap:20px;margin-left:auto;font-size:11px}
+  .improve-stat{display:flex;flex-direction:column;align-items:center}
+  .improve-stat-val{font-size:15px;font-weight:700;color:var(--accent3);font-family:var(--font-mono)}
+  .improve-stat-label{font-size:9px;color:var(--text2);letter-spacing:1px}
+  #improve-output{flex:1;overflow-y:auto;padding:16px}
+  .improve-cycle{padding:10px 12px;background:var(--panel2);border-radius:var(--radius);margin-bottom:8px;border-left:3px solid var(--accent3)}
+  .improve-cycle.failed{border-left-color:var(--red)}
+  .improve-cycle-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .improve-cycle-id{font-size:11px;font-weight:700;color:var(--accent3)}
+  .improve-delta{font-size:11px;color:var(--accent3);font-family:var(--font-mono)}
+  .insight-item{padding:6px 8px;background:rgba(0,255,159,.05);border-radius:4px;margin:3px 0;font-size:11px;border-left:2px solid var(--accent3)}
+
   /* ToT TAB */
   #tab-tot{display:flex;flex-direction:column;overflow:hidden}
   #tot-input-area{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -271,6 +321,10 @@
       <div class="module-item"><div class="module-dot off" id="mod-executive"></div><span class="module-name">총사령관</span><span class="module-info" id="mod-executive-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-livemon"></div><span class="module-name">실시간 모니터</span><span class="module-info" id="mod-livemon-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-palace"></div><span class="module-name">기억의 궁전</span><span class="module-info" id="mod-palace-info">-</span></div>
+      <div style="font-size:9px;color:var(--text2);letter-spacing:1px;padding:4px 0 2px">ITERATION 7</div>
+      <div class="module-item"><div class="module-dot off" id="mod-causal"></div><span class="module-name">인과 추론</span><span class="module-info" id="mod-causal-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-webagent"></div><span class="module-name">웹 에이전트</span><span class="module-info" id="mod-webagent-info">-</span></div>
+      <div class="module-item"><div class="module-dot off" id="mod-improver"></div><span class="module-name">재귀 개선</span><span class="module-info" id="mod-improver-info">-</span></div>
       <div style="font-size:9px;color:var(--text2);letter-spacing:1px;padding:4px 0 2px">이전 ITERATION</div>
       <div class="module-item"><div class="module-dot off" id="mod-autoloop"></div><span class="module-name">자율 루프</span><span class="module-info" id="mod-autoloop-info">-</span></div>
       <div class="module-item"><div class="module-dot off" id="mod-debate"></div><span class="module-name">토론 엔진</span><span class="module-info" id="mod-debate-info">5 agents</span></div>
@@ -294,6 +348,9 @@
       <button class="tab-btn" data-tab="executive">⚡ EXECUTIVE</button>
       <button class="tab-btn" data-tab="feed">📡 LIVE FEED</button>
       <button class="tab-btn" data-tab="palace">💎 PALACE</button>
+      <button class="tab-btn" data-tab="causal">🔗 CAUSAL</button>
+      <button class="tab-btn" data-tab="webagent">🌐 WEB</button>
+      <button class="tab-btn" data-tab="improve">🔄 IMPROVE</button>
     </div>
 
     <!-- CHAT TAB -->
@@ -464,6 +521,50 @@
       </div>
       <div id="palace-memories"><div style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">기억의 궁전 — Ebbinghaus 망각 곡선 기반 계층적 메모리<br>탭을 클릭하면 기억이 로드됩니다.</div></div>
     </div>
+    <!-- CAUSAL TAB -->
+    <div class="tab-content" id="tab-causal">
+      <div id="causal-input-area">
+        <div id="causal-mode-row">
+          <button class="causal-mode-btn active" data-cmode="counterfactual">🔀 반사실 추론</button>
+          <button class="causal-mode-btn" data-cmode="intervene">⚙️ 개입 계획</button>
+          <button class="causal-mode-btn" data-cmode="extract">📖 인과 추출</button>
+          <button class="causal-mode-btn" data-cmode="path">🗺️ 경로 탐색</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="causal-input" placeholder="반사실 가정: '만약 X가 달랐다면...' 또는 분석할 텍스트" />
+          <input type="text" id="causal-input2" placeholder="결과 질문: 'Y는 어떻게 됐을까?'" />
+          <button class="btn-causal" id="btn-causal-run">🔗 분석</button>
+        </div>
+      </div>
+      <div id="causal-output"><div style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">Causal Reasoning Engine — Pearl의 인과 계층 구조<br>Level 1: 관찰 · Level 2: 개입 · Level 3: 반사실</div></div>
+    </div>
+
+    <!-- WEB AGENT TAB -->
+    <div class="tab-content" id="tab-webagent">
+      <div id="wa-input-area">
+        <div id="wa-goal-row">
+          <input type="text" id="wa-goal" placeholder="웹 탐색 목표: '최신 AI 논문 요약', 'GPT-4o 사양 찾기'..." />
+          <button class="btn-wa" id="btn-wa-run">🌐 탐색</button>
+        </div>
+        <input type="text" id="wa-url" placeholder="시작 URL (기본: google.com)" value="https://www.google.com" />
+      </div>
+      <div id="wa-output"><div style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">Autonomous Web Agent — 목표 기반 자율 웹 탐색<br>Playwright (실제 브라우저) / requests / LLM 시뮬레이션</div></div>
+    </div>
+
+    <!-- RECURSIVE IMPROVE TAB -->
+    <div class="tab-content" id="tab-improve">
+      <div id="improve-controls">
+        <button class="btn-improve primary" id="btn-improve-run">⚡ 즉시 개선</button>
+        <button class="btn-improve secondary" id="btn-improve-start">▶ 자동 루프</button>
+        <button class="btn-improve danger" id="btn-improve-stop">■ 중지</button>
+        <div id="improve-status-bar">
+          <div class="improve-stat"><div class="improve-stat-val" id="imp-cycles">0</div><div class="improve-stat-label">CYCLES</div></div>
+          <div class="improve-stat"><div class="improve-stat-val" id="imp-delta">+0.000</div><div class="improve-stat-label">Δ QUALITY</div></div>
+          <div class="improve-stat"><div class="improve-stat-val" id="imp-insights">0</div><div class="improve-stat-label">INSIGHTS</div></div>
+        </div>
+      </div>
+      <div id="improve-output"><div style="color:var(--text2);text-align:center;margin-top:40px;font-size:12px">Recursive Self-Improvement — 모든 AI 시스템을 체인으로 연결<br>MetaLearner → KG → Consciousness → GoalHierarchy → ToT → Swarm → MemoryPalace → ...</div></div>
+    </div>
   </main>
 
   <!-- SIDEBAR RIGHT -->
@@ -543,6 +644,12 @@ function initSocket(){
     setThinking(false);switchTab('code');
   });
   s.on('error',d=>{showToast(d.message||'오류','error');setThinking(false);});
+  s.on('improvement_event',d=>{
+    if(d.type==='cycle_done'){showToast(`개선 사이클 #${d.cycle} 완료 (Δ${d.quality_delta>=0?'+':''}${(d.quality_delta||0).toFixed(3)})`,'success');loadImproveStatus();}
+    if(d.type==='cycle_start'){addAutoEvent({type:'info',title:'개선 사이클 시작',content:`사이클 #${d.cycle}`});}
+  });
+  s.on('executive_event',d=>addAutoEvent({type:'info',title:'총사령관',content:d.message||JSON.stringify(d)}));
+  s.on('live_feed_event',d=>{el('hdr-feed').textContent=parseInt(el('hdr-feed').textContent||'0')+1;});
 }
 
 function el(id){return document.getElementById(id);}
@@ -683,6 +790,10 @@ function loadStatus(){
     const ex=d.executive_controller||{};setMod('mod-executive',ex.available,ex.available?'ONLINE':'OFF');
     const lm=d.live_monitor||{};setMod('mod-livemon',lm.available,lm.available?(lm.is_running?'LIVE':'IDLE'):'OFF');
     const mp=d.memory_palace||{};setMod('mod-palace',mp.available,mp.available?`${mp.total_memories||0} mems`:'OFF');
+    // iteration 7
+    const ce=d.causal_engine||{};setMod('mod-causal',ce.available,ce.available?`${ce.nodes||0} nodes`:'OFF');
+    const wa=d.web_agent||{};setMod('mod-webagent',wa.available,wa.available?wa.mode:'OFF');
+    const ri=d.recursive_improver||{};setMod('mod-improver',ri.available,ri.available?`${ri.total_cycles||0} cycles`:'OFF');
   }).catch(()=>{});
 }
 
@@ -753,6 +864,7 @@ function bindEvents(){
     switchTab(b.dataset.tab);
     if(b.dataset.tab==='feed')loadFeed();
     if(b.dataset.tab==='palace')loadPalace();
+    if(b.dataset.tab==='improve')loadImproveStatus();
   }));
   el('btn-debate-full').addEventListener('click',()=>startDebate(false));
   el('btn-debate-fast').addEventListener('click',()=>startDebate(true));
@@ -785,6 +897,170 @@ function bindEvents(){
     document.querySelectorAll('.palace-type-btn').forEach(x=>x.classList.toggle('active',x===b));
     loadPalace();
   }));
+  // Causal
+  el('btn-causal-run').addEventListener('click',runCausal);
+  el('causal-input').addEventListener('keydown',e=>{if(e.key==='Enter')runCausal();});
+  document.querySelectorAll('.causal-mode-btn').forEach(b=>b.addEventListener('click',()=>{
+    causalMode=b.dataset.cmode;
+    document.querySelectorAll('.causal-mode-btn').forEach(x=>x.classList.toggle('active',x===b));
+    const inp2=el('causal-input2');
+    inp2.style.display=(causalMode==='counterfactual'||causalMode==='path')?'block':'none';
+    el('causal-input').placeholder=
+      causalMode==='counterfactual'?'반사실 가정: 만약 X가 달랐다면...':
+      causalMode==='intervene'?'달성 목표를 입력하세요':
+      causalMode==='extract'?'인과관계를 추출할 텍스트 입력':
+      '시작 개념 (from)';
+    if(causalMode==='path')inp2.placeholder='도착 개념 (to)';
+    if(causalMode==='counterfactual')inp2.placeholder='결과 질문: Y는 어떻게 됐을까?';
+  }));
+  // Web Agent
+  el('btn-wa-run').addEventListener('click',runWebAgent);
+  el('wa-goal').addEventListener('keydown',e=>{if(e.key==='Enter')runWebAgent();});
+  // Improve
+  el('btn-improve-run').addEventListener('click',triggerImprove);
+  el('btn-improve-start').addEventListener('click',startImproveLoop);
+  el('btn-improve-stop').addEventListener('click',stopImproveLoop);
+}
+
+// ── Causal Reasoning ─────────────────────────────────────────────
+let causalMode='counterfactual';
+function runCausal(){
+  const inp1=el('causal-input').value.trim();
+  const inp2=el('causal-input2').value.trim();
+  const out=el('causal-output');
+  if(!inp1){showToast('입력을 입력하세요','error');return;}
+  out.innerHTML='<div style="color:var(--text2);font-size:12px">🔗 인과 분석 중...</div>';
+  setThinking(true);
+
+  let url,body;
+  if(causalMode==='counterfactual'){
+    url='/jarvis/api/causal/counterfactual';
+    body={antecedent:inp1,consequent:inp2||'결과는 어떻게 달라졌을까?'};
+  }else if(causalMode==='intervene'){
+    url='/jarvis/api/causal/intervene';body={goal:inp1};
+  }else if(causalMode==='extract'){
+    url='/jarvis/api/causal/extract';body={text:inp1,domain:inp2};
+  }else{
+    url=`/jarvis/api/causal/path?from=${encodeURIComponent(inp1)}&to=${encodeURIComponent(inp2||'')}`;
+    body=null;
+  }
+
+  const req=body
+    ?fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    :fetch(url);
+
+  req.then(r=>r.json()).then(d=>{
+    setThinking(false);
+    if(d.error){out.innerHTML=`<div style="color:var(--red)">${d.error}</div>`;return;}
+    let html='';
+    if(causalMode==='counterfactual'){
+      html=`<div class="counterfactual-result">
+        <div style="font-size:10px;color:var(--warn);font-weight:700;letter-spacing:1px;margin-bottom:8px">COUNTERFACTUAL ANALYSIS (Level 3)</div>
+        <div style="margin-bottom:8px"><strong>가정:</strong> ${d.antecedent}</div>
+        <div style="margin-bottom:8px"><strong>질문:</strong> ${d.consequent}</div>
+        <div style="margin-bottom:8px;color:var(--accent3)"><strong>결론:</strong> ${d.answer}</div>
+        <div style="font-size:10px;color:var(--text2)">신뢰도: ${((d.confidence||0)*100).toFixed(0)}%</div>
+        ${d.reasoning_chain?.length?'<div style="margin-top:8px;font-size:11px"><strong>추론 단계:</strong><ol>'+d.reasoning_chain.map(s=>`<li style="margin:2px 0">${s}</li>`).join('')+'</ol></div>':''}
+        ${d.counterfactual_world?`<div style="margin-top:8px;padding:8px;background:rgba(255,107,53,.08);border-radius:4px;font-size:11px"><strong>반사실 세계:</strong> ${d.counterfactual_world}</div>`:''}
+      </div>`;
+    }else if(causalMode==='intervene'){
+      html=`<div style="padding:14px;background:var(--panel2);border-radius:var(--radius);border-left:4px solid var(--warn)">
+        <div style="font-size:10px;color:var(--warn);font-weight:700;letter-spacing:1px;margin-bottom:8px">INTERVENTION PLAN (do-calculus)</div>
+        <div style="margin-bottom:6px"><strong>목표:</strong> ${d.goal}</div>
+        <div style="margin-bottom:6px"><strong>핵심 변수:</strong> <span class="causal-node">${d.target_variable}</span></div>
+        <div style="margin-bottom:6px"><strong>실행 가능성:</strong> ${((d.feasibility||0)*100).toFixed(0)}%</div>
+        <div style="margin-top:10px"><strong>개입 계획:</strong></div>
+        ${(d.interventions||[]).map(i=>`<div class="causal-edge"><span style="color:var(--accent);font-weight:600">${i.priority||'?'}.</span><span>${i.action}</span><span class="causal-strength">${i.effort||''}</span></div>`).join('')}
+        <div style="margin-top:8px"><strong>예상 결과:</strong> ${d.expected_outcome}</div>
+        ${d.side_effects?.length?`<div style="margin-top:6px;font-size:11px;color:var(--warn)">⚠️ 부작용: ${d.side_effects.join(', ')}</div>`:''}
+      </div>`;
+    }else if(causalMode==='extract'){
+      html=`<div style="padding:14px;background:var(--panel2);border-radius:var(--radius)">
+        <div style="font-size:10px;color:var(--warn);font-weight:700;letter-spacing:1px;margin-bottom:8px">CAUSAL RELATIONS EXTRACTED (Level 1)</div>
+        ${(d.relations||[]).map(r=>`<div class="causal-edge"><span class="causal-node">${r.cause}</span><span class="causal-arrow">${r.relationship==='inhibits'?'⊣':'→'}</span><span class="causal-node">${r.effect}</span><span class="causal-strength">${((r.strength||0)*100).toFixed(0)}%</span><span style="font-size:10px;color:var(--text2)">${r.mechanism||''}</span></div>`).join('')}
+        <div style="margin-top:8px;font-size:10px;color:var(--text2)">그래프: ${d.graph_stats?.nodes||0} 노드 · ${d.graph_stats?.edges||0} 엣지</div>
+      </div>`;
+    }else{
+      html=`<div style="padding:14px;background:var(--panel2);border-radius:var(--radius)">
+        <div style="font-size:10px;color:var(--warn);font-weight:700;letter-spacing:1px;margin-bottom:8px">CAUSAL PATH ANALYSIS</div>
+        ${d.paths?.length?d.paths.map(p=>`<div class="causal-edge">${p.map(n=>`<span class="causal-node">${n}</span>`).join('<span class="causal-arrow">→</span>')}</div>`).join(''):'<div style="color:var(--text2)">경로 없음</div>'}
+        ${d.root_causes?.length?`<div style="margin-top:10px"><strong>근본 원인:</strong>${d.root_causes.map(c=>`<div class="causal-edge"><span class="causal-node">${c.cause}</span><span class="causal-strength">${((c.strength||0)*100).toFixed(0)}%</span></div>`).join('')}</div>`:''}
+      </div>`;
+    }
+    out.innerHTML=html;
+    showToast('인과 분석 완료','success');
+  }).catch(e=>{setThinking(false);out.innerHTML=`<div style="color:var(--red)">오류: ${e.message}</div>`;});
+}
+
+// ── Web Agent ─────────────────────────────────────────────────────
+function runWebAgent(){
+  const goal=el('wa-goal').value.trim();if(!goal){showToast('목표를 입력하세요','error');return;}
+  const url=el('wa-url').value.trim()||'https://www.google.com';
+  const out=el('wa-output');
+  out.innerHTML='<div style="color:var(--text2);font-size:12px">🌐 웹 탐색 중...</div>';
+  setThinking(true);
+  fetch('/jarvis/api/webagent/run',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({goal,url})
+  }).then(r=>r.json()).then(d=>{
+    setThinking(false);
+    const cls=d.success?'success':'failed';
+    const html=`<div class="wa-task-card ${cls}">
+      <div class="wa-task-goal">${d.goal}</div>
+      <div class="wa-task-result">${renderMd(d.result||d.error||'결과 없음')}</div>
+      <div class="wa-task-meta">
+        <span class="wa-mode-badge">${d.mode||'?'}</span>
+        <span>${d.actions_taken||0} actions</span>
+        <span>${d.duration||0}s</span>
+        <span style="color:${d.success?'var(--accent3)':'var(--red)'}">${d.success?'✓ 성공':'✗ 실패'}</span>
+      </div>
+    </div>`;
+    out.innerHTML=html+out.innerHTML.replace('<div style="color:var(--text2);font-size:12px">🌐 웹 탐색 중...</div>','');
+    showToast(d.success?'탐색 완료':'탐색 실패',d.success?'success':'error');
+  }).catch(e=>{setThinking(false);showToast('오류: '+e.message,'error');});
+}
+
+// ── Recursive Improver ────────────────────────────────────────────
+function loadImproveStatus(){
+  fetch('/jarvis/api/improve/status').then(r=>r.json()).then(d=>{
+    el('imp-cycles').textContent=d.total_cycles||0;
+    el('imp-delta').textContent=(d.total_quality_delta>=0?'+':'')+((d.total_quality_delta||0).toFixed(3));
+    el('imp-insights').textContent=d.total_insights||0;
+    const out=el('improve-output');
+    if(!d.recent_cycles?.length){return;}
+    let html='';
+    d.recent_cycles.slice().reverse().forEach(c=>{
+      html+=`<div class="improve-cycle ${c.success?'':'failed'}">
+        <div class="improve-cycle-header">
+          <span class="improve-cycle-id">사이클 #${c.id}</span>
+          <span class="improve-delta">${c.quality_delta>=0?'+':''}${c.quality_delta.toFixed(3)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text2)">개선 ${c.improvements}개 · ${c.duration}초</div>
+      </div>`;
+    });
+    if(d.top_insights?.length){
+      html+=`<div style="font-size:10px;color:var(--accent3);letter-spacing:1px;margin:12px 0 6px">TOP INSIGHTS</div>`;
+      d.top_insights.forEach(i=>{
+        html+=`<div class="insight-item"><span style="color:var(--accent);font-size:10px">[${i.category}]</span> ${i.issue}</div>`;
+      });
+    }
+    if(html)out.innerHTML=html;
+  }).catch(()=>{});
+}
+
+function triggerImprove(){
+  fetch('/jarvis/api/improve/run',{method:'POST'})
+    .then(r=>r.json()).then(d=>{showToast(d.message||'개선 사이클 시작','info');setTimeout(loadImproveStatus,3000);})
+    .catch(()=>showToast('실행 실패','error'));
+}
+function startImproveLoop(){
+  fetch('/jarvis/api/improve/start',{method:'POST'})
+    .then(r=>r.json()).then(d=>showToast(d.message||'루프 시작','success'))
+    .catch(()=>showToast('실패','error'));
+}
+function stopImproveLoop(){
+  fetch('/jarvis/api/improve/stop',{method:'POST'})
+    .then(r=>r.json()).then(d=>showToast(d.message||'루프 중지','info'))
+    .catch(()=>showToast('실패','error'));
 }
 
 // ── Tree of Thoughts ─────────────────────────────────────────────
@@ -944,6 +1220,7 @@ function init(){
   setInterval(()=>el('sb-time').textContent=new Date().toLocaleTimeString('ko-KR'),1000);
   setInterval(loadStatus,10000);setInterval(loadPredictions,30000);
   setInterval(loadFeed,60000);
+  setInterval(loadImproveStatus,30000);
   loadStatus();
 }
 document.addEventListener('DOMContentLoaded',init);
