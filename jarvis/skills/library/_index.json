@@ -82,11 +82,11 @@
       "kw"
     ],
     "created_at": "2026-03-20T08:46:48.777567",
-    "last_used": "",
-    "use_count": 0,
-    "success_count": 0,
+    "last_used": "2026-03-20T08:55:28.998001",
+    "use_count": 1,
+    "success_count": 1,
     "fail_count": 0,
-    "avg_duration_ms": 0.0,
+    "avg_duration_ms": 0.454399996669963,
     "tags": [
       "keyword",
       "extract",
@@ -129,11 +129,11 @@
       "kw"
     ],
     "created_at": "2026-03-20T08:46:48.777567",
-    "last_used": "",
-    "use_count": 0,
-    "success_count": 0,
+    "last_used": "2026-03-20T08:55:28.995991",
+    "use_count": 1,
+    "success_count": 1,
     "fail_count": 0,
-    "avg_duration_ms": 0.0,
+    "avg_duration_ms": 1.8751999887172133,
     "tags": [
       "diff",
       "compare",

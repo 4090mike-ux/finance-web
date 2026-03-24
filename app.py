@@ -9,6 +9,7 @@
 # Flask        = 웹서버를 만드는 핵심 도구
 # render_template = HTML 파일을 브라우저에 보내주는 도구
 from flask import Flask, render_template
+from trading_api import trading_bp
 
 # os = 운영체제 기능을 사용하는 도구
 # 여기서는 .env 파일의 값을 읽어오는 데 사용
@@ -40,6 +41,9 @@ app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key")
 # 이 블록 안에서만 DB 작업이 가능
 with app.app_context():
     init_db()  # models/__init__.py 의 init_db() 함수 호출
+
+# 트레이딩 블루프린트 등록
+app.register_blueprint(trading_bp)
 
 
 # =============================================

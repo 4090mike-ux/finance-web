@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 트레이딩 대시보드 - 미국 급등주 모의거래</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        .header h1 { color: #00d4ff; font-size: 1.4rem; }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .status-running { background: #00c85140; color: #00ff88; border: 1px solid #00c851; }
+        .status-stopped { background: #ff444440; color: #ff6666; border: 1px solid #ff4444; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            padding: 15px;
+        }
+        .card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .card h2 {
+            color: #00d4ff;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #1e1e3a;
+        }
+        .metric:last-child { border-bottom: none; }
+        .metric-label { color: #8888aa; font-size: 0.85rem; }
+        .metric-value { font-weight: bold; }
+        .positive { color: #00ff88; }
+        .negative { color: #ff6666; }
+        .neutral { color: #ffcc44; }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            margin: 4px;
+        }
+        .btn-primary { background: #0077ff; color: white; }
+        .btn-success { background: #00c851; color: white; }
+        .btn-danger { background: #ff4444; color: white; }
+        .btn-warning { background: #ffaa00; color: black; }
+        .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-controls { padding: 15px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        th { background: #12122a; color: #00d4ff; padding: 8px; text-align: right; }
+        th:first-child { text-align: left; }
+        td { padding: 7px 8px; border-bottom: 1px solid #1e1e3a; text-align: right; }
+        td:first-child { text-align: left; font-weight: bold; }
+        tr:hover { background: #1e1e3a; }
+
+        .trade-type-buy { color: #00ff88; }
+        .trade-type-sell { color: #ff6666; }
+
+        .scanner-table { max-height: 300px; overflow-y: auto; display: block; }
+
+        #log-area {
+            background: #0a0a0f;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.78rem;
+            color: #88aacc;
+        }
+        .log-entry { margin: 2px 0; }
+        .log-time { color: #556677; }
+
+        .last-update { color: #556677; font-size: 0.75rem; margin-top: 5px; }
+
+        .ticker-badge {
+            display: inline-block;
+            background: #0077ff30;
+            border: 1px solid #0077ff;
+            color: #00aaff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin: 2px;
+        }
+
+        .progress-bar {
+            background: #1e1e3a;
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        .progress-positive { background: linear-gradient(90deg, #00c851, #00ff88); }
+        .progress-negative { background: linear-gradient(90deg, #ff4444, #ff8888); }
+
+        #capital-input {
+            background: #0a0a1a;
+            border: 1px solid #2a2a4a;
+            color: #e0e0e0;
+            padding: 6px 10px;
+            border-radius: 6px;
+            width: 120px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🤖 AI 트레이딩 시스템 - 미국 급등주 모의거래</h1>
+    <div>
+        <span id="engine-status" class="status-badge status-stopped">⏹ 정지</span>
+        <span class="last-update" id="last-update">--</span>
+    </div>
+</div>
+
+<!-- 컨트롤 패널 -->
+<div class="btn-controls">
+    <button class="btn btn-success" onclick="startEngine()">▶ 자동매매 시작</button>
+    <button class="btn btn-danger" onclick="stopEngine()">⏹ 정지</button>
+    <button class="btn btn-primary" onclick="manualScan()">🔍 즉시 스캔</button>
+    <button class="btn btn-warning" onclick="refreshStatus()">🔄 상태 갱신</button>
+    <span style="color:#666; margin: 0 8px">|</span>
+    <input type="number" id="capital-input" value="10000" min="1000" step="1000">
+    <button class="btn btn-warning" onclick="resetPortfolio()">💰 포트폴리오 초기화</button>
+</div>
+
+<!-- 메인 그리드 -->
+<div class="grid">
+
+    <!-- 포트폴리오 요약 -->
+    <div class="card">
+        <h2>💼 포트폴리오 현황</h2>
+        <div class="metric">
+            <span class="metric-label">초기 자본</span>
+            <span class="metric-value" id="pf-initial">$10,000</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">현재 가치</span>
+            <span class="metric-value" id="pf-value">$10,000</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">보유 현금</span>
+            <span class="metric-value" id="pf-cash">$10,000</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">총 손익</span>
+            <span class="metric-value" id="pf-total-pnl">$0</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">총 수익률</span>
+            <span class="metric-value" id="pf-total-pnl-pct">0.00%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill progress-positive" id="pnl-bar" style="width:50%"></div>
+        </div>
+        <div class="metric" style="margin-top:10px">
+            <span class="metric-label">오늘 손익</span>
+            <span class="metric-value" id="pf-today-pnl">$0</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">오픈 포지션</span>
+            <span class="metric-value" id="pf-positions">0</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">총 거래 횟수</span>
+            <span class="metric-value" id="pf-trades">0</span>
+        </div>
+    </div>
+
+    <!-- 전략 상태 -->
+    <div class="card">
+        <h2>🧠 AI 전략 상태</h2>
+        <div class="metric">
+            <span class="metric-label">승/패</span>
+            <span class="metric-value" id="st-winloss">0 / 0</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">승률</span>
+            <span class="metric-value" id="st-winrate">0%</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">적응 횟수</span>
+            <span class="metric-value" id="st-adaptation">0</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">모멘텀 임계값</span>
+            <span class="metric-value" id="st-momentum">3.0%</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">목표 수익률</span>
+            <span class="metric-value positive" id="st-target">5.0%</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">손절 비율</span>
+            <span class="metric-value negative" id="st-stop">2.0%</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">최대 포지션</span>
+            <span class="metric-value" id="st-max-pos">5</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">스캔 횟수</span>
+            <span class="metric-value" id="engine-scans">0</span>
+        </div>
+    </div>
+
+    <!-- 보유 포지션 -->
+    <div class="card" style="grid-column: span 2;">
+        <h2>📊 보유 포지션</h2>
+        <div class="scanner-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>종목</th>
+                        <th>수량</th>
+                        <th>매입가</th>
+                        <th>현재가</th>
+                        <th>평가금액</th>
+                        <th>미실현손익</th>
+                        <th>수익률</th>
+                        <th>진입시간</th>
+                    </tr>
+                </thead>
+                <tbody id="positions-table">
+                    <tr><td colspan="8" style="text-align:center; color:#556677; padding:20px;">포지션 없음</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 급등주 스캐너 -->
+    <div class="card" style="grid-column: span 2;">
+        <h2>🚀 실시간 급등주 스캐너 (Top 10)</h2>
+        <div class="scanner-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>종목</th>
+                        <th>현재가</th>
+                        <th>일변화율</th>
+                        <th>시간변화율</th>
+                        <th>거래량비</th>
+                        <th>RSI</th>
+                        <th>모멘텀점수</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody id="scanner-table">
+                    <tr><td colspan="8" style="text-align:center; color:#556677; padding:20px;">스캔 데이터 없음 (스캔 버튼 클릭)</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 최근 거래 내역 -->
+    <div class="card" style="grid-column: span 2;">
+        <h2>📋 최근 거래 내역</h2>
+        <div class="scanner-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>구분</th>
+                        <th>종목</th>
+                        <th>가격</th>
+                        <th>수량</th>
+                        <th>금액</th>
+                        <th>손익</th>
+                        <th>수익률</th>
+                        <th>이유</th>
+                        <th>시간</th>
+                    </tr>
+                </thead>
+                <tbody id="trades-table">
+                    <tr><td colspan="9" style="text-align:center; color:#556677; padding:20px;">거래 내역 없음</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 로그 -->
+    <div class="card" style="grid-column: span 2;">
+        <h2>📡 시스템 로그</h2>
+        <div id="log-area"></div>
+    </div>
+
+</div>
+
+<script>
+let autoRefresh = null;
+
+function addLog(msg, type='info') {
+    const area = document.getElementById('log-area');
+    const time = new Date().toLocaleTimeString('ko-KR');
+    const colors = { info: '#88aacc', success: '#00ff88', warning: '#ffaa44', error: '#ff6666' };
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = `<span class="log-time">[${time}]</span> <span style="color:${colors[type]}">${msg}</span>`;
+    area.insertBefore(div, area.firstChild);
+    if (area.children.length > 50) area.removeChild(area.lastChild);
+}
+
+function formatMoney(val) {
+    const v = parseFloat(val) || 0;
+    const cls = v >= 0 ? 'positive' : 'negative';
+    return `<span class="${cls}">${v >= 0 ? '+' : ''}$${Math.abs(v).toLocaleString('en', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`;
+}
+
+function formatPct(val) {
+    const v = parseFloat(val) || 0;
+    const cls = v >= 0 ? 'positive' : 'negative';
+    return `<span class="${cls}">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>`;
+}
+
+async function refreshStatus() {
+    try {
+        const res = await fetch('/trading/api/status');
+        const data = await res.json();
+        if (!data.success) { addLog('상태 조회 실패: ' + data.error, 'error'); return; }
+
+        const d = data.data;
+        const pf = d.portfolio;
+        const st = d.strategy;
+        const eng = d.engine;
+
+        // 포트폴리오 업데이트
+        document.getElementById('pf-initial').textContent = '$' + pf.initial_capital.toLocaleString('en', {minimumFractionDigits:2});
+        document.getElementById('pf-value').innerHTML = formatMoney(pf.current_value).replace(/[+$]/, '$');
+        document.getElementById('pf-cash').textContent = '$' + pf.cash.toLocaleString('en', {minimumFractionDigits:2});
+        document.getElementById('pf-total-pnl').innerHTML = formatMoney(pf.total_pnl);
+        document.getElementById('pf-total-pnl-pct').innerHTML = formatPct(pf.total_pnl_pct);
+        document.getElementById('pf-today-pnl').innerHTML = formatMoney(pf.today_pnl);
+        document.getElementById('pf-positions').textContent = pf.open_positions;
+        document.getElementById('pf-trades').textContent = pf.total_trades;
+
+        // 수익률 바
+        const pnlBar = document.getElementById('pnl-bar');
+        const pnlPct = parseFloat(pf.total_pnl_pct) || 0;
+        const barWidth = Math.min(100, Math.max(0, 50 + pnlPct));
+        pnlBar.style.width = barWidth + '%';
+        pnlBar.className = 'progress-fill ' + (pnlPct >= 0 ? 'progress-positive' : 'progress-negative');
+
+        // 전략 상태
+        document.getElementById('st-winloss').textContent = st.win_count + ' / ' + st.loss_count;
+        document.getElementById('st-winrate').innerHTML = formatPct(st.win_rate * 100);
+        document.getElementById('st-adaptation').textContent = st.adaptation_round;
+        document.getElementById('st-momentum').textContent = st.params.momentum_threshold.toFixed(1) + '%';
+        document.getElementById('st-target').textContent = '+' + st.params.profit_target_pct.toFixed(1) + '%';
+        document.getElementById('st-stop').textContent = '-' + st.params.stop_loss_pct.toFixed(1) + '%';
+        document.getElementById('st-max-pos').textContent = st.params.max_positions;
+        document.getElementById('engine-scans').textContent = eng.scan_count;
+
+        // 엔진 상태
+        const statusEl = document.getElementById('engine-status');
+        if (eng.running) {
+            statusEl.textContent = '▶ 실행중';
+            statusEl.className = 'status-badge status-running';
+        } else {
+            statusEl.textContent = '⏹ 정지';
+            statusEl.className = 'status-badge status-stopped';
+        }
+
+        // 포지션 테이블
+        const posTable = document.getElementById('positions-table');
+        if (d.positions.length === 0) {
+            posTable.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#556677; padding:20px;">포지션 없음</td></tr>';
+        } else {
+            posTable.innerHTML = d.positions.map(p => `
+                <tr>
+                    <td><span class="ticker-badge">${p.symbol}</span></td>
+                    <td>${p.shares}</td>
+                    <td>$${p.avg_price.toFixed(2)}</td>
+                    <td>$${p.current_price.toFixed(2)}</td>
+                    <td>$${p.value.toFixed(2)}</td>
+                    <td>${formatMoney(p.unrealized_pnl)}</td>
+                    <td>${formatPct(p.unrealized_pnl_pct)}</td>
+                    <td style="color:#666; font-size:0.75rem">${p.entry_time.substring(11,19)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 급등주 스캐너 테이블
+        const scanTable = document.getElementById('scanner-table');
+        if (!d.top_movers || d.top_movers.length === 0) {
+            scanTable.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#556677; padding:20px;">스캔 데이터 없음</td></tr>';
+        } else {
+            scanTable.innerHTML = d.top_movers.map(m => `
+                <tr>
+                    <td><span class="ticker-badge">${m.symbol}</span></td>
+                    <td>$${(m.price || 0).toFixed(2)}</td>
+                    <td>${formatPct(m.day_change_pct)}</td>
+                    <td>${formatPct(m.hour_change_pct)}</td>
+                    <td>${(m.volume_ratio || 0).toFixed(1)}x</td>
+                    <td style="color:${(m.rsi||50)>70?'#ff6666':(m.rsi||50)<30?'#00ff88':'#ffcc44'}">${(m.rsi || 0).toFixed(1)}</td>
+                    <td><span class="positive">${(m.momentum_score || 0).toFixed(1)}</span></td>
+                    <td>
+                        <button class="btn btn-success" style="padding:3px 8px; font-size:0.75rem"
+                            onclick="quickBuy('${m.symbol}', ${m.price || 0})">매수</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 거래 내역 테이블
+        const tradesTable = document.getElementById('trades-table');
+        const trades = (d.recent_trades || []).slice().reverse();
+        if (trades.length === 0) {
+            tradesTable.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#556677; padding:20px;">거래 내역 없음</td></tr>';
+        } else {
+            tradesTable.innerHTML = trades.slice(0, 20).map(t => `
+                <tr>
+                    <td class="trade-type-${t.type.toLowerCase()}">${t.type === 'BUY' ? '▲ 매수' : '▼ 매도'}</td>
+                    <td><span class="ticker-badge">${t.symbol}</span></td>
+                    <td>$${(t.price || 0).toFixed(2)}</td>
+                    <td>${(t.shares || 0).toFixed(4)}</td>
+                    <td>$${(t.total || 0).toFixed(2)}</td>
+                    <td>${t.pnl !== undefined ? formatMoney(t.pnl) : '-'}</td>
+                    <td>${t.pnl_pct !== undefined ? formatPct(t.pnl_pct) : '-'}</td>
+                    <td style="color:#556677; font-size:0.75rem; max-width:150px; overflow:hidden">${(t.reason||'').substring(0,40)}</td>
+                    <td style="color:#556677; font-size:0.75rem">${(t.timestamp||'').substring(11,19)}</td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('last-update').textContent = '갱신: ' + new Date().toLocaleTimeString('ko-KR');
+
+    } catch (e) {
+        addLog('상태 조회 오류: ' + e.message, 'error');
+    }
+}
+
+async function startEngine() {
+    try {
+        addLog('자동매매 엔진 시작 중...', 'info');
+        const res = await fetch('/trading/api/start', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({interval: 300})
+        });
+        const data = await res.json();
+        if (data.success) {
+            addLog('✅ ' + data.message, 'success');
+            // 자동 갱신 시작
+            if (!autoRefresh) {
+                autoRefresh = setInterval(refreshStatus, 30000);
+            }
+            refreshStatus();
+        } else {
+            addLog('❌ 시작 실패: ' + data.error, 'error');
+        }
+    } catch (e) {
+        addLog('엔진 시작 오류: ' + e.message, 'error');
+    }
+}
+
+async function stopEngine() {
+    try {
+        const res = await fetch('/trading/api/stop', { method: 'POST' });
+        const data = await res.json();
+        addLog(data.success ? '⏹ 엔진 정지' : '오류: ' + data.error, data.success ? 'warning' : 'error');
+        if (autoRefresh) { clearInterval(autoRefresh); autoRefresh = null; }
+        refreshStatus();
+    } catch (e) {
+        addLog('엔진 정지 오류: ' + e.message, 'error');
+    }
+}
+
+async function manualScan() {
+    addLog('🔍 수동 스캔 시작... (수십 초 소요)', 'info');
+    document.querySelector('[onclick="manualScan()"]').disabled = true;
+    try {
+        const res = await fetch('/trading/api/scan', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            addLog(`✅ 스캔 완료: ${data.count}개 급등 종목 발견`, 'success');
+            refreshStatus();
+        } else {
+            addLog('❌ 스캔 실패: ' + data.error, 'error');
+        }
+    } catch (e) {
+        addLog('스캔 오류: ' + e.message, 'error');
+    } finally {
+        document.querySelector('[onclick="manualScan()"]').disabled = false;
+    }
+}
+
+async function resetPortfolio() {
+    const capital = parseFloat(document.getElementById('capital-input').value) || 10000;
+    if (!confirm(`포트폴리오를 $${capital.toLocaleString()}로 초기화하시겠습니까?\n모든 거래 내역이 삭제됩니다.`)) return;
+
+    const res = await fetch('/trading/api/portfolio/reset', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({capital})
+    });
+    const data = await res.json();
+    addLog(data.success ? '💰 ' + data.message : '오류: ' + data.error, data.success ? 'success' : 'error');
+    refreshStatus();
+}
+
+async function quickBuy(symbol, price) {
+    if (!confirm(`${symbol}을 $${price.toFixed(2)}에 매수하시겠습니까?`)) return;
+    const res = await fetch('/trading/api/trade/buy', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({symbol, price, invest_pct: 0.1})
+    });
+    const data = await res.json();
+    addLog(data.success ? `✅ ${symbol} 매수 성공` : `❌ 매수 실패: ${data.error}`, data.success ? 'success' : 'error');
+    refreshStatus();
+}
+
+// 초기 로드
+addLog('대시보드 초기화...', 'info');
+refreshStatus();
+// 30초마다 자동 갱신
+autoRefresh = setInterval(refreshStatus, 30000);
+</script>
+
+</body>
+</html>
