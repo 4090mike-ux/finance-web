@@ -76,6 +76,13 @@ from jarvis.core.rl_optimizer import RLOptimizer
 from jarvis.intelligence.reality_simulator import RealitySimulator
 from jarvis.core.agent_genesis import AgentGenesis
 from jarvis.intelligence.experience_distiller import ExperienceDistiller
+# Iteration 10
+from jarvis.core.autonomous_programmer import AutonomousProgrammer
+from jarvis.intelligence.live_learner import LiveLearner
+# Iteration 11
+from jarvis.intelligence.multimodal_processor import MultimodalProcessor
+from jarvis.intelligence.data_scientist import DataScientist
+from jarvis.core.creative_engine import CreativeEngine
 
 # ==================== 앱 초기화 ====================
 
@@ -388,6 +395,49 @@ def create_jarvis() -> JarvisEngine:
     logger.info(f"ExperienceDistiller initialized — {experience_distiller.get_wisdom_summary()['total_episodes']} episodes")
 
     logger.info("JARVIS Iteration 9 — 감정 + RL최적화 + 멀티버스 + 에이전트 창조 + 경험증류")
+
+    # ── Iteration 10 신규 모듈 ──
+    def programmer_event_cb(event):
+        socketio.emit("programmer_event", event, namespace="/jarvis")
+
+    autonomous_programmer = AutonomousProgrammer(
+        llm_manager=llm,
+        event_callback=programmer_event_cb,
+    )
+    final_jarvis.autonomous_programmer = autonomous_programmer
+    logger.info("AutonomousProgrammer initialized — Gödel Machine ready")
+
+    def learner_event_cb(event):
+        socketio.emit("learner_event", event, namespace="/jarvis")
+
+    live_learner = LiveLearner(
+        llm_manager=llm,
+        event_callback=learner_event_cb,
+    )
+    live_learner.start_auto_learn(interval_minutes=60)
+    final_jarvis.live_learner = live_learner
+    summary = live_learner.get_learning_summary()
+    logger.info(f"LiveLearner started — {summary.get('total_insights', 0)} insights in DB")
+
+    logger.info("JARVIS Iteration 10 — 자율 프로그래머 + 실시간 학습기 온라인")
+
+    # ── Iteration 11 신규 모듈 ──
+    multimodal_processor = MultimodalProcessor(llm_manager=llm)
+    final_jarvis.multimodal_processor = multimodal_processor
+    logger.info("MultimodalProcessor initialized — Claude Vision + OCR + Fusion ready")
+
+    data_scientist = DataScientist(llm_manager=llm, charts_dir="data/charts")
+    final_jarvis.data_scientist = data_scientist
+    logger.info(f"DataScientist initialized — pandas={data_scientist.get_stats()['pandas_available']}")
+
+    def creative_event_cb(event):
+        socketio.emit("creative_event", event, namespace="/jarvis")
+
+    creative_engine = CreativeEngine(llm_manager=llm, event_callback=creative_event_cb)
+    final_jarvis.creative_engine = creative_engine
+    logger.info("CreativeEngine initialized — SCAMPER + 6Hats + Analogical ready")
+
+    logger.info("JARVIS Iteration 11 — 멀티모달 + 자율 데이터 과학자 + 창의 엔진 완성 🚀")
     return final_jarvis
 
 
@@ -2818,6 +2868,186 @@ def api_rl_stats():
         if hasattr(j, 'rl_optimizer') and j.rl_optimizer:
             return jsonify(j.rl_optimizer.get_stats())
         return jsonify({"error": "RLOptimizer not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 11: 멀티모달 API ====================
+
+@app.route("/jarvis/api/multimodal/analyze", methods=["POST"])
+def api_multimodal_analyze():
+    """이미지/URL 분석 — Claude Vision"""
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        url = data.get("url", "")
+        task = data.get("task", "describe")
+
+        if not hasattr(j, "multimodal_processor") or not j.multimodal_processor:
+            return jsonify({"success": False, "error": "MultimodalProcessor not available"}), 503
+
+        mp = j.multimodal_processor
+        # URL이면 URL 처리, 파일 경로면 파일 처리
+        import os as _os
+        if url.startswith("http://") or url.startswith("https://"):
+            result = mp.process_image_url(url, task=task)
+        elif _os.path.exists(url):
+            result = mp.process_image(url, task=task)
+        else:
+            return jsonify({"success": False, "error": f"URL/경로를 찾을 수 없음: {url}"}), 400
+
+        return jsonify({
+            "success": True,
+            "result": result.to_dict(),
+            "stats": mp.get_stats(),
+        })
+    except Exception as e:
+        logger.error(f"Multimodal analyze error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/jarvis/api/multimodal/stats")
+def api_multimodal_stats():
+    try:
+        j = get_jarvis()
+        if hasattr(j, "multimodal_processor") and j.multimodal_processor:
+            return jsonify(j.multimodal_processor.get_stats())
+        return jsonify({"error": "MultimodalProcessor not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 11: 데이터 과학 API ====================
+
+@app.route("/jarvis/api/datascience/load", methods=["POST"])
+def api_ds_load():
+    """데이터셋 로드"""
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        file_path = data.get("file_path", "")
+        name = data.get("name")
+
+        if not hasattr(j, "data_scientist") or not j.data_scientist:
+            return jsonify({"success": False, "error": "DataScientist not available"}), 503
+
+        result = j.data_scientist.load_file(file_path, name=name)
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"DataScientist load error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/jarvis/api/datascience/ask", methods=["POST"])
+def api_ds_ask():
+    """자연어 데이터 쿼리"""
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        dataset_name = data.get("dataset_name", "")
+        question = data.get("question", "")
+
+        if not hasattr(j, "data_scientist") or not j.data_scientist:
+            return jsonify({"success": False, "error": "DataScientist not available"}), 503
+        if not dataset_name or not question:
+            return jsonify({"success": False, "error": "dataset_name과 question 필요"}), 400
+
+        result = j.data_scientist.ask(dataset_name, question)
+        return jsonify({"success": True, "result": result.to_dict()})
+    except Exception as e:
+        logger.error(f"DataScientist ask error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/jarvis/api/datascience/eda", methods=["POST"])
+def api_ds_eda():
+    """전체 EDA 자동 실행"""
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        dataset_name = data.get("dataset_name", "")
+
+        if not hasattr(j, "data_scientist") or not j.data_scientist:
+            return jsonify({"success": False, "error": "DataScientist not available"}), 503
+
+        result = j.data_scientist.auto_eda(dataset_name)
+        return jsonify({"success": True, "result": result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/jarvis/api/datascience/datasets")
+def api_ds_datasets():
+    try:
+        j = get_jarvis()
+        if hasattr(j, "data_scientist") and j.data_scientist:
+            return jsonify({
+                "datasets": j.data_scientist.list_datasets(),
+                "stats": j.data_scientist.get_stats(),
+            })
+        return jsonify({"datasets": [], "stats": {}}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 11: 창의 엔진 API ====================
+
+@app.route("/jarvis/api/creative/session", methods=["POST"])
+def api_creative_session():
+    """창의 세션 실행"""
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        problem = data.get("problem", "")
+        technique = data.get("technique", "full")
+
+        if not hasattr(j, "creative_engine") or not j.creative_engine:
+            return jsonify({"success": False, "error": "CreativeEngine not available"}), 503
+        if not problem:
+            return jsonify({"success": False, "error": "problem 필드 필요"}), 400
+
+        ce = j.creative_engine
+        if technique == "full":
+            session = ce.full_creative_session(problem)
+        else:
+            from jarvis.core.creative_engine import CreativityTechnique
+            technique_map = {
+                "brainstorm": CreativityTechnique.BRAINSTORM,
+                "scamper": CreativityTechnique.SCAMPER,
+                "analogical": CreativityTechnique.ANALOGICAL,
+                "reverse": CreativityTechnique.REVERSE,
+                "six_hats": CreativityTechnique.SIX_HATS,
+                "random_stimulus": CreativityTechnique.RANDOM_STIMULUS,
+            }
+            session = ce.start_session(problem)
+            ct = technique_map.get(technique, CreativityTechnique.BRAINSTORM)
+            ideas = ce.brainstorm(problem, n_ideas=8, technique=ct)
+            for idea in ideas:
+                session.add_idea(idea)
+            session.techniques_applied.append(technique)
+            session.synthesis = ce._synthesize(problem, session.get_top_ideas(5))
+
+        return jsonify({
+            "success": True,
+            "session": session.to_dict(),
+            "stats": ce.get_stats(),
+        })
+    except Exception as e:
+        logger.error(f"Creative session error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/jarvis/api/creative/stats")
+def api_creative_stats():
+    try:
+        j = get_jarvis()
+        if hasattr(j, "creative_engine") and j.creative_engine:
+            return jsonify({
+                "stats": j.creative_engine.get_stats(),
+                "idea_bank": j.creative_engine.get_idea_bank_stats(),
+                "sessions": j.creative_engine.list_sessions(),
+            })
+        return jsonify({"error": "CreativeEngine not available"}), 503
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

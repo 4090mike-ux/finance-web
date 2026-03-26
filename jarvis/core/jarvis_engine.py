@@ -57,6 +57,9 @@ class JarvisEngine:
         agent_genesis=None,
         experience_distiller=None,
     ):
+        # Iteration 10/11 — 동적 주입 (jarvis_app.py에서 .attr로 설정)
+        # autonomous_programmer, live_learner
+        # multimodal_processor, data_scientist, creative_engine
         self.llm = llm_manager
         self.memory = memory_manager
         self.computer = computer_controller

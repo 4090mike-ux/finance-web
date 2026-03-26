@@ -467,6 +467,9 @@
       <button class="tab-btn" data-tab="simulate">🌐 SIMULATE</button>
       <button class="tab-btn" data-tab="genesis">🧬 GENESIS</button>
       <button class="tab-btn" data-tab="wisdom">📚 WISDOM</button>
+      <button class="tab-btn" data-tab="vision">👁 VISION</button>
+      <button class="tab-btn" data-tab="datascience">📊 DATA</button>
+      <button class="tab-btn" data-tab="creative">💡 CREATIVE</button>
     </div>
 
     <!-- CHAT TAB -->
@@ -865,6 +868,99 @@
         </div>
       </div>
     </div>
+    <!-- VISION TAB — Iteration 11 -->
+    <div class="tab-content" id="tab-vision" style="flex-direction:column;overflow:hidden;padding:16px;gap:12px">
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">멀티모달 처리 — Claude Vision</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="vision-url-input" type="text" placeholder="이미지 URL 또는 파일 경로 입력..."
+          style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none"/>
+        <select id="vision-task-select" style="background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:8px;font-size:12px;outline:none">
+          <option value="describe">설명</option>
+          <option value="ocr">OCR</option>
+          <option value="chart">차트 분석</option>
+          <option value="classify">분류</option>
+        </select>
+        <button onclick="analyzeImage()" style="padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:linear-gradient(135deg,#00bcd4,#006080);color:#fff">분석</button>
+      </div>
+      <div id="vision-result-area" style="flex:1;overflow-y:auto;background:var(--panel2);border-radius:var(--radius);padding:14px;font-size:12px;line-height:1.7;color:var(--text);border:1px solid var(--border)">
+        <span style="color:var(--text2)">이미지 URL 입력 후 분석 버튼을 클릭하세요.</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        <div style="background:var(--panel2);border-radius:var(--radius);padding:10px;text-align:center;border:1px solid var(--border)">
+          <div id="mm-images-count" style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#00bcd4">0</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">IMAGES</div>
+        </div>
+        <div style="background:var(--panel2);border-radius:var(--radius);padding:10px;text-align:center;border:1px solid var(--border)">
+          <div id="mm-docs-count" style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#00bcd4">0</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">DOCS</div>
+        </div>
+        <div style="background:var(--panel2);border-radius:var(--radius);padding:10px;text-align:center;border:1px solid var(--border)">
+          <div id="mm-fusions-count" style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#00bcd4">0</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">FUSIONS</div>
+        </div>
+        <div style="background:var(--panel2);border-radius:var(--radius);padding:10px;text-align:center;border:1px solid var(--border)">
+          <div id="mm-cache-count" style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#00bcd4">0</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">CACHE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA SCIENCE TAB — Iteration 11 -->
+    <div class="tab-content" id="tab-datascience" style="flex-direction:column;overflow:hidden;padding:16px;gap:12px">
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">자율 데이터 과학자 — pandas + matplotlib</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="ds-file-input" type="text" placeholder="CSV/JSON 파일 경로..."
+          style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none"/>
+        <button onclick="loadDataset()" style="padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:linear-gradient(135deg,#ff9800,#c66a00);color:#fff">로드</button>
+      </div>
+      <div id="ds-datasets-list" style="font-size:11px;color:var(--text2)">데이터셋 없음</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="ds-query-input" type="text" placeholder="질문: '매출이 가장 높은 달은?' '이상치가 있나요?'"
+          style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none"/>
+        <input id="ds-name-input" type="text" placeholder="데이터셋 이름" style="width:140px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:8px;font-size:12px;outline:none"/>
+        <button onclick="queryDataset()" style="padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:linear-gradient(135deg,#ff9800,#c66a00);color:#fff">질문</button>
+      </div>
+      <div id="ds-result-area" style="flex:1;overflow-y:auto;background:var(--panel2);border-radius:var(--radius);padding:14px;font-size:12px;line-height:1.7;color:var(--text);border:1px solid var(--border)">
+        <span style="color:var(--text2)">CSV 파일 경로를 입력하고 로드한 후 질문하세요.</span>
+      </div>
+    </div>
+
+    <!-- CREATIVE ENGINE TAB — Iteration 11 -->
+    <div class="tab-content" id="tab-creative" style="flex-direction:column;overflow:hidden;padding:16px;gap:12px">
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">창의 엔진 — SCAMPER + 역발상 + 아날로지</div>
+      <div style="display:flex;gap:8px">
+        <input id="creative-problem-input" type="text" placeholder="해결할 문제 또는 탐구할 주제를 입력하세요..."
+          style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none"/>
+        <select id="creative-technique-select" style="background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:8px;font-size:12px;outline:none">
+          <option value="full">전체 세션</option>
+          <option value="brainstorm">자유 브레인스토밍</option>
+          <option value="scamper">SCAMPER</option>
+          <option value="analogical">아날로지</option>
+          <option value="reverse">역발상</option>
+          <option value="six_hats">6가지 모자</option>
+          <option value="random_stimulus">무작위 자극</option>
+        </select>
+        <button onclick="runCreativeSession()" style="padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:linear-gradient(135deg,#e040fb,#9c27b0);color:#fff">생성</button>
+      </div>
+      <div id="creative-ideas-area" style="flex:1;overflow-y:auto;background:var(--panel2);border-radius:var(--radius);padding:14px;font-size:12px;line-height:1.7;color:var(--text);border:1px solid var(--border)">
+        <span style="color:var(--text2)">문제를 입력하고 창의 세션을 시작하세요.</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:var(--panel2);border-radius:var(--radius);padding:10px;text-align:center;border:1px solid var(--border)">
+          <div id="cr-sessions-count" style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#e040fb">0</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">SESSIONS</div>
+        </div>
+        <div style="background:var(--panel2);border-radius:var(--radius);padding:10px;text-align:center;border:1px solid var(--border)">
+          <div id="cr-ideas-count" style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#e040fb">0</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">IDEAS</div>
+        </div>
+        <div style="background:var(--panel2);border-radius:var(--radius);padding:10px;text-align:center;border:1px solid var(--border)">
+          <div id="cr-bank-count" style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#e040fb">0</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">BANK</div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- SIDEBAR RIGHT -->
@@ -1975,6 +2071,125 @@ function init(){
   loadWisdom();
 }
 document.addEventListener('DOMContentLoaded',init);
+
+// ── Iteration 11: VISION ──────────────────────────────────────
+async function analyzeImage(){
+  const url=document.getElementById('vision-url-input').value.trim();
+  const task=document.getElementById('vision-task-select').value;
+  const area=document.getElementById('vision-result-area');
+  if(!url){area.innerHTML='<span style="color:#ff5555">URL을 입력하세요</span>';return;}
+  area.innerHTML='<span style="color:var(--text2)">분석 중...</span>';
+  try{
+    const res=await fetch('/jarvis/api/multimodal/analyze',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url,task})
+    });
+    const data=await res.json();
+    if(data.success){
+      const r=data.result;
+      area.innerHTML=`<div style="margin-bottom:8px"><span style="color:#00bcd4;font-weight:700">[${r.modality?.toUpperCase()||'IMAGE'}]</span> <span style="font-size:10px;color:var(--text2)">${(r.processing_time||0).toFixed(2)}s | 신뢰도: ${((r.confidence||0)*100).toFixed(0)}%</span></div>`+
+        `<div style="white-space:pre-wrap">${escapeHtml(r.raw_description||'')}</div>`+
+        (r.tags?.length?`<div style="margin-top:8px">${r.tags.map(t=>`<span style="background:#00bcd422;color:#00bcd4;padding:2px 6px;border-radius:4px;font-size:10px;margin-right:4px">${t}</span>`).join('')}</div>`:'');
+      document.getElementById('mm-images-count').textContent=data.stats?.images_processed||0;
+      document.getElementById('mm-docs-count').textContent=data.stats?.documents_ocr||0;
+      document.getElementById('mm-fusions-count').textContent=data.stats?.fusions_completed||0;
+      document.getElementById('mm-cache-count').textContent=data.stats?.cache_size||0;
+    }else{area.innerHTML=`<span style="color:#ff5555">오류: ${escapeHtml(data.error||'알 수 없는 오류')}</span>`;}
+  }catch(e){area.innerHTML=`<span style="color:#ff5555">요청 실패: ${e.message}</span>`;}
+}
+
+// ── Iteration 11: DATA SCIENCE ───────────────────────────────
+async function loadDataset(){
+  const path=document.getElementById('ds-file-input').value.trim();
+  const area=document.getElementById('ds-result-area');
+  const listEl=document.getElementById('ds-datasets-list');
+  if(!path){area.innerHTML='<span style="color:#ff5555">파일 경로를 입력하세요</span>';return;}
+  area.innerHTML='<span style="color:var(--text2)">로딩 중...</span>';
+  try{
+    const res=await fetch('/jarvis/api/datascience/load',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({file_path:path})
+    });
+    const data=await res.json();
+    if(data.success){
+      const p=data.profile||{};
+      area.innerHTML=`<div style="color:#ff9800;font-weight:700">✓ 로드 완료: ${data.name}</div>`+
+        `<div style="margin-top:8px;font-size:11px;color:var(--text2)">`+
+        `행: <b style="color:var(--text)">${(p.row_count||0).toLocaleString()}</b> | `+
+        `열: <b style="color:var(--text)">${p.col_count||0}</b><br>`+
+        `컬럼: <span style="color:#ff9800">${(p.columns||[]).slice(0,6).join(', ')}</span></div>`+
+        (p.anomalies?.length?`<div style="margin-top:8px;color:#ff5555;font-size:11px">⚠ ${p.anomalies.join('<br>')}</div>`:'');
+      document.getElementById('ds-name-input').value=data.name;
+      listEl.innerHTML=`<span style="color:#ff9800">✓ ${data.name}</span> (${(p.row_count||0).toLocaleString()}행 × ${p.col_count||0}열)`;
+    }else{area.innerHTML=`<span style="color:#ff5555">오류: ${escapeHtml(data.error||'로드 실패')}</span>`;}
+  }catch(e){area.innerHTML=`<span style="color:#ff5555">요청 실패: ${e.message}</span>`;}
+}
+
+async function queryDataset(){
+  const question=document.getElementById('ds-query-input').value.trim();
+  const name=document.getElementById('ds-name-input').value.trim();
+  const area=document.getElementById('ds-result-area');
+  if(!question||!name){area.innerHTML='<span style="color:#ff5555">데이터셋 이름과 질문을 입력하세요</span>';return;}
+  area.innerHTML='<span style="color:var(--text2)">분석 중...</span>';
+  try{
+    const res=await fetch('/jarvis/api/datascience/ask',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({dataset_name:name,question})
+    });
+    const data=await res.json();
+    if(data.success){
+      const r=data.result;
+      area.innerHTML=`<div style="color:#ff9800;font-weight:700;margin-bottom:8px">Q: ${escapeHtml(question)}</div>`+
+        `<div style="white-space:pre-wrap;line-height:1.8">${escapeHtml(r.answer||'')}</div>`+
+        (r.recommendations?.length?`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px"><div style="color:var(--text2);font-size:10px;letter-spacing:1px;margin-bottom:4px">권장 사항</div>${r.recommendations.map(rec=>`<div style="font-size:11px;margin:3px 0">• ${escapeHtml(rec)}</div>`).join('')}</div>`:'')+
+        (r.charts_generated?.length?`<div style="margin-top:8px;color:#4caf50;font-size:11px">📊 차트 생성됨: ${r.charts_generated.length}개</div>`:'');
+    }else{area.innerHTML=`<span style="color:#ff5555">오류: ${escapeHtml(data.error||'분석 실패')}</span>`;}
+  }catch(e){area.innerHTML=`<span style="color:#ff5555">요청 실패: ${e.message}</span>`;}
+}
+
+// ── Iteration 11: CREATIVE ENGINE ────────────────────────────
+async function runCreativeSession(){
+  const problem=document.getElementById('creative-problem-input').value.trim();
+  const technique=document.getElementById('creative-technique-select').value;
+  const area=document.getElementById('creative-ideas-area');
+  if(!problem){area.innerHTML='<span style="color:#ff5555">문제를 입력하세요</span>';return;}
+  area.innerHTML='<span style="color:var(--text2)">창의 세션 진행 중...</span>';
+  try{
+    const res=await fetch('/jarvis/api/creative/session',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({problem,technique})
+    });
+    const data=await res.json();
+    if(data.success){
+      const s=data.session;
+      let html=`<div style="color:#e040fb;font-weight:700;margin-bottom:8px">🎨 세션 ${s.session_id} — ${s.total_ideas}개 아이디어</div>`;
+      (s.best_ideas||[]).forEach((idea,i)=>{
+        const score=idea.scores?.combined||0;
+        html+=`<div style="background:var(--panel1);border:1px solid #e040fb44;border-radius:8px;padding:10px;margin-bottom:8px">`+
+          `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">`+
+          `<span style="color:#e040fb;font-weight:700;font-size:12px">${i+1}. ${escapeHtml(idea.title||'')}</span>`+
+          `<span style="font-size:10px;color:var(--text2)">${(score*100).toFixed(0)}점</span></div>`+
+          `<div style="font-size:11px;line-height:1.6">${escapeHtml(idea.description||'')}</div>`+
+          `<div style="margin-top:4px;font-size:10px;color:var(--text2)">기법: ${idea.technique_used||''} | 참신도:${((idea.scores?.originality||0)*100).toFixed(0)} 실현:${((idea.scores?.feasibility||0)*100).toFixed(0)} 영향:${((idea.scores?.impact||0)*100).toFixed(0)}</div>`+
+          `</div>`;
+      });
+      if(s.synthesis){html+=`<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px"><div style="color:#e040fb;font-size:10px;letter-spacing:1px;margin-bottom:6px">종합 인사이트</div><div style="font-size:12px;line-height:1.7;white-space:pre-wrap">${escapeHtml(s.synthesis)}</div></div>`;}
+      area.innerHTML=html;
+      document.getElementById('cr-sessions-count').textContent=data.stats?.sessions_created||0;
+      document.getElementById('cr-ideas-count').textContent=data.stats?.ideas_generated||0;
+      document.getElementById('cr-bank-count').textContent=data.stats?.idea_bank_size||0;
+    }else{area.innerHTML=`<span style="color:#ff5555">오류: ${escapeHtml(data.error||'세션 실패')}</span>`;}
+  }catch(e){area.innerHTML=`<span style="color:#ff5555">요청 실패: ${e.message}</span>`;}
+}
+
+// escapeHtml 헬퍼 (기존 없을 경우 대비)
+if(typeof escapeHtml==='undefined'){
+  window.escapeHtml=function(text){
+    const div=document.createElement('div');
+    div.appendChild(document.createTextNode(text||''));
+    return div.innerHTML;
+  };
+}
 </script>
 </body>
 </html>
