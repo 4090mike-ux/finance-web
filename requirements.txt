@@ -46,3 +46,19 @@ pdfplumber
 PyPDF2
 python-docx
 openpyxl
+
+# Iteration 13 — Computer Use (Anthropic API)
+# anthropic already included above (needs >=0.39.0)
+
+# Iteration 14 — Browser Intelligence
+playwright
+# Run after install: playwright install chromium
+
+# Iteration 15 — Evolution Engine
+# uses ast, importlib (stdlib only)
+
+# Iteration 16 — Distributed Network
+# uses asyncio (stdlib)
+
+# Iteration 17 — Superintelligence Core
+# uses statistics, math (stdlib)

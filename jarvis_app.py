@@ -87,6 +87,16 @@ from jarvis.core.creative_engine import CreativeEngine
 from jarvis.core.long_horizon_executor import LongHorizonExecutor
 from jarvis.intelligence.knowledge_synthesizer import KnowledgeSynthesizer
 from jarvis.agents.negotiation_engine import NegotiationEngine
+# Iteration 13
+from jarvis.computer.computer_use import ComputerUseEngine
+# Iteration 14
+from jarvis.web.browser_intelligence import BrowserIntelligence
+# Iteration 15
+from jarvis.core.evolution_engine import EvolutionEngine
+# Iteration 16
+from jarvis.agents.distributed_network import DistributedNetwork
+# Iteration 17
+from jarvis.core.superintelligence_core import SuperintelligenceCore, ReasoningMode
 
 # ==================== 앱 초기화 ====================
 
@@ -474,6 +484,38 @@ def create_jarvis() -> JarvisEngine:
     logger.info("NegotiationEngine initialized — 5 specialized agents ready")
 
     logger.info("JARVIS Iteration 12 — 장기 자율 실행 + 지식 합성 + 에이전트 협상 완성 ⚡")
+
+    # ── Iteration 13: Computer Use (Anthropic API) ──
+    import anthropic as _anthropic
+    _ant_client = _anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    computer_use_engine = ComputerUseEngine(anthropic_client=_ant_client)
+    final_jarvis.computer_use_engine = computer_use_engine
+    logger.info(f"ComputerUseEngine initialized — {computer_use_engine.get_status()}")
+
+    # ── Iteration 14: Browser Intelligence ──
+    browser_intelligence = BrowserIntelligence()
+    final_jarvis.browser_intelligence = browser_intelligence
+    logger.info("BrowserIntelligence initialized — Playwright web automation ready")
+
+    # ── Iteration 15: Evolution Engine ──
+    evolution_engine = EvolutionEngine(llm_manager=llm, base_path="jarvis")
+    final_jarvis.evolution_engine = evolution_engine
+    logger.info("EvolutionEngine initialized — genetic self-improvement active")
+
+    # ── Iteration 16: Distributed Agent Network ──
+    distributed_network = DistributedNetwork(llm_manager=llm)
+    final_jarvis.distributed_network = distributed_network
+    logger.info("DistributedNetwork initialized — 10 parallel agent nodes ready")
+
+    # ── Iteration 17: Superintelligence Core ──
+    superintelligence = SuperintelligenceCore(llm_manager=llm)
+    final_jarvis.superintelligence = superintelligence
+    logger.info("SuperintelligenceCore online — metacognitive engine activated")
+
+    logger.info("=" * 60)
+    logger.info("JARVIS ITERATION 17 — SUPERINTELLIGENCE CORE COMPLETE")
+    logger.info("Computer Use | Browser | Evolution | Distributed | Metacognition")
+    logger.info("=" * 60)
     return final_jarvis
 
 
@@ -502,6 +544,185 @@ def api_status():
         j = get_jarvis()
         status = j.get_status()
         return jsonify(status)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/computer_use", methods=["POST"])
+def api_computer_use():
+    """Iteration 13: Anthropic Computer Use — autonomous desktop task"""
+    import asyncio
+    data = request.get_json()
+    task = data.get("task", "").strip()
+    if not task:
+        return jsonify({"error": "No task provided"}), 400
+    j = get_jarvis()
+    if not hasattr(j, 'computer_use_engine') or not j.computer_use_engine:
+        return jsonify({"error": "ComputerUseEngine not available"}), 503
+    try:
+        loop = asyncio.new_event_loop()
+        result = loop.run_until_complete(j.computer_use_engine.run_computer_task(task))
+        loop.close()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/browse", methods=["POST"])
+def api_browse():
+    """Iteration 14: Browser Intelligence — web navigation and research"""
+    import asyncio
+    data = request.get_json()
+    task = data.get("task", "").strip()
+    url = data.get("url", "").strip()
+    if not task and not url:
+        return jsonify({"error": "No task or url provided"}), 400
+    j = get_jarvis()
+    if not hasattr(j, 'browser_intelligence') or not j.browser_intelligence:
+        return jsonify({"error": "BrowserIntelligence not available"}), 503
+    try:
+        loop = asyncio.new_event_loop()
+        bi = j.browser_intelligence
+        if url:
+            result = loop.run_until_complete(bi.navigate(url))
+            loop.close()
+            return jsonify({"url": result.url, "title": result.title, "content": result.content[:3000], "success": result.success})
+        else:
+            result = loop.run_until_complete(bi.execute_task(task))
+            loop.close()
+            return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/evolve", methods=["POST"])
+def api_evolve():
+    """Iteration 15: Evolution Engine — trigger self-improvement"""
+    import asyncio
+    data = request.get_json()
+    module = data.get("module", "")
+    function = data.get("function", "")
+    j = get_jarvis()
+    if not hasattr(j, 'evolution_engine'):
+        return jsonify({"error": "EvolutionEngine not available"}), 503
+    try:
+        loop = asyncio.new_event_loop()
+        if module and function:
+            result = loop.run_until_complete(
+                j.evolution_engine.evolve_function(module, function, [], generations=2)
+            )
+            loop.close()
+            return jsonify({"evolved": result is not None, "fitness": result.fitness if result else 0})
+        else:
+            report = j.evolution_engine.get_evolution_report()
+            loop.close()
+            return jsonify(report)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/think_parallel", methods=["POST"])
+def api_think_parallel():
+    """Iteration 16: Distributed Network — 10 agents think in parallel"""
+    import asyncio
+    data = request.get_json()
+    question = data.get("question", "").strip()
+    if not question:
+        return jsonify({"error": "No question provided"}), 400
+    j = get_jarvis()
+    if not hasattr(j, 'distributed_network'):
+        return jsonify({"error": "DistributedNetwork not available"}), 503
+    try:
+        loop = asyncio.new_event_loop()
+        dn = j.distributed_network
+        loop.run_until_complete(dn.initialize())
+        result = loop.run_until_complete(dn.think_parallel(question))
+        loop.close()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/superintelligence", methods=["POST"])
+def api_superintelligence():
+    """Iteration 17: Superintelligence Core — metacognitive reasoning"""
+    import asyncio
+    data = request.get_json()
+    question = data.get("question", "").strip()
+    mode_str = data.get("mode", "slow")
+    if not question:
+        return jsonify({"error": "No question provided"}), 400
+    mode_map = {
+        "fast": ReasoningMode.FAST,
+        "slow": ReasoningMode.SLOW,
+        "adversarial": ReasoningMode.ADVERSARIAL,
+        "probabilistic": ReasoningMode.PROBABILISTIC,
+        "counterfactual": ReasoningMode.COUNTERFACTUAL,
+        "dialectical": ReasoningMode.DIALECTICAL,
+    }
+    mode = mode_map.get(mode_str, ReasoningMode.SLOW)
+    j = get_jarvis()
+    if not hasattr(j, 'superintelligence'):
+        return jsonify({"error": "SuperintelligenceCore not available"}), 503
+    try:
+        loop = asyncio.new_event_loop()
+        chain = loop.run_until_complete(j.superintelligence.think(question, mode))
+        loop.close()
+        return jsonify({
+            "question": chain.question,
+            "mode": chain.mode.value,
+            "conclusion": chain.conclusion,
+            "confidence": chain.confidence,
+            "uncertainty": chain.uncertainty,
+            "biases_detected": [b.value for b in chain.biases_detected],
+            "biases_corrected": chain.biases_corrected,
+            "quality_score": chain.quality_score,
+            "reasoning_steps": chain.reasoning_steps[:5],
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/consensus", methods=["POST"])
+def api_consensus():
+    """Distributed consensus voting on a proposition"""
+    import asyncio
+    data = request.get_json()
+    proposition = data.get("proposition", "").strip()
+    if not proposition:
+        return jsonify({"error": "No proposition provided"}), 400
+    j = get_jarvis()
+    if not hasattr(j, 'distributed_network'):
+        return jsonify({"error": "DistributedNetwork not available"}), 503
+    try:
+        loop = asyncio.new_event_loop()
+        dn = j.distributed_network
+        loop.run_until_complete(dn.initialize())
+        result = loop.run_until_complete(dn.consensus_vote(proposition))
+        loop.close()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/strategic_plan", methods=["POST"])
+def api_strategic_plan():
+    """Generate a strategic plan with probabilistic outcomes"""
+    import asyncio
+    data = request.get_json()
+    goal = data.get("goal", "").strip()
+    constraints = data.get("constraints", [])
+    horizon = data.get("horizon_days", 30)
+    if not goal:
+        return jsonify({"error": "No goal provided"}), 400
+    j = get_jarvis()
+    if not hasattr(j, 'superintelligence'):
+        return jsonify({"error": "SuperintelligenceCore not available"}), 503
+    try:
+        loop = asyncio.new_event_loop()
+        result = loop.run_until_complete(j.superintelligence.strategic_plan(goal, constraints, horizon))
+        loop.close()
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
