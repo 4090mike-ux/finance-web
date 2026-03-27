@@ -83,6 +83,10 @@ from jarvis.intelligence.live_learner import LiveLearner
 from jarvis.intelligence.multimodal_processor import MultimodalProcessor
 from jarvis.intelligence.data_scientist import DataScientist
 from jarvis.core.creative_engine import CreativeEngine
+# Iteration 12
+from jarvis.core.long_horizon_executor import LongHorizonExecutor
+from jarvis.intelligence.knowledge_synthesizer import KnowledgeSynthesizer
+from jarvis.agents.negotiation_engine import NegotiationEngine
 
 # ==================== 앱 초기화 ====================
 
@@ -438,6 +442,38 @@ def create_jarvis() -> JarvisEngine:
     logger.info("CreativeEngine initialized — SCAMPER + 6Hats + Analogical ready")
 
     logger.info("JARVIS Iteration 11 — 멀티모달 + 자율 데이터 과학자 + 창의 엔진 완성 🚀")
+
+    # ── Iteration 12 신규 모듈 ──
+    def executor_event_cb(event):
+        socketio.emit("executor_event", event, namespace="/jarvis")
+
+    long_horizon_executor = LongHorizonExecutor(
+        llm_manager=llm,
+        jarvis_engine=final_jarvis,
+        event_callback=executor_event_cb,
+    )
+    final_jarvis.long_horizon_executor = long_horizon_executor
+    logger.info("LongHorizonExecutor initialized — HTN planner + multi-step executor ready")
+
+    knowledge_synthesizer = KnowledgeSynthesizer(
+        llm_manager=llm,
+        knowledge_graph=knowledge_graph,
+        memory_manager=memory,
+    )
+    final_jarvis.knowledge_synthesizer = knowledge_synthesizer
+    logger.info("KnowledgeSynthesizer initialized — conceptual blending ready")
+
+    def negotiation_event_cb(event):
+        socketio.emit("negotiation_event", event, namespace="/jarvis")
+
+    negotiation_engine = NegotiationEngine(
+        llm_manager=llm,
+        event_callback=negotiation_event_cb,
+    )
+    final_jarvis.negotiation_engine = negotiation_engine
+    logger.info("NegotiationEngine initialized — 5 specialized agents ready")
+
+    logger.info("JARVIS Iteration 12 — 장기 자율 실행 + 지식 합성 + 에이전트 협상 완성 ⚡")
     return final_jarvis
 
 
@@ -3048,6 +3084,193 @@ def api_creative_stats():
                 "sessions": j.creative_engine.list_sessions(),
             })
         return jsonify({"error": "CreativeEngine not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 12: 장기 자율 실행 API ====================
+
+@app.route("/jarvis/api/executor/run", methods=["POST"])
+def api_executor_run():
+    """장기 자율 실행 — 목표 입력 시 자동 계획 + 실행"""
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        goal = data.get("goal", "")
+        strategy = data.get("strategy", "adaptive")
+        blocking = data.get("blocking", False)  # 기본 비동기
+
+        if not hasattr(j, "long_horizon_executor") or not j.long_horizon_executor:
+            return jsonify({"success": False, "error": "LongHorizonExecutor not available"}), 503
+        if not goal:
+            return jsonify({"success": False, "error": "goal 필드 필요"}), 400
+
+        plan = j.long_horizon_executor.execute_goal(
+            goal=goal,
+            strategy=strategy,
+            blocking=blocking,
+        )
+        return jsonify({"success": True, "plan": plan.to_dict()})
+    except Exception as e:
+        logger.error(f"Executor run error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/jarvis/api/executor/status/<plan_id>")
+def api_executor_status(plan_id: str):
+    try:
+        j = get_jarvis()
+        if hasattr(j, "long_horizon_executor") and j.long_horizon_executor:
+            status = j.long_horizon_executor.get_plan_status(plan_id)
+            if status:
+                return jsonify({"success": True, "plan": status})
+            return jsonify({"success": False, "error": "Plan not found"}), 404
+        return jsonify({"error": "LongHorizonExecutor not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/executor/history")
+def api_executor_history():
+    try:
+        j = get_jarvis()
+        if hasattr(j, "long_horizon_executor") and j.long_horizon_executor:
+            return jsonify({
+                "history": j.long_horizon_executor.get_history(10),
+                "stats": j.long_horizon_executor.get_stats(),
+            })
+        return jsonify({"history": [], "stats": {}}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 12: 지식 합성 API ====================
+
+@app.route("/jarvis/api/synthesizer/synthesize", methods=["POST"])
+def api_synthesizer_synthesize():
+    """지식 합성 실행"""
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        query = data.get("query", "")
+        mode = data.get("mode", "cross_domain")
+
+        if not hasattr(j, "knowledge_synthesizer") or not j.knowledge_synthesizer:
+            return jsonify({"success": False, "error": "KnowledgeSynthesizer not available"}), 503
+        if not query:
+            return jsonify({"success": False, "error": "query 필드 필요"}), 400
+
+        from jarvis.intelligence.knowledge_synthesizer import SynthesisMode
+        mode_map = {
+            "cross_domain": SynthesisMode.CROSS_DOMAIN,
+            "contradiction": SynthesisMode.CONTRADICTION,
+            "analogical": SynthesisMode.ANALOGICAL,
+            "emergent": SynthesisMode.EMERGENT,
+            "meta_analysis": SynthesisMode.META_ANALYSIS,
+        }
+        syn_mode = mode_map.get(mode, SynthesisMode.CROSS_DOMAIN)
+        domains = data.get("domains", [])
+
+        result = j.knowledge_synthesizer.synthesize(query, mode=syn_mode, domains=domains)
+        return jsonify({"success": True, "result": result.to_dict()})
+    except Exception as e:
+        logger.error(f"Synthesizer error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/jarvis/api/synthesizer/add_knowledge", methods=["POST"])
+def api_synthesizer_add():
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        content = data.get("content", "")
+        if not content:
+            return jsonify({"success": False, "error": "content 필요"}), 400
+        if hasattr(j, "knowledge_synthesizer") and j.knowledge_synthesizer:
+            atom = j.knowledge_synthesizer.add_knowledge(
+                content=content,
+                source=data.get("source", "user"),
+                domain=data.get("domain", "일반"),
+                tags=data.get("tags", []),
+            )
+            return jsonify({"success": True, "atom_id": atom.atom_id})
+        return jsonify({"error": "KnowledgeSynthesizer not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/synthesizer/cross_domain", methods=["POST"])
+def api_synthesizer_cross_domain():
+    """두 도메인 연결 이론 생성"""
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        domain1 = data.get("domain1", "")
+        domain2 = data.get("domain2", "")
+        topic = data.get("topic", "")
+        if not all([domain1, domain2, topic]):
+            return jsonify({"success": False, "error": "domain1, domain2, topic 필요"}), 400
+        if hasattr(j, "knowledge_synthesizer") and j.knowledge_synthesizer:
+            theory = j.knowledge_synthesizer.synthesize_cross_domain_theory(domain1, domain2, topic)
+            return jsonify({"success": True, "theory": theory.to_dict()})
+        return jsonify({"error": "KnowledgeSynthesizer not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/jarvis/api/synthesizer/stats")
+def api_synthesizer_stats():
+    try:
+        j = get_jarvis()
+        if hasattr(j, "knowledge_synthesizer") and j.knowledge_synthesizer:
+            return jsonify({
+                "stats": j.knowledge_synthesizer.get_stats(),
+                "domain_map": j.knowledge_synthesizer.get_domain_map(),
+                "recent_syntheses": j.knowledge_synthesizer.get_synthesis_history(5),
+            })
+        return jsonify({"error": "KnowledgeSynthesizer not available"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ==================== Iteration 12: 협상 엔진 API ====================
+
+@app.route("/jarvis/api/negotiate", methods=["POST"])
+def api_negotiate():
+    """에이전트 협상 실행"""
+    try:
+        j = get_jarvis()
+        data = request.get_json() or {}
+        topic = data.get("topic", "")
+        protocol = data.get("protocol", "consensus")
+        max_rounds = int(data.get("max_rounds", 3))
+
+        if not hasattr(j, "negotiation_engine") or not j.negotiation_engine:
+            return jsonify({"success": False, "error": "NegotiationEngine not available"}), 503
+        if not topic:
+            return jsonify({"success": False, "error": "topic 필드 필요"}), 400
+
+        session = j.negotiation_engine.negotiate(
+            topic=topic,
+            protocol=protocol,
+            max_rounds=max_rounds,
+        )
+        return jsonify({"success": True, "session": session.to_dict()})
+    except Exception as e:
+        logger.error(f"Negotiation error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/jarvis/api/negotiate/history")
+def api_negotiate_history():
+    try:
+        j = get_jarvis()
+        if hasattr(j, "negotiation_engine") and j.negotiation_engine:
+            return jsonify({
+                "history": j.negotiation_engine.get_history(10),
+                "stats": j.negotiation_engine.get_stats(),
+            })
+        return jsonify({"history": [], "stats": {}}), 503
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
